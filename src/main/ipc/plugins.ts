@@ -20,11 +20,12 @@ export const isFileAPlugin = (f: Dirent | Stats, name: string): boolean => {
 };
 
 async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
-  const isAsar = pluginName.includes('.asar');
+  const isAsar = pluginName.includes(".asar");
   const pluginPath = join(PLUGINS_DIR, pluginName);
-  const realPluginPath = isAsar ? join(TEMP_PLUGINS_DIR, pluginName.replace(/\.asar$/, "")) : pluginPath; // Remove ".asar" from the directory name
-  if (isAsar)
-    await extractAddon(pluginPath, realPluginPath);
+  const realPluginPath = isAsar
+    ? join(TEMP_PLUGINS_DIR, pluginName.replace(/\.asar$/, ""))
+    : pluginPath; // Remove ".asar" from the directory name
+  if (isAsar) await extractAddon(pluginPath, realPluginPath);
 
   const manifestPath = join(realPluginPath, "manifest.json");
   if (!manifestPath.startsWith(`${realPluginPath}${sep}`)) {
@@ -56,13 +57,12 @@ async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
   return data;
 }
 
-
 ipcMain.handle(
   RepluggedIpcChannels.GET_PLUGIN,
   async (_, pluginName: string): Promise<RepluggedPlugin | undefined> => {
     try {
       return await getPlugin(pluginName);
-    } catch { }
+    } catch {}
   },
 );
 
@@ -99,9 +99,11 @@ ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlu
 });
 
 ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, (_, pluginName: string) => {
-  const isAsar = pluginName.includes('.asar');
+  const isAsar = pluginName.includes(".asar");
   const pluginPath = join(PLUGINS_DIR, pluginName);
-  const realPluginPath = isAsar ? join(TEMP_PLUGINS_DIR, pluginName.replace(".asar", "")) : pluginPath; // Remove ".asar" from the directory name
+  const realPluginPath = isAsar
+    ? join(TEMP_PLUGINS_DIR, pluginName.replace(".asar", ""))
+    : pluginPath; // Remove ".asar" from the directory name
 
   if (!realPluginPath.startsWith(`${isAsar ? TEMP_PLUGINS_DIR : PLUGINS_DIR}${sep}`)) {
     // Ensure file changes are restricted to the base path
@@ -110,12 +112,14 @@ ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, (_, pluginName: string) =>
 
   if (isAsar) {
     unlinkSync(pluginPath);
-    rmdirSync(realPluginPath, { recursive: true, });
-  }
-  else rmdirSync(pluginPath, { recursive: true, });
+    rmdirSync(realPluginPath, { recursive: true });
+  } else rmdirSync(pluginPath, { recursive: true });
 });
-
 
 ipcMain.on(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER, () => shell.openPath(PLUGINS_DIR));
 
-ipcMain.on(RepluggedIpcChannels.CLEAR_TEMP_THEME, () => { try { rmdirSync(TEMP_PLUGINS_DIR, { recursive: true }) } catch { } });
+ipcMain.on(RepluggedIpcChannels.CLEAR_TEMP_THEME, () => {
+  try {
+    rmdirSync(TEMP_PLUGINS_DIR, { recursive: true });
+  } catch {}
+});

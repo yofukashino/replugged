@@ -169,10 +169,16 @@ electron.app.once("ready", () => {
         filePath = join(CONFIG_PATHS.quickcss, reqUrl.pathname);
         break;
       case "theme":
-        filePath = join(reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_themes : CONFIG_PATHS.themes, reqUrl.pathname.replace(".asar", ""));
+        filePath = join(
+          reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_themes : CONFIG_PATHS.themes,
+          reqUrl.pathname.replace(".asar", ""),
+        );
         break;
       case "plugin":
-        filePath = join(reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins, reqUrl.pathname.replace(".asar", ""));
+        filePath = join(
+          reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins,
+          reqUrl.pathname.replace(".asar", ""),
+        );
         break;
     }
     cb({ path: filePath });
