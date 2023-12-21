@@ -1,17 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type EventEmitter from "events";
 import { waitForProps } from "../webpack";
+import type { ActionHandler, ActionHandlerRecord } from "./flux";
 
-export enum Band {
+export enum DispatchBand {
   Early,
   Database,
   Default,
 }
 
-type FluxCallback = (action?: { [index: string]: unknown }) => void;
-
 interface Action {
   type: string;
-  [index: string]: unknown;
+  [key: string]: any;
 }
 
 type ActionMetric = [string, string, number];
@@ -57,8 +57,8 @@ declare class ActionLog {
 }
 
 interface NodeData {
-  actionHandler: Record<string, FluxCallback>;
-  band: Band;
+  actionHandler: ActionHandlerRecord;
+  band: DispatchBand;
   name: string;
   storeDidChange: (action: Action) => void;
 }
@@ -86,12 +86,12 @@ export declare class DepGraph {
 }
 
 interface Handler {
-  actionHandler: FluxCallback;
+  actionHandler: ActionHandler;
   name: string;
   storeDidChange: (action: Action) => void;
 }
 
-declare class ActionHandlers {
+declare class ActionHandlersGraph {
   public _orderedActionHandlers: Record<string, Handler[]>;
   public _orderedCallbackTokens: string[];
   public _lastID: number;
@@ -99,17 +99,17 @@ declare class ActionHandlers {
 
   public addDependencies: (token: string, tokens: string) => void;
   public createToken: () => string;
-  public getOrderedActionHandlers: (action: Action) => void;
+  public getOrderedActionHandlers: (action: Action) => Handler[];
   public register: (
     name: string,
-    actionHandler: Record<string, FluxCallback>,
+    actionHandlers: ActionHandlerRecord,
     storeDidChange: (action: Action) => void,
-    band: Band,
+    band: DispatchBand,
     token?: string,
   ) => string;
 
-  private _addToBand: (token: string, band: Band) => void;
-  private _bandToken: (band: Band) => string;
+  private _addToBand: (token: string, band: DispatchBand) => void;
+  private _bandToken: (band: DispatchBand) => string;
   private _computeOrderedActionHandlers: (type: string) => Handler[];
   private _computeOrderedCallbackTokens: () => string[];
   private _invalidateCaches: () => void;
@@ -117,12 +117,12 @@ declare class ActionHandlers {
 }
 
 export interface FluxDispatcher {
-  _actionHandlers: ActionHandlers;
+  _actionHandlers: ActionHandlersGraph;
   _currentDispatchActionType: string | null;
-  _defaultBand: Band;
+  _defaultBand: DispatchBand;
   _interceptors: Array<(...rest: unknown[]) => unknown>;
   _processingWaitQueue: boolean;
-  _subscriptions: Record<string, Set<FluxCallback>>;
+  _subscriptions: Record<string, Set<ActionHandler>>;
   _waitQueue: Array<(...rest: unknown[]) => unknown>;
   actionLogger: ActionLogger;
 
@@ -139,14 +139,14 @@ export interface FluxDispatcher {
   dispatch: (action: Action) => void;
   flushWaitQueue: () => void;
   isDispatching: () => boolean;
-  subscribe: (type: string, callback: FluxCallback) => void;
-  unsubscribe: (type: string, callback: FluxCallback) => void;
+  subscribe: <A extends Action>(type: string, callback: ActionHandler<A>) => void;
+  unsubscribe: <A extends Action>(type: string, callback: ActionHandler<A>) => void;
   wait: (callback: (...rest: unknown[]) => unknown) => void;
   register: (
     name: string,
-    actionHandler: Record<string, FluxCallback>,
+    actionHandlers: ActionHandlerRecord,
     storeDidChange: (action: Action) => void,
-    band: Band,
+    band: DispatchBand,
     token?: string,
   ) => string;
 }
