@@ -28,7 +28,7 @@ async function getTheme(path: string): Promise<RepluggedTheme> {
 
   if (!manifestPath.startsWith(`${realThemePath}${sep}`)) {
     // Ensure file changes are restricted to the base path
-    throw new Error("Invalid plugin name");
+    throw new Error("Invalid theme name");
   }
   const manifest: unknown = JSON.parse(
     await readFile(manifestPath, {
