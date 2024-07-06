@@ -160,24 +160,16 @@ export async function stopAll(): Promise<void> {
  * @hidden
  * @internal
  */
-export async function runPlaintextPatches(): Promise<void> {
+export function runPlaintextPatches(): void {
   const disabled: string[] = settings.get("disabled", []);
-  const list = [...plugins.values()].filter((x) => !disabled.includes(x.manifest.id));
-  await Promise.allSettled(
-    list.map(async (plugin) => {
-      if (plugin.manifest.plaintextPatches) {
-        patchPlaintext(
-          (
-            await import(
-              `replugged://plugin/${plugin.path}/${
-                plugin.manifest.plaintextPatches
-              }?t=${Date.now()}`
-            )
-          ).default,
-        );
-      }
-    }),
-  );
+  const list = Array.from(plugins.values());
+  for (const plugin of list) {
+    if (plugin.manifest.plaintextPatches && !disabled.includes(plugin.manifest.id)) {
+      import(
+        `replugged://plugin/${plugin.path}/${plugin.manifest.plaintextPatches}?t=${Date.now()}`
+      ).then((x) => patchPlaintext(x.default));
+    }
+  }
 }
 
 /**

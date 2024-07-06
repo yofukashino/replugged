@@ -83,6 +83,7 @@ export async function ignite(): Promise<void> {
   // This is the function that will be called when loading the window.
   // Plaintext patches must run first.
   interceptChunksGlobal();
+
   coremods.runPlaintextPatches();
   await plugins.loadAll();
   await plugins.runPlaintextPatches();
