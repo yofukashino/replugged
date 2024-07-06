@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 lockfileVersion: '9.0'
+=======
+lockfileVersion: '6.1'
+>>>>>>> 213d62c3b46b8b3e7079c4f2c56468aea8111467
 
 settings:
   autoInstallPeers: true
