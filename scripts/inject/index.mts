@@ -4,7 +4,7 @@ import "./checks/env.mjs";
 
 import { join } from "path";
 import { AnsiEscapes, getCommand } from "./util.mjs";
-import { inject, uninject } from "./injector.mjs";
+import { smartInject } from "./injector.mjs";
 
 import * as darwin from "./platforms/darwin.mjs";
 import * as linux from "./platforms/linux.mjs";
@@ -23,6 +23,7 @@ const ctx = createContext(process.argv);
 
 export const exitCode = ctx.hasOptionalArg(/--no-exit-codes/) ? 0 : 1;
 const prod = ctx.hasOptionalArg(/--production/);
+const noRelaunch = ctx.getOptionalArg(/--no-relaunch/);
 export const entryPoint = ctx.getOptionalArg(/--entryPoint/);
 
 if (!(process.platform in platformModules)) {
@@ -97,7 +98,7 @@ const run = async (cmd = ctx.getPositionalArg(2), replug = false): Promise<void>
 
   if (cmd === "inject") {
     try {
-      result = await inject(platformModule, platform, prod);
+      result = await smartInject(cmd, replug, platformModule, platform, prod, noRelaunch);
     } catch (e) {
       console.error(
         `${AnsiEscapes.RED}An error occurred while trying to inject into Discord!${AnsiEscapes.RESET}`,
@@ -124,7 +125,7 @@ To plug into a different platform, use the following syntax: ${AnsiEscapes.BOLD}
     }
   } else if (cmd === "uninject") {
     try {
-      result = await uninject(platformModule, platform);
+      result = await smartInject(cmd, replug, platformModule, platform, prod, noRelaunch);
     } catch (e) {
       console.error(
         `${AnsiEscapes.RED}An error occurred while trying to uninject from Discord!${AnsiEscapes.RESET}`,
