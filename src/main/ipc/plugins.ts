@@ -99,7 +99,7 @@ ipcMain.handle(
     const disabled = await getSetting<string[]>("dev.replugged.Settings", "disabled", []);
     const plugins = await listPlugins();
     const pluginPlaintextPatchEntries = plugins.reduce((acc: string[][], p) => {
-      if (!p.manifest.plaintextPatches || !disabled.includes(p.manifest.id)) {
+      if (!p.manifest.plaintextPatches || disabled.includes(p.manifest.id)) {
         return acc;
       }
       const plaintextPatchPath = join(join(PLUGINS_DIR, p.path), p.manifest.plaintextPatches);
