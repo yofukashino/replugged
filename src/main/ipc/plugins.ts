@@ -98,18 +98,20 @@ ipcMain.handle(
   async (): Promise<Record<string, string>> => {
     const disabled = await getSetting<string[]>("dev.replugged.Settings", "disabled", []);
     const plugins = await listPlugins();
-    const pluginPlaintextPatchEntries = plugins
-      .map((p) => {
-        if (!p.manifest.plaintextPatches) return [p.manifest.id, null];
-        const plaintextPatchPath = join(join(PLUGINS_DIR, p.path), p.manifest.plaintextPatches);
-        if (!plaintextPatchPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
-          // Ensure file changes are restricted to the base path
-          throw new Error("Invalid plugin name");
-        }
+    const pluginPlaintextPatchEntries = plugins.reduce((acc: string[][], p) => {
+      if (!p.manifest.plaintextPatches || !disabled.includes(p.manifest.id)) {
+        return acc;
+      }
+      const plaintextPatchPath = join(join(PLUGINS_DIR, p.path), p.manifest.plaintextPatches);
+      if (!plaintextPatchPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+        // Ensure file changes are restricted to the base path
+        throw new Error("Invalid plugin name");
+      }
 
-        return [p.manifest.id, plaintextPatchPath];
-      })
-      .filter(([id, preload]) => preload && !disabled.includes(id!));
+      acc.push([p.manifest.id, plaintextPatchPath]);
+      return acc;
+    }, []);
+
     return Object.fromEntries(pluginPlaintextPatchEntries);
   },
 );
