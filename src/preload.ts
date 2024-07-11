@@ -4,7 +4,7 @@ import {
   ipcRenderer,
   webFrame,
 } from "electron";
-
+import { readFileSync } from "fs";
 import { RepluggedIpcChannels } from "./types";
 // eslint-disable-next-line no-duplicate-imports -- these are only used for types, the other import is for the actual code
 import type {
@@ -23,6 +23,27 @@ void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => 
   version = v;
 });
 
+const pluginPlaintextPatches = {} as Record<string, string>;
+
+void ipcRenderer
+  .invoke(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES)
+  .then(async (plaintextPatchList) => {
+    for (const id in plaintextPatchList) {
+      const plaintextPatchCode = readFileSync(plaintextPatchList[id], "utf-8");
+      const plaintextModule = `() => {
+        ${plaintextPatchCode.replace(
+          // @ts-ignore
+          /export\s*({.*})/s,
+          (_, name) =>
+            `return ${name.replace(
+              /(\w+) as (\w+)/,
+              (_: string, name: string, realName: string) => `${realName}:${name}`,
+            )}`,
+        )}
+      }`;
+      pluginPlaintextPatches[id] = plaintextModule;
+    }
+  });
 const RepluggedNative = {
   themes: {
     list: async (): Promise<RepluggedTheme[]> =>
@@ -37,6 +58,7 @@ const RepluggedNative = {
       ipcRenderer.invoke(RepluggedIpcChannels.GET_PLUGIN, pluginPath),
     list: async (): Promise<RepluggedPlugin[]> =>
       ipcRenderer.invoke(RepluggedIpcChannels.LIST_PLUGINS),
+    listPlaintextPatches: (): Record<string, string> => pluginPlaintextPatches,
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),

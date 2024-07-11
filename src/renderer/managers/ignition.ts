@@ -84,8 +84,9 @@ export async function ignite(): Promise<void> {
   // Plaintext patches must run first.
   interceptChunksGlobal();
   coremods.runPlaintextPatches();
+  plugins.runPlaintextPatches();
   await plugins.loadAll();
-  await plugins.runPlaintextPatches();
+
   // At this point, Discord's code should run.
   // Wait for the designated common modules to load before continuing.
   await Promise.all([commonReady(), componentsReady()]);

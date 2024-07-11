@@ -162,24 +162,13 @@ export async function stopAll(): Promise<void> {
  * @hidden
  * @internal
  */
-export async function runPlaintextPatches(): Promise<void> {
-  const disabled: string[] = settings.get("disabled", []);
-  const list = [...plugins.values()].filter((x) => !disabled.includes(x.manifest.id));
-  await Promise.allSettled(
-    list.map(async (plugin) => {
-      if (plugin.manifest.plaintextPatches) {
-        patchPlaintext(
-          (
-            await import(
-              `replugged://plugin/${plugin.path}/${
-                plugin.manifest.plaintextPatches
-              }?t=${Date.now()}`
-            )
-          ).default,
-        );
-      }
-    }),
-  );
+// plugins manager
+export function runPlaintextPatches(): void {
+  const list = RepluggedNative.plugins.listPlaintextPatches();
+  for (const pluginId in list) {
+    const plaintextModule = (0, eval)(list[pluginId]);
+    patchPlaintext(plaintextModule()?.default);
+  }
 }
 
 /**

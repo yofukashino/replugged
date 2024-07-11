@@ -11,7 +11,7 @@ import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
 import { plugin } from "../../types/addon";
 import type { Dirent, Stats } from "fs";
 import { CONFIG_PATHS } from "src/util.mjs";
-
+import { getSetting } from "./settings";
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
 
 export const isFileAPlugin = (f: Dirent | Stats, name: string): boolean => {
@@ -49,16 +49,7 @@ async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
   return data;
 }
 
-ipcMain.handle(
-  RepluggedIpcChannels.GET_PLUGIN,
-  async (_, pluginName: string): Promise<RepluggedPlugin | undefined> => {
-    try {
-      return await getPlugin(pluginName);
-    } catch {}
-  },
-);
-
-ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlugin[]> => {
+async function listPlugins(): Promise<RepluggedPlugin[]> {
   const plugins = [];
 
   const pluginDirs = (
@@ -88,7 +79,40 @@ ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlu
   }
 
   return plugins;
+}
+ipcMain.handle(
+  RepluggedIpcChannels.GET_PLUGIN,
+  async (_, pluginName: string): Promise<RepluggedPlugin | undefined> => {
+    try {
+      return await getPlugin(pluginName);
+    } catch {}
+  },
+);
+
+ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlugin[]> => {
+  return await listPlugins();
 });
+
+ipcMain.handle(
+  RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES,
+  async (): Promise<Record<string, string>> => {
+    const disabled = await getSetting<string[]>("dev.replugged.Settings", "disabled", []);
+    const plugins = await listPlugins();
+    const pluginPlaintextPatchEntries = plugins
+      .map((p) => {
+        if (!p.manifest.plaintextPatches) return [p.manifest.id, null];
+        const plaintextPatchPath = join(join(PLUGINS_DIR, p.path), p.manifest.plaintextPatches);
+        if (!plaintextPatchPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+          // Ensure file changes are restricted to the base path
+          throw new Error("Invalid plugin name");
+        }
+
+        return [p.manifest.id, plaintextPatchPath];
+      })
+      .filter(([id, preload]) => preload && !disabled.includes(id!));
+    return Object.fromEntries(pluginPlaintextPatchEntries);
+  },
+);
 
 ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, async (_, pluginName: string) => {
   const pluginPath = join(PLUGINS_DIR, pluginName);
