@@ -98,7 +98,7 @@ ipcMain.handle(
   async (): Promise<Record<string, string>> => {
     const disabled = await getSetting<string[]>("dev.replugged.Settings", "disabled", []);
     const plugins = await listPlugins();
-    const pluginPlaintextPatchEntries = plugins.reduce((acc: string[][], p) => {
+    const pluginPlaintextPatches = plugins.reduce((acc: Record<string, string>, p) => {
       if (!p.manifest.plaintextPatches || disabled.includes(p.manifest.id)) {
         return acc;
       }
@@ -108,11 +108,11 @@ ipcMain.handle(
         throw new Error("Invalid plugin name");
       }
 
-      acc.push([p.manifest.id, plaintextPatchPath]);
+      acc[p.manifest.id] = plaintextPatchPath;
       return acc;
-    }, []);
+    }, {});
 
-    return Object.fromEntries(pluginPlaintextPatchEntries);
+    return pluginPlaintextPatches;
   },
 );
 
