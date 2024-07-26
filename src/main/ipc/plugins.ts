@@ -14,6 +14,8 @@ import { CONFIG_PATHS } from "src/util.mjs";
 import { getSetting } from "./settings";
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
 
+let PluginIpcMappings: Record<string, Record<string, string>>;
+
 export const isFileAPlugin = (f: Dirent | Stats, name: string): boolean => {
   return f.isDirectory() || (f.isFile() && extname(name) === ".asar");
 };
@@ -95,22 +97,36 @@ ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlu
 });
 
 ipcMain.handle(
-  RepluggedIpcChannels.LIST_PLUGINS_PRELOAD,
-  async (): Promise<Record<string, string>> => {
-    const disabled = await getSetting<string[]>("dev.replugged.Settings", "disabled", []);
+  RepluggedIpcChannels.LIST_PLUGINS_NATIVE,
+  async (): Promise<Record<string, Record<string, string>>> => {
+    const disabled = await getSetting<string[]>("plugins", "disabled", []);
     const plugins = await listPlugins();
-    const pluginPreloadEntries = plugins
-      .map((p) => {
-        if (!p.manifest.preload) return [p.manifest.id, null];
-        const preloadPath = join(PLUGINS_DIR, p.path, p.manifest.preload);
-        if (!preloadPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
-          // Ensure file changes are restricted to the base path
-          throw new Error("Invalid plugin name");
-        }
-        return [p.manifest.id, preloadPath];
-      })
-      .filter(([id, preload]) => preload && !disabled.includes(id!));
-    return Object.fromEntries(pluginPreloadEntries);
+
+    PluginIpcMappings ??= plugins.reduce((acc: Record<string, Record<string, string>>, plugin) => {
+      if (!plugin.manifest.native || disabled.includes(plugin.manifest.id)) return acc;
+      const nativePath = join(PLUGINS_DIR, plugin.path, plugin.manifest.native);
+      if (!nativePath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+        // Ensure file changes are restricted to the base path
+        throw new Error("Invalid plugin name");
+      }
+      const entries = Object.entries(require(nativePath));
+      if (!entries.length) return acc;
+
+      const mappings = (acc[plugin.manifest.id] = {} as Record<string, string>);
+
+      for (const [methodName, method] of entries) {
+        const key = `RPPlugin-Native_${plugin.manifest.id}_${methodName}`;
+        ipcMain.handle(
+          key,
+          (_, ...args) =>
+            (method as (...args: unknown[]) => unknown)(...args) /* For easy type when importing */,
+        );
+        mappings[methodName] = key;
+      }
+      return acc;
+    }, {});
+
+    return PluginIpcMappings;
   },
 );
 

@@ -339,12 +339,12 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
       });
 
       build.onResolve(
-        { filter: new RegExp(`.*?/${manifest.preload?.split("/")?.pop()?.replace(/\..+/, "")}`) },
+        { filter: new RegExp(`.*?/${manifest.native?.split("/")?.pop()?.replace(/\..+/, "")}`) },
         (args) => {
           if (args.kind !== "import-statement") return undefined;
 
           return {
-            path: `replugged/plugins/preload["${manifest.id}"]`,
+            path: `replugged/plugins/native["${manifest.id}"]`,
             namespace: "replugged",
           };
         },
@@ -437,20 +437,20 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
 
     manifest.plaintextPatches = "plaintextPatches.js";
   }
-  if ("preload" in manifest) {
+  if ("native" in manifest) {
     targets.push(
       esbuild.context(
         overwrites({
           ...common,
           platform: "node",
           format: "cjs",
-          entryPoints: [path.join(folderPath, manifest.preload)],
-          outfile: `${distPath}/preload.js`,
+          entryPoints: [path.join(folderPath, manifest.native)],
+          outfile: `${distPath}/native.js`,
         }),
       ),
     );
 
-    manifest.preload = "preload.js";
+    manifest.native = "native.js";
   }
 
   if (!existsSync(distPath)) mkdirSync(distPath, { recursive: true });

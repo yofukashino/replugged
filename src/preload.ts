@@ -23,13 +23,19 @@ void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => 
   version = v;
 });
 
-const pluginPreloads = {} as Record<
-  string,
-  Record<string, (...args: unknown[]) => unknown> | unknown
->;
+const pluginNatives = {} as Record<string, Record<string, (...args: any[]) => Promise<unknown>>>;
 
-void ipcRenderer.invoke(RepluggedIpcChannels.LIST_PLUGINS_PRELOAD).then((preloadList) => {
-  for (const id in preloadList) pluginPreloads[id] = require(preloadList[id]);
+void ipcRenderer.invoke(RepluggedIpcChannels.LIST_PLUGINS_NATIVE).then((nativeList) => {
+  for (const pluginId in nativeList) {
+    const methods = nativeList[pluginId];
+    const map = (pluginNatives[pluginId] = {} as Record<
+      string,
+      (...args: any[]) => Promise<unknown>
+    >);
+    for (const methodName in methods) {
+      map[methodName] = (...args: any[]) => ipcRenderer.invoke(methods[methodName], ...args);
+    }
+  }
 });
 
 const RepluggedNative = {
@@ -49,7 +55,7 @@ const RepluggedNative = {
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
-    listPreload: () => pluginPreloads,
+    listNative: () => pluginNatives,
   },
 
   updater: {
