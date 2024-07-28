@@ -5,6 +5,7 @@ IPC events:
 */
 
 import { readFile, readdir, readlink, rm, stat } from "fs/promises";
+import { readFileSync } from "fs";
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
@@ -108,7 +109,7 @@ ipcMain.handle(
         throw new Error("Invalid plugin name");
       }
 
-      acc[p.manifest.id] = plaintextPatchPath;
+      acc[p.manifest.id] = readFileSync(plaintextPatchPath, "utf-8");
       return acc;
     }, {});
 

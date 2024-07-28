@@ -1,4 +1,6 @@
 import { ipcMain } from "electron";
+import { readFileSync } from "fs";
+import { join } from "path";
 import "./plugins";
 import "./themes";
 import "./quick-css";
@@ -10,4 +12,8 @@ import { RepluggedIpcChannels, type RepluggedWebContents } from "../../types";
 
 ipcMain.on(RepluggedIpcChannels.GET_DISCORD_PRELOAD, (event) => {
   event.returnValue = (event.sender as RepluggedWebContents).originalPreload;
+});
+
+ipcMain.on(RepluggedIpcChannels.GET_REPLUGGED_RENDERER, (event) => {
+  event.returnValue = readFileSync(join(__dirname, "./renderer.js"), "utf-8");
 });

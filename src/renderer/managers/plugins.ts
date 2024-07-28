@@ -162,12 +162,10 @@ export async function stopAll(): Promise<void> {
  * @hidden
  * @internal
  */
-// plugins manager
 export function runPlaintextPatches(): void {
   const list = RepluggedNative.plugins.listPlaintextPatches();
   for (const pluginId in list) {
-    const plaintextModule = (0, eval)(list[pluginId]);
-    patchPlaintext(plaintextModule()?.default);
+    void import(list[pluginId]).then(({ default: patch }) => patchPlaintext(patch));
   }
 }
 

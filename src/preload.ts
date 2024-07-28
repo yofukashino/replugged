@@ -29,21 +29,12 @@ void ipcRenderer
   .invoke(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES)
   .then(async (plaintextPatchList) => {
     for (const id in plaintextPatchList) {
-      const plaintextPatchCode = readFileSync(plaintextPatchList[id], "utf-8");
-      const plaintextModule = `() => {
-        ${plaintextPatchCode.replace(
-          // @ts-ignore
-          /export\s*({.*})/s,
-          (_, name) =>
-            `return ${name.replace(
-              /(\w+) as (\w+)/,
-              (_: string, name: string, realName: string) => `${realName}:${name}`,
-            )}`,
-        )}
-      }`;
-      pluginPlaintextPatches[id] = plaintextModule;
+      const plaintextPatchCode = plaintextPatchList[id];
+      const plaintextPatchBlob = new Blob([plaintextPatchCode], { type: "application/javascript" });
+      pluginPlaintextPatches[id] = URL.createObjectURL(plaintextPatchBlob);
     }
   });
+
 const RepluggedNative = {
   themes: {
     list: async (): Promise<RepluggedTheme[]> =>
@@ -143,7 +134,12 @@ export type RepluggedNativeType = typeof RepluggedNative;
 contextBridge.exposeInMainWorld("RepluggedNative", RepluggedNative);
 
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
-void webFrame.executeJavaScript('void import("replugged://renderer");');
+
+const renderer = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
+
+const rendererBlob = new Blob([renderer], { type: "application/javascript" });
+
+void webFrame.executeJavaScript(`void import("${URL.createObjectURL(rendererBlob)}")`);
 
 try {
   window.addEventListener("beforeunload", () => {
