@@ -109,18 +109,14 @@ ipcMain.handle(
         // Ensure file changes are restricted to the base path
         throw new Error("Invalid plugin name");
       }
-      const entries = Object.entries(require(nativePath));
+      const entries = Object.entries<(...args: unknown[]) => unknown>(require(nativePath));
       if (!entries.length) return acc;
 
-      const mappings = (acc[plugin.manifest.id] = {} as Record<string, string>);
+      const mappings: Record<string, string> = (acc[plugin.manifest.id] = {});
 
       for (const [methodName, method] of entries) {
         const key = `RPPlugin-Native_${plugin.manifest.id}_${methodName}`;
-        ipcMain.handle(
-          key,
-          (_, ...args) =>
-            (method as (...args: unknown[]) => unknown)(...args) /* For easy type when importing */,
-        );
+        ipcMain.handle(key, (_, ...args) => method(...args) /* For easy type when importing */);
         mappings[methodName] = key;
       }
       return acc;

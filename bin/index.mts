@@ -332,6 +332,15 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
           };
         }
 
+        if (args.importer?.startsWith?.(path.resolve(manifest.native))) {
+          return {
+            errors: [
+              {
+                text: `Unsupported import: ${args.path}\nOnly Native lib imports are supported in native files.`,
+              },
+            ],
+          };
+        }
         return {
           path: args.path,
           namespace: "replugged",
@@ -352,6 +361,16 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
 
       build.onResolve({ filter: /^react$/ }, (args) => {
         if (args.kind !== "import-statement") return undefined;
+
+        if (args.importer?.startsWith?.(path.resolve(manifest.native))) {
+          return {
+            errors: [
+              {
+                text: `Unsupported import: ${args.path}\nOnly Native lib imports are supported in native files.`,
+              },
+            ],
+          };
+        }
 
         return {
           path: "replugged/common/React",
