@@ -4,7 +4,6 @@ import {
   ipcRenderer,
   webFrame,
 } from "electron";
-import { readFileSync } from "fs";
 import { RepluggedIpcChannels } from "./types";
 // eslint-disable-next-line no-duplicate-imports -- these are only used for types, the other import is for the actual code
 import type {
@@ -27,7 +26,7 @@ const pluginPlaintextPatches = {} as Record<string, string>;
 
 void ipcRenderer
   .invoke(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES)
-  .then(async (plaintextPatchList) => {
+  .then((plaintextPatchList) => {
     for (const id in plaintextPatchList) {
       const plaintextPatchCode = plaintextPatchList[id];
       const plaintextPatchBlob = new Blob(
@@ -140,11 +139,9 @@ contextBridge.exposeInMainWorld("RepluggedNative", RepluggedNative);
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
 const renderer = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
 
-const rendererBlob = new Blob([`${renderer}\n//# sourceURL=RepluggedRenderer`], {
-  type: "application/javascript",
-});
-
-void webFrame.executeJavaScript(`void import("${URL.createObjectURL(rendererBlob)}")`);
+void webFrame.executeJavaScript(
+  `void (async function(){ ${renderer} })().catch(console.error)\n\n//# sourceURL=RepluggedRenderer`,
+);
 
 try {
   window.addEventListener("beforeunload", () => {
