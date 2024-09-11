@@ -139,9 +139,7 @@ contextBridge.exposeInMainWorld("RepluggedNative", RepluggedNative);
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
 const renderer = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
 
-void webFrame.executeJavaScript(
-  `void (async function(){ ${renderer} })().catch(console.error)\n\n//# sourceURL=RepluggedRenderer`,
-);
+if (renderer) void webFrame.executeJavaScript(renderer);
 
 try {
   window.addEventListener("beforeunload", () => {
