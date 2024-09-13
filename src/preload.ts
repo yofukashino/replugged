@@ -17,43 +17,38 @@ import type {
   RepluggedTranslations,
 } from "./types";
 
-let version = "";
-void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => {
-  version = v;
-});
+const version = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_VERSION);
 
 const pluginPlaintextPatches = {} as Record<string, string>;
 
-void ipcRenderer
-  .invoke(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES)
-  .then((plaintextPatchList) => {
-    for (const id in plaintextPatchList) {
-      const plaintextPatchCode = plaintextPatchList[id];
-      const plaintextPatchBlob = new Blob(
-        [`${plaintextPatchCode}\n//# sourceURL=PlaintextPatch-${id}`],
-        { type: "application/javascript" },
-      );
+const plaintextPatchList = ipcRenderer.sendSync(
+  RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES,
+);
 
-      pluginPlaintextPatches[id] = URL.createObjectURL(plaintextPatchBlob);
-    }
-  });
+for (const id in plaintextPatchList) {
+  const plaintextPatchCode = plaintextPatchList[id];
+  const plaintextPatchBlob = new Blob(
+    [`${plaintextPatchCode}\n//# sourceURL=PlaintextPatch-${id}`],
+    { type: "application/javascript" },
+  );
+
+  pluginPlaintextPatches[id] = URL.createObjectURL(plaintextPatchBlob);
+}
 
 const RepluggedNative = {
   themes: {
-    list: async (): Promise<RepluggedTheme[]> =>
-      ipcRenderer.invoke(RepluggedIpcChannels.LIST_THEMES),
-    uninstall: async (themeName: string) =>
+    list: (): RepluggedTheme[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_THEMES),
+    uninstall: (themeName: string) =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_THEME, themeName), // whether theme was successfully uninstalled
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_THEMES_FOLDER),
   },
 
   plugins: {
-    get: async (pluginPath: string): Promise<RepluggedPlugin | undefined> =>
+    get: (pluginPath: string): Promise<RepluggedPlugin | undefined> =>
       ipcRenderer.invoke(RepluggedIpcChannels.GET_PLUGIN, pluginPath),
-    list: async (): Promise<RepluggedPlugin[]> =>
-      ipcRenderer.invoke(RepluggedIpcChannels.LIST_PLUGINS),
+    list: (): Promise<RepluggedPlugin[]> => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
     listPlaintextPatches: (): Record<string, string> => pluginPlaintextPatches,
-    uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
+    uninstall: (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
   },
@@ -91,7 +86,7 @@ const RepluggedNative = {
   },
 
   quickCSS: {
-    get: async () => ipcRenderer.invoke(RepluggedIpcChannels.GET_QUICK_CSS),
+    get: () => ipcRenderer.sendSync(RepluggedIpcChannels.GET_QUICK_CSS),
     save: (css: string) => ipcRenderer.send(RepluggedIpcChannels.SAVE_QUICK_CSS, css),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_QUICKCSS_FOLDER),
   },

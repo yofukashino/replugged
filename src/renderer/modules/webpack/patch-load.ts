@@ -86,9 +86,6 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
       if (wpRequire.c && !webpackChunks) webpackChunks = wpRequire.c;
 
       if (r) {
-        // The first batch of modules are added inline via r.m rather than being pushed
-        patchChunk([[], r.m]);
-
         r.d = (module: unknown, exports: Record<string, () => unknown>) => {
           for (const prop in exports) {
             if (
@@ -104,6 +101,8 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
             }
           }
         };
+        // The first batch of modules are added inline via r.m rather than being pushed
+        patchChunk([[], r.m]);
       }
     },
   ]);
@@ -139,4 +138,25 @@ export function interceptChunksGlobal(): void {
       configurable: true,
     });
   }
+  // Credit to @Vendicated - https://github.com/Vendicated/Vencord/blob/f27361f017330e8957b12b6eabcf4930ffcf7eb4/src/webpack/patchWebpack.ts#L59-L110
+  // eslint-disable-next-line no-extend-native, accessor-pairs
+  Object.defineProperty(Function.prototype, "m", {
+    configurable: true,
+    set(v: unknown) {
+      Object.defineProperty(this, "m", {
+        value: v,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+      const { stack } = new Error();
+      if (
+        !(stack?.includes("discord.com") || stack?.includes("discordapp.com")) ||
+        Array.isArray(v)
+      ) {
+        return;
+      }
+      patchChunk([[], v]);
+    },
+  });
 }

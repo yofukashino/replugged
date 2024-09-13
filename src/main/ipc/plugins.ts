@@ -3,13 +3,12 @@ IPC events:
 - REPLUGGED_LIST_PLUGINS: returns an array of the names of all installed plugins
 - REPLUGGED_UNINSTALL_PLUGIN: returns whether a plugin by the provided name was successfully uninstalled
 */
-
-import { readFile, readdir, readlink, rm, stat } from "fs/promises";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, readlinkSync, rmSync, statSync } from "fs";
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
 import { plugin } from "../../types/addon";
+// eslint-disable-next-line no-duplicate-imports
 import type { Dirent, Stats } from "fs";
 import { CONFIG_PATHS } from "src/util.mjs";
 import { getSetting } from "./settings";
@@ -19,7 +18,7 @@ export const isFileAPlugin = (f: Dirent | Stats, name: string): boolean => {
   return f.isDirectory() || (f.isFile() && extname(name) === ".asar");
 };
 
-async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
+function getPlugin(pluginName: string): RepluggedPlugin {
   const manifestPath = join(PLUGINS_DIR, pluginName, "manifest.json");
   if (!manifestPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
     // Ensure file changes are restricted to the base path
@@ -27,7 +26,7 @@ async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
   }
 
   const manifest: unknown = JSON.parse(
-    await readFile(manifestPath, {
+    readFileSync(manifestPath, {
       encoding: "utf-8",
     }),
   );
@@ -39,40 +38,32 @@ async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
   };
 
   const cssPath = data.manifest.renderer?.replace(/\.js$/, ".css");
-  const hasCSS =
-    cssPath &&
-    (await stat(join(PLUGINS_DIR, pluginName, cssPath))
-      .then(() => true)
-      .catch(() => false));
+  const hasCSS = cssPath && statSync(join(PLUGINS_DIR, pluginName, cssPath));
 
   if (hasCSS) data.hasCSS = true;
 
   return data;
 }
 
-async function listPlugins(): Promise<RepluggedPlugin[]> {
+function listPlugins(): RepluggedPlugin[] {
   const plugins = [];
 
-  const pluginDirs = (
-    await Promise.all(
-      (
-        await readdir(PLUGINS_DIR, {
-          withFileTypes: true,
-        })
-      ).map(async (f) => {
-        if (isFileAPlugin(f, f.name)) return f;
-        if (f.isSymbolicLink()) {
-          const actualPath = await readlink(join(PLUGINS_DIR, f.name));
-          const actualFile = await stat(actualPath);
-          if (isFileAPlugin(actualFile, actualPath)) return f;
-        }
-      }),
-    )
-  ).filter(Boolean) as Dirent[];
+  const pluginDirs = readdirSync(PLUGINS_DIR, {
+    withFileTypes: true,
+  })
+    .map((f) => {
+      if (isFileAPlugin(f, f.name)) return f;
+      if (f.isSymbolicLink()) {
+        const actualPath = readlinkSync(join(PLUGINS_DIR, f.name));
+        const actualFile = statSync(actualPath);
+        if (isFileAPlugin(actualFile, actualPath)) return f;
+      }
+    })
+    .filter(Boolean) as Dirent[];
 
   for (const pluginDir of pluginDirs) {
     try {
-      plugins.push(await getPlugin(pluginDir.name));
+      plugins.push(getPlugin(pluginDir.name));
     } catch (e) {
       console.error(`Invalid plugin: ${pluginDir.name}`);
       console.error(e);
@@ -83,48 +74,45 @@ async function listPlugins(): Promise<RepluggedPlugin[]> {
 }
 ipcMain.handle(
   RepluggedIpcChannels.GET_PLUGIN,
-  async (_, pluginName: string): Promise<RepluggedPlugin | undefined> => {
+  (_, pluginName: string): RepluggedPlugin | undefined => {
     try {
-      return await getPlugin(pluginName);
+      return getPlugin(pluginName);
     } catch {}
   },
 );
 
-ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlugin[]> => {
-  return await listPlugins();
+ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (): RepluggedPlugin[] => {
+  return listPlugins();
 });
 
-ipcMain.handle(
-  RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES,
-  async (): Promise<Record<string, string>> => {
-    const disabled = await getSetting<string[]>("dev.replugged.Settings", "disabled", []);
-    const plugins = await listPlugins();
-    const pluginPlaintextPatches = plugins.reduce((acc: Record<string, string>, p) => {
-      if (!p.manifest.plaintextPatches || disabled.includes(p.manifest.id)) {
-        return acc;
-      }
-      const plaintextPatchPath = join(join(PLUGINS_DIR, p.path), p.manifest.plaintextPatches);
-      if (!plaintextPatchPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
-        // Ensure file changes are restricted to the base path
-        throw new Error("Invalid plugin name");
-      }
-
-      acc[p.manifest.id] = readFileSync(plaintextPatchPath, "utf-8");
+ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES, (): Record<string, string> => {
+  const disabled = getSetting<string[]>("dev.replugged.Settings", "disabled", []);
+  const plugins = listPlugins();
+  const pluginPlaintextPatches = plugins.reduce((acc: Record<string, string>, p) => {
+    if (!p.manifest.plaintextPatches || disabled.includes(p.manifest.id)) {
       return acc;
-    }, {});
+    }
+    const plaintextPatchPath = join(join(PLUGINS_DIR, p.path), p.manifest.plaintextPatches);
+    if (!plaintextPatchPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+      // Ensure file changes are restricted to the base path
+      throw new Error("Invalid plugin name");
+    }
 
-    return pluginPlaintextPatches;
-  },
-);
+    acc[p.manifest.id] = readFileSync(plaintextPatchPath, "utf-8");
+    return acc;
+  }, {});
 
-ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, async (_, pluginName: string) => {
+  return pluginPlaintextPatches;
+});
+
+ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, (_, pluginName: string) => {
   const pluginPath = join(PLUGINS_DIR, pluginName);
   if (!pluginPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
     // Ensure file changes are restricted to the base path
     throw new Error("Invalid plugin name");
   }
 
-  await rm(pluginPath, {
+  rmSync(pluginPath, {
     recursive: true,
     force: true,
   });

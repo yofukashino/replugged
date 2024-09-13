@@ -17,6 +17,7 @@ import { AnyAddonManifestOrReplugged, anyAddonOrReplugged } from "src/types/addo
 import { getSetting } from "./settings";
 import { promisify } from "util";
 import { WEBSITE_URL } from "src/constants";
+import { readFileSync } from "fs";
 
 const writeFile = promisify(originalWriteFile);
 
@@ -96,7 +97,7 @@ async function github(
 }
 
 async function store(id: string): Promise<CheckResultSuccess | CheckResultFailure> {
-  const apiUrl = await getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
+  const apiUrl = getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
   const STORE_BASE_URL = `${apiUrl}/api/v1/store`;
   const manifestUrl = `${STORE_BASE_URL}/${id}`;
   const asarUrl = `${manifestUrl}.asar`;
@@ -182,7 +183,7 @@ ipcMain.handle(
     if (type === "replugged") {
       // Manually set Path and URL for security purposes
       path = "replugged.asar";
-      const apiUrl = await getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
+      const apiUrl = getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
       url = `${apiUrl}/api/v1/store/dev.replugged.Replugged.asar`;
     }
 
@@ -234,14 +235,15 @@ ipcMain.handle(
   },
 );
 
-ipcMain.handle(RepluggedIpcChannels.GET_REPLUGGED_VERSION, async () => {
+ipcMain.on(RepluggedIpcChannels.GET_REPLUGGED_VERSION, (event) => {
   const path = join(__dirname, "package.json");
   try {
-    const packageJson = JSON.parse(await readFile(path, "utf8"));
-    return packageJson.version;
+    const packageJson = JSON.parse(readFileSync(path, "utf8"));
+    event.returnValue = packageJson.version;
   } catch (err) {
     if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") {
-      return "dev";
+      event.returnValue = "dev";
+      return;
     }
     throw err;
   }
