@@ -83,6 +83,7 @@ function listPlugins(): RepluggedPlugin[] {
           if (isFileAPlugin(actualFile, actualPath)) return f;
         } catch {}
       }
+      return void 0;
     })
     .filter(Boolean) as Dirent[];
 
@@ -98,11 +99,11 @@ function listPlugins(): RepluggedPlugin[] {
   return plugins;
 }
 
-function mapPluginNatives() {
+function mapPluginNatives(): void {
   const disabled = getSetting<string[]>("plugins", "disabled", []);
   const plugins = listPlugins();
 
-  PluginIpcMappings ??= plugins.reduce((acc: Record<string, Record<string, string>>, plugin) => {
+  PluginIpcMappings = plugins.reduce((acc: Record<string, Record<string, string>>, plugin) => {
     if (!plugin.manifest.native || disabled.includes(plugin.manifest.id)) return acc;
 
     const isAsar = plugin.path.includes(".asar");
@@ -120,7 +121,8 @@ function mapPluginNatives() {
     const entries = Object.entries(require(nativePath));
     if (!entries.length) return acc;
 
-    const mappings = (acc[plugin.manifest.id] = {} as Record<string, string>);
+    acc[plugin.manifest.id] = {} as Record<string, string>;
+    const mappings = acc[plugin.manifest.id];
 
     for (const [methodName, method] of entries) {
       const key = `RPPlugin-Native_${plugin.manifest.id}_${methodName}`;

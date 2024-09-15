@@ -56,7 +56,7 @@ ipcMain.handle(RepluggedIpcChannels.GET_THEME, (_, path: string): RepluggedTheme
   } catch {}
 });
 
-ipcMain.on(RepluggedIpcChannels.LIST_THEMES, (event): RepluggedTheme[] => {
+ipcMain.on(RepluggedIpcChannels.LIST_THEMES, (event) => {
   const themes = [];
 
   const themeDirs = readdirSync(THEMES_DIR, {
@@ -71,6 +71,7 @@ ipcMain.on(RepluggedIpcChannels.LIST_THEMES, (event): RepluggedTheme[] => {
           if (isFileATheme(actualFile, actualPath)) return f;
         } catch {}
       }
+      return void 0;
     })
     .filter(Boolean) as Dirent[];
 
