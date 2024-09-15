@@ -78,6 +78,7 @@ function patchPush(webpackChunk: WebpackChunkGlobal): void {
  * @internal
  */
 function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
+  patchPush(chunksGlobal);
   chunksGlobal.push([
     [Symbol("replugged")],
     {},
@@ -87,7 +88,6 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
 
       if (r) {
         // The first batch of modules are added inline via r.m rather than being pushed
-        patchChunk([[], r.m]);
 
         r.d = (module: unknown, exports: Record<string, () => unknown>) => {
           for (const prop in exports) {
@@ -104,6 +104,8 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
             }
           }
         };
+
+        patchChunk([[], wpRequire!.m]);
       }
     },
   ]);
@@ -114,8 +116,6 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
       patchChunk(loadedChunk);
     }
   }
-
-  patchPush(chunksGlobal);
 }
 
 // Intercept the webpack chunk global as soon as Discord creates it
@@ -132,11 +132,41 @@ export function interceptChunksGlobal(): void {
         // because webpack will go over the previously loaded modules
         // when it sets the custom push method.
         if (v !== webpackChunk) {
+          // setTimeout(() => {
           loadWebpackModules(v);
+          // }, 0);
         }
         webpackChunk = v;
       },
       configurable: true,
     });
   }
+  // eslint-disable-next-line no-extend-native, accessor-pairs
+  Object.defineProperty(Function.prototype, "m", {
+    configurable: true,
+
+    set(v: unknown) {
+      Object.defineProperty(this, "m", {
+        value: v,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+
+      // When using react devtools or other extensions, we may also catch their webpack here.
+      // This ensures we actually got the right one
+      const { stack } = new Error();
+      if (
+        !(stack?.includes("discord.com") || stack?.includes("discordapp.com")) ||
+        Array.isArray(v)
+      ) {
+        return;
+      }
+
+      const fileName = stack.match(/\/assets\/(.+?\.js)/)?.[1] ?? "";
+      console.log("Found Webpack module factory", fileName);
+
+      patchChunk([[], v]);
+    },
+  });
 }

@@ -1,6 +1,7 @@
 import type { Channel, Message } from "discord-types/general";
 import type { GetButtonItem, IconButtonProps } from "../../../types/coremods/message";
 import { Logger } from "../../modules/logger";
+import { getBySource, getFunctionBySource } from "../../modules/webpack";
 
 const logger = Logger.api("MessagePopover");
 
@@ -31,12 +32,12 @@ export function removeButton(item: GetButtonItem): void {
  * @internal
  * @hidden
  */
-export function _buildPopoverElements(
-  msg: Message,
-  channel: Channel,
-  makeButton: (item: IconButtonProps) => React.ComponentType,
-): React.ComponentType[] {
-  const items = [] as React.ComponentType[];
+export function _buildPopoverElements(msg: Message, channel: Channel): React.ReactElement[] {
+  const MakeButton = getFunctionBySource<React.ComponentType<IconButtonProps>>(
+    getBySource(".hoverBarButton"),
+    ".hoverBarButton",
+  )!;
+  const items = [] as React.ReactElement[];
 
   buttons.forEach((key, getItem) => {
     try {
@@ -46,7 +47,7 @@ export function _buildPopoverElements(
           item.message ??= msg;
           item.channel ??= channel;
           item.key = key;
-          items.push(makeButton(item));
+          items.push(<MakeButton {...item} />);
         }
       } catch (err) {
         logger.error(`Error in making the button [${item?.key}]`, err, item);

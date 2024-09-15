@@ -23,7 +23,7 @@ const ctx = createContext(process.argv);
 
 export const exitCode = ctx.hasOptionalArg(/--no-exit-codes/) ? 0 : 1;
 const prod = ctx.hasOptionalArg(/--production/);
-const noRelaunch = ctx.getOptionalArg(/--no-relaunch/);
+const noRelaunch = ctx.hasOptionalArg(/--no-relaunch/);
 export const entryPoint = ctx.getOptionalArg(/--entryPoint/);
 
 if (!(process.platform in platformModules)) {
@@ -98,7 +98,7 @@ const run = async (cmd = ctx.getPositionalArg(2), replug = false): Promise<void>
 
   if (cmd === "inject") {
     try {
-      result = await smartInject(cmd, replug, platformModule, platform, prod, noRelaunch);
+      result = await smartInject(cmd, replug, platformModule, platform, prod, Boolean(noRelaunch));
     } catch (e) {
       console.error(
         `${AnsiEscapes.RED}An error occurred while trying to inject into Discord!${AnsiEscapes.RESET}`,
@@ -131,6 +131,14 @@ To plug into a different platform, use the following syntax: ${AnsiEscapes.BOLD}
         `${AnsiEscapes.RED}An error occurred while trying to uninject from Discord!${AnsiEscapes.RESET}`,
       );
       console.error(e);
+      if (e.code === "EBUSY") {
+        console.log(
+          `\nYou now have to completely close the Discord client, from the system tray or through the task manager.\n
+To unplug from a different platform, use the following syntax: ${AnsiEscapes.BOLD}${
+            AnsiEscapes.GREEN
+          }${getCommand({ action: "unplug", prod })}${AnsiEscapes.RESET}`,
+        );
+      }
       process.exit(exitCode);
     }
     if (result) {
@@ -141,12 +149,6 @@ To plug into a different platform, use the following syntax: ${AnsiEscapes.BOLD}
         console.log(
           `${AnsiEscapes.BOLD}${AnsiEscapes.GREEN}Replugged has been successfully unplugged${AnsiEscapes.RESET}`,
           "\n",
-        );
-        console.log(
-          `You now have to completely close the Discord client, from the system tray or through the task manager.\n
-To unplug from a different platform, use the following syntax: ${AnsiEscapes.BOLD}${
-            AnsiEscapes.GREEN
-          }${getCommand({ action: "unplug", prod })}${AnsiEscapes.RESET}`,
         );
       }
     }

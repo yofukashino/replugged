@@ -34,7 +34,7 @@ interface CommandsAndSection {
 void waitForModule<typeof User>(filters.bySource("hasHadPremium(){")).then((User) => {
   RepluggedUser = new User({
     avatar: "replugged",
-    id: "replugged",
+    id: "69",
     bot: true,
     username: "Replugged",
     system: true,
@@ -242,7 +242,7 @@ export class CommandManager {
     command.displayDescription ??= command.description;
     command.type = 2;
     command.id ??= command.name;
-
+    command.section = currentSection;
     command.execute ??= (args, currentInfo) => {
       void executeCommand(command.executor, args, currentInfo, command);
     };

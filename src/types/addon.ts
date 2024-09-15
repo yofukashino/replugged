@@ -61,6 +61,7 @@ export type ThemeManifest = z.infer<typeof theme>;
 export const plugin = common.extend({
   type: z.literal("replugged-plugin"),
   renderer: z.string().optional(),
+  native: z.string().optional(),
   plaintextPatches: z.string().optional(),
   reloadRequired: z.boolean().optional(),
 });

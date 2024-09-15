@@ -1,6 +1,6 @@
 // btw, pluginID is the directory name, not the RDNN. We really need a better name for this.
 import { loadStyleSheet } from "../util";
-import type { PluginExports, RepluggedPlugin } from "../../types";
+import type { PlaintextPatch, PluginExports, RepluggedPlugin } from "../../types";
 import { Logger } from "../modules/logger";
 import { patchPlaintext } from "../modules/webpack/plaintext-patch";
 import { init } from "../apis/settings";
@@ -16,6 +16,7 @@ interface PluginWrapper extends RepluggedPlugin {
 /**
  * @hidden
  */
+export const native = RepluggedNative.plugins.listNative();
 export const plugins = new Map<string, PluginWrapper>();
 const running = new Set<string>();
 
@@ -66,6 +67,7 @@ export async function loadAll(): Promise<void> {
  * Plugin must be loaded first with {@link register} or {@link loadAll}
  */
 export async function start(id: string): Promise<void> {
+  const startTime = performance.now();
   const plugin = plugins.get(id);
   try {
     if (!plugin) {
@@ -86,26 +88,33 @@ export async function start(id: string): Promise<void> {
           );
           plugin.exports = pluginExports;
           await pluginExports.start?.();
+          if (plugin.hasCSS) {
+            if (styleElements.has(plugin.manifest.id)) {
+              // Remove old style element in case it wasn't removed properly
+              styleElements.get(plugin.manifest.id)?.remove();
+            }
+
+            const el = loadStyleSheet(
+              `replugged://plugin/${plugin.path}/${plugin.manifest.renderer?.replace(
+                /\.js$/,
+                ".css",
+              )}`,
+            );
+            styleElements.set(plugin.manifest.id, el);
+          }
         })(),
       ]);
     }
 
-    if (plugin.hasCSS) {
-      if (styleElements.has(plugin.manifest.id)) {
-        // Remove old style element in case it wasn't removed properly
-        styleElements.get(plugin.manifest.id)?.remove();
-      }
-
-      const el = loadStyleSheet(
-        `replugged://plugin/${plugin.path}/${plugin.manifest.renderer?.replace(/\.js$/, ".css")}`,
-      );
-      styleElements.set(plugin.manifest.id, el);
-    }
-
     running.add(plugin.manifest.id);
-    logger.log(`Plugin started: ${plugin.manifest.name}`);
+    logger.log(
+      `Plugin started: ${plugin.manifest.name} in ${(performance.now() - startTime).toFixed(2)}ms`,
+    );
   } catch (e: unknown) {
-    logger.error(`Error starting plugin ${plugin?.manifest.name}`, e);
+    logger.error(
+      `Error starting plugin ${plugin?.manifest.name} after ${(performance.now() - startTime).toFixed(2)}ms`,
+      e,
+    );
   }
 }
 
@@ -116,9 +125,12 @@ export async function start(id: string): Promise<void> {
  * Plugins must be loaded first with {@link register} or {@link loadAll}
  */
 export async function startAll(): Promise<void> {
+  const startTime = performance.now();
+  logger.log(`Starting plugins...`);
   const disabled: string[] = settings.get("disabled", []);
   const list = [...plugins.keys()].filter((x) => !disabled.includes(x));
   await Promise.allSettled(list.map(start));
+  logger.log(`All plugins started in ${(performance.now() - startTime).toFixed(2)}ms`);
 }
 
 /**
@@ -161,14 +173,9 @@ export async function stopAll(): Promise<void> {
  * @internal
  */
 export function runPlaintextPatches(): void {
-  const disabled: string[] = settings.get("disabled", []);
-  const list = Array.from(plugins.values());
-  for (const plugin of list) {
-    if (plugin.manifest.plaintextPatches && !disabled.includes(plugin.manifest.id)) {
-      import(
-        `replugged://plugin/${plugin.path}/${plugin.manifest.plaintextPatches}?t=${Date.now()}`
-      ).then((x) => patchPlaintext(x.default));
-    }
+  const list = RepluggedNative.plugins.listPlaintextPatches();
+  for (const pluginId in list) {
+    void import(list[pluginId]).then(({ default: patch }) => patchPlaintext(patch, pluginId));
   }
 }
 

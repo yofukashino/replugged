@@ -6,6 +6,9 @@ import type { RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
 const electronPath = require.resolve("electron");
 const discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
+let customTitlebar: boolean = getSetting("dev.replugged.Settings", "titlebar", false);
+console.log(customTitlebar);
+
 // require.main!.filename = discordMain;
 
 Object.defineProperty(global, "appSettings", {
@@ -33,6 +36,7 @@ class BrowserWindow extends electron.BrowserWindow {
       };
     },
   ) {
+    if (opts.frame && process.platform.includes("linux") && customTitlebar) opts.frame = void 0;
     const originalPreload = opts.webPreferences?.preload;
 
     if (opts.webContents) {
@@ -103,8 +107,8 @@ electron.protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-async function loadReactDevTools(): Promise<void> {
-  const rdtSetting = await getSetting("dev.replugged.Settings", "reactDevTools", false);
+function loadReactDevTools(): void {
+  const rdtSetting = getSetting("dev.replugged.Settings", "reactDevTools", false);
 
   if (rdtSetting) {
     void electron.session.defaultSession.loadExtension(CONFIG_PATHS["react-devtools"]);
@@ -155,6 +159,9 @@ electron.app.once("ready", () => {
     done({ responseHeaders: headersWithoutCSP });
   });
 
+  loadReactDevTools();
+});
+electron.app.on("session-created", () => {
   electron.protocol.registerFileProtocol("replugged", (request, cb) => {
     let filePath = "";
     const reqUrl = new URL(request.url);
@@ -183,8 +190,6 @@ electron.app.once("ready", () => {
     }
     cb({ path: filePath });
   });
-
-  void loadReactDevTools();
 });
 
 // This module is required this way at runtime.

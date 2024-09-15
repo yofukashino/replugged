@@ -5,6 +5,7 @@ import {
   webFrame,
 } from "electron";
 
+import https from "https";
 import { RepluggedIpcChannels } from "./types";
 // eslint-disable-next-line no-duplicate-imports -- these are only used for types, the other import is for the actual code
 import type {
@@ -17,17 +18,46 @@ import type {
   RepluggedTheme,
   RepluggedTranslations,
 } from "./types";
+import { readFileSync } from "fs";
 
 let version = "";
 void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => {
   version = v;
 });
 
+const pluginNatives = {} as Record<string, Record<string, (...args: any[]) => Promise<unknown>>>;
+
+const nativeList = ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS_NATIVE);
+
+for (const pluginId in nativeList) {
+  const methods = nativeList[pluginId];
+  const map = (pluginNatives[pluginId] = {} as Record<
+    string,
+    (...args: any[]) => Promise<unknown>
+  >);
+  for (const methodName in methods) {
+    map[methodName] = (...args: any[]) => ipcRenderer.invoke(methods[methodName], ...args);
+  }
+}
+const pluginPlaintextPatches = {} as Record<string, string>;
+
+const plaintextPatchList = ipcRenderer.sendSync(
+  RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES,
+);
+
+for (const id in plaintextPatchList) {
+  const plaintextPatchCode = plaintextPatchList[id];
+  const plaintextPatchBlob = new Blob([`${plaintextPatchCode}//# sourceURL=PlaintextPatch-${id}`], {
+    type: "application/javascript",
+  });
+
+  pluginPlaintextPatches[id] = URL.createObjectURL(plaintextPatchBlob);
+}
+
 const RepluggedNative = {
   themes: {
-    list: async (): Promise<RepluggedTheme[]> =>
-      ipcRenderer.invoke(RepluggedIpcChannels.LIST_THEMES),
-    uninstall: async (themeName: string) =>
+    list: (): RepluggedTheme[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_THEMES),
+    uninstall: (themeName: string) =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_THEME, themeName), // whether theme was successfully uninstalled
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_THEMES_FOLDER),
   },
@@ -35,8 +65,10 @@ const RepluggedNative = {
   plugins: {
     get: async (pluginPath: string): Promise<RepluggedPlugin | undefined> =>
       ipcRenderer.invoke(RepluggedIpcChannels.GET_PLUGIN, pluginPath),
-    list: async (): Promise<RepluggedPlugin[]> =>
-      ipcRenderer.invoke(RepluggedIpcChannels.LIST_PLUGINS),
+    list: (): Promise<RepluggedPlugin[]> => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
+    listPlaintextPatches: (): Record<string, string> => pluginPlaintextPatches,
+    listNative: (): Record<string, Record<string, (...args: any[]) => Promise<unknown>>> =>
+      pluginNatives,
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
@@ -112,6 +144,7 @@ const RepluggedNative = {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   openBrowserWindow: (opts: BrowserWindowConstructorOptions) => {}, // later
+  https,
 
   // @todo We probably want to move these somewhere else, but I'm putting them here for now because I'm too lazy to set anything else up
 };
@@ -121,16 +154,20 @@ export type RepluggedNativeType = typeof RepluggedNative;
 contextBridge.exposeInMainWorld("RepluggedNative", RepluggedNative);
 
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
-void webFrame.executeJavaScript('void import("replugged://renderer");');
+const renderer = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
+
+void webFrame.executeJavaScript(renderer);
 
 try {
   window.addEventListener("beforeunload", () => {
     ipcRenderer.send(RepluggedIpcChannels.REGISTER_RELOAD);
   });
   // Get and execute Discord preload
-  // If Discord ever sandboxes its preload, we'll have to eval the preload contents directly
+  // If Discord ever sandboxes its preload, we'll have to eval the preload contents directlsy
   const preload = ipcRenderer.sendSync(RepluggedIpcChannels.GET_DISCORD_PRELOAD);
-  if (preload) require(preload);
+  if (preload) {
+    require(preload);
+  }
 } catch (err) {
   console.error("Error loading original preload", err);
 }

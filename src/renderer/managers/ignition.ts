@@ -14,14 +14,16 @@ export async function start(): Promise<void> {
   const startTime = performance.now();
 
   loadStyleSheet("replugged://renderer.css");
-  await import("../modules/i18n").then((i18n) => i18n.load());
+  await import("../modules/i18n")
+    .then((i18n) => i18n.load())
+    .catch((err) => error("Ignition", "Start", void 0, "Error Loading i18n", err));
 
   let started = false;
   await Promise.race([
     Promise.allSettled([
+      themes.loadMissing().then(themes.loadAll),
       coremods.startAll(),
       plugins.startAll(),
-      themes.loadMissing().then(themes.loadAll),
     ]),
     // Failsafe to ensure that we always start Replugged
     new Promise((resolve) =>
@@ -82,13 +84,19 @@ Load order:
 export async function ignite(): Promise<void> {
   // This is the function that will be called when loading the window.
   // Plaintext patches must run first.
-  interceptChunksGlobal();
+  setTimeout(() => {
+    interceptChunksGlobal();
+  }, 0);
 
   coremods.runPlaintextPatches();
+
+  plugins.runPlaintextPatches();
+
   await plugins.loadAll();
-  await plugins.runPlaintextPatches();
+
   // At this point, Discord's code should run.
   // Wait for the designated common modules to load before continuing.
+
   await Promise.all([commonReady(), componentsReady()]);
   await start();
 }

@@ -11,6 +11,7 @@ import { default as languagePlaintext } from "../coremods/language/plaintextPatc
 import { default as commandsPlaintext } from "../coremods/commands/plaintextPatches";
 import { default as settingsPlaintext } from "../coremods/settings/plaintextPatches";
 import { default as badgesPlaintext } from "../coremods/badges/plaintextPatches";
+import { default as titlebarPlaintext } from "../coremods/titlebar/plaintextPatches";
 import { Logger } from "../modules/logger";
 
 const logger = Logger.api("Coremods");
@@ -48,6 +49,8 @@ export async function stop(name: keyof typeof coremods): Promise<void> {
 }
 
 export async function startAll(): Promise<void> {
+  const startTime = performance.now();
+  logger.log(`Starting coremods...`);
   coremods.noDevtoolsWarning = await import("../coremods/noDevtoolsWarning");
   coremods.settings = await import("../coremods/settings");
   coremods.badges = await import("../coremods/badges");
@@ -64,13 +67,19 @@ export async function startAll(): Promise<void> {
 
   await Promise.all(
     Object.entries(coremods).map(async ([name, mod]) => {
+      const startTime = performance.now();
       try {
         await mod.start?.();
+        logger.log(`Coremod started: ${name} in ${(performance.now() - startTime).toFixed(2)}ms`);
       } catch (e) {
-        logger.error(`Failed to start coremod ${name}`, e);
+        logger.error(
+          `Failed to start coremod ${name}  after ${(performance.now() - startTime).toFixed(2)}ms`,
+          e,
+        );
       }
     }),
   );
+  logger.log(`All coremods started in ${(performance.now() - startTime).toFixed(2)}ms`);
 }
 
 export async function stopAll(): Promise<void> {
@@ -79,15 +88,16 @@ export async function stopAll(): Promise<void> {
 
 export function runPlaintextPatches(): void {
   [
-    experimentsPlaintext,
-    notrackPlaintext,
-    noDevtoolsWarningPlaintext,
-    messagePopover,
-    notices,
-    contextMenu,
-    languagePlaintext,
-    commandsPlaintext,
-    settingsPlaintext,
-    badgesPlaintext,
-  ].forEach(patchPlaintext);
+    { patch: experimentsPlaintext, name: "replugged.coremod.experiments" },
+    { patch: notrackPlaintext, name: "replugged.coremod.noTrack" },
+    { patch: noDevtoolsWarningPlaintext, name: "replugged.coremod.noDevtoolsWarning" },
+    { patch: messagePopover, name: "replugged.coremod.messagePopover" },
+    { patch: notices, name: "replugged.coremod.notices" },
+    { patch: contextMenu, name: "replugged.coremod.contextMenu" },
+    { patch: languagePlaintext, name: "replugged.coremod.language" },
+    { patch: commandsPlaintext, name: "replugged.coremod.commands" },
+    { patch: settingsPlaintext, name: "replugged.coremod.settings" },
+    { patch: badgesPlaintext, name: "replugged.coremod.badges" },
+    { patch: titlebarPlaintext, name: "replugged.coremod.titlebar" },
+  ].forEach(({ patch, name }) => patchPlaintext(patch, name));
 }

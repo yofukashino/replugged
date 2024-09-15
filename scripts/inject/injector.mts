@@ -21,7 +21,7 @@ import { existsSync } from "fs";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 let processInfo: ProcessInfo;
-
+console.log(join(dirname, "..", ".."));
 export const isDiscordInstalled = async (appDir: string, silent?: boolean): Promise<boolean> => {
   try {
     await stat(appDir);
@@ -137,6 +137,21 @@ export const inject = async (
       `${AnsiEscapes.YELLOW}Flatpak detected, allowing Discord access to Replugged files (${entryPointDir})${AnsiEscapes.RESET}`,
     );
     execSync(overrideCommand);
+    if (!prod) {
+      console.log(
+        `${
+          appDir.startsWith("/var") ? "sudo flatpak override" : "flatpak override --user"
+        } com.discordapp.${discordName} --filesystem=${join(dirname, "..", "..")}`,
+      );
+      execSync(
+        `${
+          appDir.startsWith("/var") ? "sudo flatpak override" : "flatpak override --user"
+        } com.discordapp.${discordName} --filesystem=${join(dirname, "..", "..")}`,
+      );
+      console.log(
+        `${AnsiEscapes.YELLOW}Flatpak Development detected, allowing Discord access to Replugged files (${join(dirname, "..", "..")})${AnsiEscapes.RESET}`,
+      );
+    }
     console.log("Done!");
   }
 

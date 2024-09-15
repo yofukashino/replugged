@@ -16,7 +16,6 @@ import * as util from "../../../util";
 import { Messages } from "@common/i18n";
 import { type GeneralSettings, defaultSettings } from "src/types";
 import { initWs, socket } from "../../devCompanion";
-import { WEBSITE_URL } from "src/constants";
 
 export const generalSettings = await settings.init<GeneralSettings, keyof typeof defaultSettings>(
   "dev.replugged.Settings",
@@ -57,6 +56,11 @@ export const General = (): React.ReactElement => {
     "reactDevTools",
   );
 
+  const { value: titlbarValue, onChange: titlebarOnChange } = util.useSetting(
+    generalSettings,
+    "titlebar",
+  );
+
   const [kKeys, setKKeys] = React.useState<number[]>([]);
 
   const isEasterEgg = kKeys.toString().includes(konamiCode.join(","));
@@ -91,6 +95,12 @@ export const General = (): React.ReactElement => {
 
       <Divider style={{ margin: "20px 0px" }} />
 
+      {/* <SwitchItem
+        {...util.useSetting(generalSettings, "pluginEmbeds", false)}
+        note="Enable embedding plugins in chat">
+        Plugin Embeds
+      </SwitchItem> */}
+
       <SwitchItem
         {...util.useSetting(generalSettings, "badges")}
         note={Messages.REPLUGGED_SETTINGS_BADGES_DESC}>
@@ -109,6 +119,21 @@ export const General = (): React.ReactElement => {
         {Messages.REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY}
       </SwitchItem>
 
+      {
+        // TODO: i18n
+        DiscordNative.process.platform.includes("linux") && (
+          <SwitchItem
+            value={titlbarValue}
+            onChange={(value) => {
+              titlebarOnChange(value);
+              restartModal(true);
+            }}
+            note={"Use custom window titlebars instead of the default OS titlebars"}>
+            Custom Titlebar
+          </SwitchItem>
+        )
+      }
+
       <Category
         title={Messages.REPLUGGED_SETTINGS_ADVANCED}
         note={Messages.REPLUGGED_SETTINGS_ADVANCED_DESC}>
@@ -119,7 +144,7 @@ export const General = (): React.ReactElement => {
           style={{ marginBottom: "20px" }}>
           <TextInput
             {...util.useSetting(generalSettings, "apiUrl")}
-            placeholder={WEBSITE_URL}
+            placeholder="https://replugged.dev"
             disabled
           />
         </FormItem>

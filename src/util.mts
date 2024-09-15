@@ -165,13 +165,10 @@ export const logBuildPlugin: esbuild.Plugin = {
   },
 };
 
-export const extractAddon = async (srcPath: string, destPath: string): Promise<void> => {
-  return new Promise<void>((res) => {
-    // Ensure the destination directory exists
-    mkdirSync(destPath, { recursive: true });
+export const extractAddon = (srcPath: string, destPath: string): void => {
+  // Ensure the destination directory exists
+  mkdirSync(destPath, { recursive: true });
 
-    // Extract the contents of the asar archive directly into the destination directory
-    extractAll(srcPath, destPath);
-    res();
-  });
+  // Extract the contents of the asar archive directly into the destination directory
+  extractAll(srcPath, destPath);
 };

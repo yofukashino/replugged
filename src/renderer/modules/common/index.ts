@@ -108,6 +108,7 @@ export let toast: Toast;
 importTimeout("toast", import("./toast"), (mod) => (toast = mod.default));
 
 import type { Typing } from "./typing";
+
 export type { Typing };
 export let typing: Typing;
 importTimeout("typing", import("./typing"), (mod) => (typing = mod.default));
@@ -117,7 +118,7 @@ importTimeout("typing", import("./typing"), (mod) => (typing = mod.default));
 /**
  * @see {@link https://highlightjs.org/usage/}
  */
-export let hljs: typeof import("highlightjs");
+export let hljs: typeof import("highlight.js").default;
 importTimeout("hljs", import("./hljs"), (mod) => (hljs = mod.default));
 
 /**

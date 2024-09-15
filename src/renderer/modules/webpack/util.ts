@@ -1,6 +1,6 @@
 import { Logger } from "../logger";
 
-const logger = Logger.api("webpack");
+export const logger = Logger.api("webpack");
 
 /**
  * Log caught errors from webpack query, while doing some filtering to reduce noise

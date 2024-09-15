@@ -7,7 +7,6 @@ import { githubDark, githubLight } from "./codemirror-github";
 import { webpack } from "@replugged";
 import { Button, ButtonItem, Clickable, Divider, Flex, Text, Tooltip } from "@components";
 import { generalSettings } from "./General";
-import { ReactComponent } from "src/types";
 import { Store } from "@common/flux";
 import Popout from "../icons/Popout";
 import Unpin from "../icons/Unpin";
@@ -51,10 +50,6 @@ const PopoutWindowStore = webpack.getByStoreName<
     getIsAlwaysOnTop: (key: string) => boolean;
   }
 >("PopoutWindowStore")!;
-
-const PopoutWindow = webpack.getBySource<ReactComponent<unknown>>(
-  ".EMBEDDED_ACTIVITIES_ARE_YOU_SURE_WANT_TO_LEAVE",
-)!;
 
 function useTheme(): "light" | "dark" {
   const [theme, setTheme] = React.useState<"light" | "dark">("dark");
@@ -268,13 +263,18 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
                   onClick={() => {
                     openPopout(
                       "DISCORD_REPLUGGED_QUICKCSS",
-                      () => (
-                        <PopoutWindow
-                          windowKey="DISCORD_REPLUGGED_QUICKCSS"
-                          title={Messages.REPLUGGED_QUICKCSS}>
-                          <QuickCSS popout={true}></QuickCSS>
-                        </PopoutWindow>
-                      ),
+                      () => {
+                        const PopoutWindow = webpack.getBySource<React.ComponentType<unknown>>(
+                          ".EMBEDDED_ACTIVITIES_ARE_YOU_SURE_WANT_TO_LEAVE",
+                        )!;
+                        return (
+                          <PopoutWindow
+                            windowKey="DISCORD_REPLUGGED_QUICKCSS"
+                            title={Messages.REPLUGGED_QUICKCSS}>
+                            <QuickCSS popout={true}></QuickCSS>
+                          </PopoutWindow>
+                        );
+                      },
                       {},
                     );
                   }}>

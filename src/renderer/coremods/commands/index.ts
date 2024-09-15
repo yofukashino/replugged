@@ -12,6 +12,7 @@ import {
 
 import { commandAndSections, defaultSection } from "../../apis/commands";
 import { loadCommands, unloadCommands } from "./commands";
+import { REPLUGGED_CLYDE_ID } from "../../../constants";
 
 const logger = Logger.api("Commands");
 const injector = new Injector();
@@ -140,11 +141,11 @@ async function injectApplicationCommandIndexStore(): Promise<void> {
   injector.after(
     ApplicationCommandIndexStoreMod,
     useDiscoveryStateKey,
-    ([, , { commandType }], res) => {
+    ([, , { commandTypes }], res) => {
       const commandAndSectionsArray = Array.from(commandAndSections.values()).filter(
         (commandAndSection) => commandAndSection.commands.size,
       );
-      if (!res || !commandAndSectionsArray.length || commandType !== 1) return res;
+      if (!res || !commandAndSectionsArray.length || !commandTypes.includes(1)) return res;
       if (
         !Array.isArray(res.descriptors) ||
         !commandAndSectionsArray.every((commandAndSection) =>
@@ -293,7 +294,7 @@ async function injectProfileFetch(): Promise<void> {
   );
   const fetchProfileKey = getFunctionKeyBySource(mod, "fetchProfile")!;
   injector.instead(mod, fetchProfileKey, (args, res) => {
-    if (args[0] === "replugged") {
+    if (args[0] === REPLUGGED_CLYDE_ID) {
       return;
     }
     return res(...args);
