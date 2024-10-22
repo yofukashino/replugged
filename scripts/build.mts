@@ -86,7 +86,11 @@ const contexts = await Promise.all([
     entryPoints: ["src/main/index.ts"],
     platform: "node",
     target: `node${NODE_VERSION}`,
+<<<<<<< HEAD
     outfile: `${distDir}/main.js`,
+=======
+    outfile: "dist/main.js",
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
     external: ["electron", "original-fs"],
   }),
   // Preload

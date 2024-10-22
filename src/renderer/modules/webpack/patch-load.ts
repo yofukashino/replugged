@@ -15,7 +15,10 @@ import { patchModuleSource } from "./plaintext-patch";
  * @hidden
  */
 export let wpRequire: WebpackRequire | undefined;
+<<<<<<< HEAD
 export let webpackChunks: WebpackRawModules | undefined;
+=======
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 
 const patchedModules = new Set<string>();
 

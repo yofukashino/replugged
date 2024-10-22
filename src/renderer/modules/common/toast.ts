@@ -39,7 +39,7 @@ type ToastFn = (
   content: string | React.ReactElement | null,
   kind?: (typeof Kind)[keyof typeof Kind],
   opts?: ToastOptions,
-) => void;
+) => unknown;
 
 export interface Toast {
   toast: ToastFn;

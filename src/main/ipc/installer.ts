@@ -16,7 +16,12 @@ import { join, resolve, sep } from "path";
 import { AnyAddonManifestOrReplugged, anyAddonOrReplugged } from "src/types/addon";
 import { getSetting } from "./settings";
 import { promisify } from "util";
+<<<<<<< HEAD
 import { WEBSITE_URL } from "src/constants";
+=======
+
+const writeFile = promisify(originalWriteFile);
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 
 const writeFile = promisify(originalWriteFile);
 
@@ -182,7 +187,11 @@ ipcMain.handle(
     if (type === "replugged") {
       // Manually set Path and URL for security purposes
       path = "replugged.asar";
+<<<<<<< HEAD
       const apiUrl = await getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
+=======
+      const apiUrl = await getSetting("dev.replugged.Settings", "apiUrl", "https://replugged.dev");
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
       url = `${apiUrl}/api/v1/store/dev.replugged.Replugged.asar`;
     }
 

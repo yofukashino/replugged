@@ -3,6 +3,7 @@ IPC events:
 - REPLUGGED_LIST_THEMES: returns an array of all valid themes available
 - REPLUGGED_UNINSTALL_THEME: uninstalls a theme by name
 */
+<<<<<<< HEAD
 import {
   type Dirent,
   type Stats,
@@ -13,6 +14,10 @@ import {
   statSync,
   unlinkSync,
 } from "fs";
+=======
+
+import { readFile, readdir, readlink, rm, stat } from "fs/promises";
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedTheme } from "../../types";
@@ -26,6 +31,7 @@ export const isFileATheme = (f: Dirent | Stats, name: string): boolean => {
   return f.isDirectory() || (f.isFile() && extname(name) === ".asar");
 };
 
+<<<<<<< HEAD
 function getTheme(path: string): RepluggedTheme {
   const isAsar = path.includes(".asar");
   const themePath = join(THEMES_DIR, path);
@@ -40,6 +46,17 @@ function getTheme(path: string): RepluggedTheme {
   }
   const manifest: unknown = JSON.parse(
     readFileSync(manifestPath, {
+=======
+async function getTheme(path: string): Promise<RepluggedTheme> {
+  const manifestPath = join(THEMES_DIR, path, "manifest.json");
+  if (!manifestPath.startsWith(`${THEMES_DIR}${sep}`)) {
+    // Ensure file changes are restricted to the base path
+    throw new Error("Invalid plugin name");
+  }
+
+  const manifest: unknown = JSON.parse(
+    await readFile(manifestPath, {
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
       encoding: "utf-8",
     }),
   );
@@ -86,6 +103,7 @@ ipcMain.on(RepluggedIpcChannels.LIST_THEMES, (event) => {
   event.returnValue = themes;
 });
 
+<<<<<<< HEAD
 ipcMain.handle(RepluggedIpcChannels.UNINSTALL_THEME, (_, themeName: string) => {
   const isAsar = themeName.includes(".asar");
   const themePath = join(THEMES_DIR, themeName);
@@ -100,6 +118,19 @@ ipcMain.handle(RepluggedIpcChannels.UNINSTALL_THEME, (_, themeName: string) => {
     unlinkSync(themePath);
     rmdirSync(realThemePath, { recursive: true });
   } else rmdirSync(themePath, { recursive: true });
+=======
+ipcMain.handle(RepluggedIpcChannels.UNINSTALL_THEME, async (_, themeName: string) => {
+  const themePath = join(THEMES_DIR, themeName);
+  if (!themePath.startsWith(`${THEMES_DIR}${sep}`)) {
+    // Ensure file changes are restricted to the base path
+    throw new Error("Invalid theme name");
+  }
+
+  await rm(themePath, {
+    recursive: true,
+    force: true,
+  });
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 });
 
 ipcMain.on(RepluggedIpcChannels.OPEN_THEMES_FOLDER, () => shell.openPath(THEMES_DIR));

@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import { readFile, writeFile } from "fs/promises";
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 import { resolve, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels } from "../../types";
@@ -13,6 +17,10 @@ const SETTINGS_DIR = CONFIG_PATHS.settings;
 
 export function getSettingsPath(namespace: string): string {
   const resolved = resolve(SETTINGS_DIR, `${namespace}.json`);
+<<<<<<< HEAD
+=======
+  console.log(resolved, SETTINGS_DIR, resolved.startsWith(SETTINGS_DIR));
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
   if (!resolved.startsWith(`${SETTINGS_DIR}${sep}`)) {
     // Ensure file changes are restricted to the base path
     throw new Error("Invalid namespace");
@@ -20,25 +28,41 @@ export function getSettingsPath(namespace: string): string {
   return resolved;
 }
 
+<<<<<<< HEAD
 function readSettings(namespace: string): Map<string, unknown> {
   const path = getSettingsPath(namespace);
   try {
     const data = readFileSync(path, "utf8");
+=======
+async function readSettings(namespace: string): Promise<Map<string, unknown>> {
+  const path = getSettingsPath(namespace);
+  try {
+    const data = await readFile(path, "utf8");
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
     return new Map(Object.entries(JSON.parse(data)));
   } catch {
     return new Map();
   }
 }
 
+<<<<<<< HEAD
 function writeSettings(namespace: string, settings: SettingsMap): void {
   writeFileSync(
+=======
+function writeSettings(namespace: string, settings: SettingsMap): Promise<void> {
+  return writeFile(
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
     getSettingsPath(namespace),
     JSON.stringify(Object.fromEntries(settings.entries()), null, 2),
     "utf8",
   );
 }
 
+<<<<<<< HEAD
 const locks: Record<string, unknown | undefined> = {};
+=======
+const locks: Record<string, Promise<unknown> | undefined> = {};
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 
 function transaction<T>(namespace: string, handler: TransactionHandler<T>): T {
   const result = handler();
@@ -54,11 +78,22 @@ export function readTransaction<T>(namespace: string, handler: SettingsTransacti
   });
 }
 
+<<<<<<< HEAD
 export function writeTransaction<T>(namespace: string, handler: SettingsTransactionHandler<T>): T {
   return transaction(namespace, () => {
     const postHandlerTransform: Array<(settings: SettingsMap) => void | void> = [];
 
     const settings = readSettings(namespace);
+=======
+export async function writeTransaction<T>(
+  namespace: string,
+  handler: SettingsTransactionHandler<T>,
+): Promise<T> {
+  return transaction(namespace, async () => {
+    const postHandlerTransform: Array<(settings: SettingsMap) => void | Promise<void>> = [];
+
+    const settings = await readSettings(namespace);
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
     if (namespace.toLowerCase() === "dev.replugged.settings") {
       // Prevent the "apiUrl" setting from changing
       const originalValue = settings.get("apiUrl");
@@ -71,6 +106,7 @@ export function writeTransaction<T>(namespace: string, handler: SettingsTransact
       });
     }
 
+<<<<<<< HEAD
     const res = handler(settings);
 
     for (const transform of postHandlerTransform) {
@@ -78,6 +114,15 @@ export function writeTransaction<T>(namespace: string, handler: SettingsTransact
     }
 
     writeSettings(namespace, settings);
+=======
+    const res = await handler(settings);
+
+    for (const transform of postHandlerTransform) {
+      await transform(settings);
+    }
+
+    await writeSettings(namespace, settings);
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
     return res;
   });
 }

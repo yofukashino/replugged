@@ -23,6 +23,7 @@ interface APIRepluggedCustomBadge {
   color: string | null;
 }
 
+<<<<<<< HEAD
 interface APIRepluggedBadges {
   [key: string]: boolean | APIRepluggedCustomBadge;
   developer: boolean;
@@ -39,6 +40,14 @@ interface APIRepluggedBadges {
 type UseBadges = (displayProfile: DisplayProfile | null) => Badge[];
 
 type GetBadgeAsset = (icon: string) => string;
+=======
+type BadgeMod = (args: BadgeModArgs) =>
+  | React.ReactElement<{
+      children?: React.ReactElement[];
+      className: string;
+    }>
+  | undefined;
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 
 interface BadgeCache {
   badges: APIRepluggedBadges;
@@ -114,7 +123,13 @@ export async function start(): Promise<void> {
               userId,
               await fetch(`${generalSettings.get("apiUrl")}/api/v1/users/${userId}`)
                 .then(async (res) => {
+<<<<<<< HEAD
                   const body = await res.json();
+=======
+                  const body = (await res.json()) as Record<string, unknown> & {
+                    badges: APIBadges | undefined;
+                  };
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 
                   if (res.status === 200 || res.status === 404) {
                     return {
@@ -150,6 +165,7 @@ export async function start(): Promise<void> {
           icon: `replugged${badgeCache.custom.icon}`,
         });
       }
+<<<<<<< HEAD
 
       badgeElements.forEach((badgeElement) => {
         if (badgeCache[badgeElement.id]) {
@@ -165,6 +181,44 @@ export async function start(): Promise<void> {
                     ? badgeCache.custom.color
                     : `#${badgeCache.custom.color}`)) ??
                 DISCORD_BLURPLE,
+=======
+      const children = res?.props.children;
+      if (!children || !Array.isArray(children)) {
+        logger.error("Error injecting badges: res.props.children is not an array", { children });
+        return res;
+      }
+
+      // Calculate badge size with new added badges
+      const addedBadgesCount =
+        children.length + Object.values(badges).filter((value) => value).length;
+      size =
+        shrinkAtCount && shrinkToSize && addedBadgesCount > shrinkAtCount ? shrinkToSize : size;
+
+      const sizeClass = getBadgeSizeClass(size);
+
+      children.forEach((badge) => {
+        const elem: React.ReactElement | undefined = badge.props.children?.();
+        if (elem) {
+          elem.props.children.props.className = sizeClass;
+          badge.props.children = (props: Record<string, unknown>) => {
+            elem.props = { ...elem.props, ...props };
+            return elem;
+          };
+        }
+      });
+
+      if (badges.custom?.name && badges.custom.icon) {
+        children.push(<Custom url={badges.custom.icon} name={badges.custom.name} size={size} />);
+      }
+
+      badgeElements.forEach(({ type, component }) => {
+        const value = badges[type];
+        if (value) {
+          children.push(
+            React.createElement(component, {
+              color: badges.custom?.color,
+              size,
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
             }),
           });
         }

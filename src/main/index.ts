@@ -36,7 +36,10 @@ class BrowserWindow extends electron.BrowserWindow {
       };
     },
   ) {
+<<<<<<< HEAD
     if (opts.frame && process.platform.includes("linux") && customTitlebar) opts.frame = void 0;
+=======
+>>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
     const originalPreload = opts.webPreferences?.preload;
 
     if (opts.webContents) {
