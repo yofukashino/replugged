@@ -57,6 +57,7 @@ const CONFIG_FOLDER_NAMES = [
   "settings",
   "quickcss",
   "react-devtools",
+  "adguard",
   "temp_themes",
   "temp_plugins",
 ] as const;

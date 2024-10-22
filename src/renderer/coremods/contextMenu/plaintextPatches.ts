@@ -2,12 +2,12 @@ import type { PlaintextPatch } from "src/types";
 
 export default [
   {
-    find: 'Error("Menu API',
+    find: "♫ (つ｡◕‿‿◕｡)つ ♪",
     replacements: [
       {
-        match: /return(\(0,.\.jsx\)\(\w+\.\w+\.Provider)/,
-        replace: (_, suffix) =>
-          `return replugged.coremods.coremods.contextMenu._buildPatchedMenu(arguments[0])??${suffix}`,
+        match: /((\w+)\){)(var\s*\w+;let{navId:)/,
+        replace: (_, prefix, props, suffix) =>
+          `${prefix}${props}=replugged.coremods.coremods.contextMenu._insertMenuItems(${props});${suffix}`,
       },
     ],
   },

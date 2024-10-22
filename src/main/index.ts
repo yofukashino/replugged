@@ -7,9 +7,9 @@ import { getSetting } from "./ipc/settings";
 const electronPath = require.resolve("electron");
 const discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
 let customTitlebar: boolean = getSetting("dev.replugged.Settings", "titlebar", false);
-console.log(customTitlebar);
 
-// require.main!.filename = discordMain;
+const realMain = require(join(discordPath, "package.json")).main;
+require.main!.filename = join(discordPath, realMain);
 
 Object.defineProperty(global, "appSettings", {
   set: (v /* : typeof global.appSettings*/) => {
@@ -46,8 +46,8 @@ class BrowserWindow extends electron.BrowserWindow {
       // opts.webPreferences.preload = join(__dirname, './preloadSplash.js');
     } else if (opts.webPreferences?.offscreen) {
       // Overlay
-      //      originalPreload = opts.webPreferences.preload;
-      // opts.webPreferences.preload = join(__dirname, './preload.js');
+      // originalPreload = opts.webPreferences.preload;
+      //opts.webPreferences.preload = join(__dirname, "./preload.js");
     } else if (opts.webPreferences?.preload) {
       // originalPreload = opts.webPreferences.preload;
       if (opts.webPreferences.nativeWindowOpen) {
@@ -62,6 +62,10 @@ class BrowserWindow extends electron.BrowserWindow {
 
     super(opts);
     (this.webContents as RepluggedWebContents).originalPreload = originalPreload;
+    this.webContents.on("devtools-opened", () => {
+      electron.nativeTheme.themeSource = "light";
+      setTimeout(() => (electron.nativeTheme.themeSource = "dark"), 25);
+    });
   }
 }
 
@@ -195,4 +199,4 @@ electron.app.on("session-created", () => {
 // This module is required this way at runtime.
 require("./ipc");
 
-require("module")._load(discordPath);
+require(discordPath);
