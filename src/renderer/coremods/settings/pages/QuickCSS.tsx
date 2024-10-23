@@ -29,7 +29,7 @@ type ThemeModule = {
 
 const PopoutModule = await webpack.waitForModule(
   webpack.filters.bySource('type:"POPOUT_WINDOW_OPEN"'),
-)!;
+);
 const openPopout = webpack.getFunctionBySource<
   (key: string, render: React.ComponentType, features: Record<string, string>) => void
 >(PopoutModule, "POPOUT_WINDOW_OPEN")!;
@@ -143,6 +143,7 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
   const { value, setValue } = useCodeMirror({
     container: ref.current,
   });
+  const idk = React.useRef();
   const [ready, setReady] = React.useState(false);
 
   const autoApply = generalSettings.get("autoApplyQuickCss");
@@ -200,7 +201,7 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
 
   if (props.popout) {
     React.useEffect(() => {
-      const window = PopoutWindowStore?.getWindow("DISCORD_REPLUGGED_QUICKCSS");
+      const window = PopoutWindowStore.getWindow("DISCORD_REPLUGGED_QUICKCSS");
 
       let el = window.document.createElement("link");
       el.rel = "stylesheet";
@@ -270,12 +271,14 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
                         return (
                           <PopoutWindow
                             windowKey="DISCORD_REPLUGGED_QUICKCSS"
-                            title={Messages.REPLUGGED_QUICKCSS}>
+                            title={Messages.REPLUGGED_QUICKCSS}
+                            appWrapperClassName={"quickcss-popout"}
+                            ref={idk.current}>
                             <QuickCSS popout={true}></QuickCSS>
                           </PopoutWindow>
                         );
                       },
-                      {},
+                      { menubar: false, toolbar: false },
                     );
                   }}>
                   <Popout />
