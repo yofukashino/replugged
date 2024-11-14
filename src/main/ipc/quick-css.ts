@@ -1,13 +1,15 @@
-import { readFile, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import { join } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels } from "../../types";
 import { CONFIG_PATHS } from "src/util.mjs";
+import { readFileSync } from "fs";
 
 const CSS_PATH = join(CONFIG_PATHS.quickcss, "main.css");
 
-ipcMain.handle(RepluggedIpcChannels.GET_QUICK_CSS, () =>
-  readFile(CSS_PATH, { encoding: "utf-8" }).catch(() => ""),
+ipcMain.on(
+  RepluggedIpcChannels.GET_QUICK_CSS,
+  (event) => (event.returnValue = readFileSync(CSS_PATH, "utf-8")),
 );
 
 ipcMain.on(RepluggedIpcChannels.SAVE_QUICK_CSS, (_, css: string) =>

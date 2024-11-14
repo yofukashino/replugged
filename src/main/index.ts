@@ -5,11 +5,12 @@ import { CONFIG_PATHS } from "src/util.mjs";
 import type { RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
 const electronPath = require.resolve("electron");
-const discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
+console.log(require(join(dirname(require.main!.filename), "package.json")));
+const discordPath = join(dirname(require.main!.filename), "app.orig");
 let customTitlebar: boolean = getSetting("dev.replugged.Settings", "titlebar", false);
 
 const realMain = require(join(discordPath, "package.json")).main;
-require.main!.filename = join(discordPath, realMain);
+require.main!.filename = join(discordPath, "..", realMain);
 
 Object.defineProperty(global, "appSettings", {
   set: (v /* : typeof global.appSettings*/) => {
@@ -36,10 +37,8 @@ class BrowserWindow extends electron.BrowserWindow {
       };
     },
   ) {
-<<<<<<< HEAD
     if (opts.frame && process.platform.includes("linux") && customTitlebar) opts.frame = void 0;
-=======
->>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
+
     const originalPreload = opts.webPreferences?.preload;
 
     if (opts.webContents) {
@@ -49,8 +48,8 @@ class BrowserWindow extends electron.BrowserWindow {
       // opts.webPreferences.preload = join(__dirname, './preloadSplash.js');
     } else if (opts.webPreferences?.offscreen) {
       // Overlay
-      // originalPreload = opts.webPreferences.preload;
-      //opts.webPreferences.preload = join(__dirname, "./preload.js");
+      //      originalPreload = opts.webPreferences.preload;
+      // opts.webPreferences.preload = join(__dirname, './preload.js');
     } else if (opts.webPreferences?.preload) {
       // originalPreload = opts.webPreferences.preload;
       if (opts.webPreferences.nativeWindowOpen) {

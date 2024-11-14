@@ -1,7 +1,7 @@
 import { chown, copyFile, mkdir, rename, rm, stat, writeFile } from "fs/promises";
 import path, { join, sep } from "path";
 import { fileURLToPath } from "url";
-
+import asar, { uncache } from "@electron/asar";
 import { entryPoint as argEntryPoint, exitCode } from "./index.mjs";
 
 import {
@@ -17,7 +17,7 @@ import {
 import { execSync } from "child_process";
 import { DiscordPlatform, PlatformModule, ProcessInfo } from "./types.mjs";
 import { CONFIG_PATH } from "../../src/util.mjs";
-import { existsSync } from "fs";
+import { existsSync, rmdir } from "fs";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 let processInfo: ProcessInfo;
@@ -69,7 +69,8 @@ export const correctMissingMainAsar = async (appDir: string): Promise<boolean> =
 
 export const isPlugged = async (appDir: string): Promise<boolean> => {
   try {
-    await stat(join(appDir, "..", "app.orig.asar"));
+    uncache(appDir);
+    await asar.statFile(appDir, "app.orig");
     return true;
   } catch {
     return false;
@@ -183,21 +184,26 @@ export const inject = async (
     }
   }
 
-  await mkdir(appDir);
+  await mkdir(join(appDir, "..", "temp"));
   await Promise.all([
     writeFile(
-      join(appDir, "index.js"),
+      join(appDir, "..", "temp", "index.js"),
       `require("${entryPoint.replace(RegExp(sep.repeat(2), "g"), "/")}")`,
     ),
     writeFile(
-      join(appDir, "package.json"),
+      join(appDir, "..", "temp", "package.json"),
       JSON.stringify({
         main: "index.js",
         name: "discord",
+        modded: "true",
       }),
     ),
+    asar.extractAll(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "temp", "app.orig")),
   ]);
 
+  await asar.createPackage(join(appDir, "..", "temp"), appDir);
+  await rm(join(appDir, "..", "app.orig.asar"), { recursive: true, force: true });
+  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
   return true;
 };
 
@@ -218,9 +224,10 @@ export const uninject = async (
     );
     return false;
   }
-
+  await asar.extractAll(appDir, join(appDir, "..", "temp"));
   await rm(appDir, { recursive: true, force: true });
-  await rename(join(appDir, "..", "app.orig.asar"), appDir);
+  await asar.createPackage(join(appDir, "..", "temp", "app.orig"), appDir);
+  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
   // For discord_arch_electron
   if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
     await rename(
@@ -275,7 +282,6 @@ export const smartInject = async (
           });
           break;
         case "darwin":
-          console.log(appDir);
           openProcess(`open -a ${join(PlatformNames[platform], "..", "..", "..")}`);
           break;
       }

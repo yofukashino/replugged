@@ -4,6 +4,7 @@ import React from "react";
 import { WEBLATE_URL } from "src/constants";
 import i18n from "../../modules/common/i18n";
 import { messages } from "../../modules/i18n";
+import { webpack } from "@replugged";
 
 const defaultLocale = "en-US";
 
@@ -25,8 +26,11 @@ export function Percentage(
   localizedName: React.ReactElement,
   flag: React.ReactElement,
 ): React.ReactElement {
+  console.log(localeName);
   const name = localeName.props.children as string;
-  const locale = i18n.getLanguages().find((language) => language.name === name)!.code;
+  const locale = webpack
+    .getBySource('"name":"English, UK"')
+    .find((language) => language.name === name)?.code;
   const percentage = percentages.get(locale);
 
   return (

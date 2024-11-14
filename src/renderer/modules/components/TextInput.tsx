@@ -1,9 +1,5 @@
 import type React from "react";
-<<<<<<< HEAD
 import components from "../common/components";
-=======
-import { waitForProps } from "../webpack";
->>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
 
 interface TextInputProps
   extends Omit<
@@ -29,10 +25,4 @@ export type TextInputType = React.ComponentClass<TextInputProps> & {
   Sizes: Record<"DEFAULT" | "MINI", string>;
 };
 
-<<<<<<< HEAD
 export default components.TextInput;
-=======
-export default await waitForProps<Record<"TextInput", TextInputType>>("TextInput").then(
-  (x) => x.TextInput,
-);
->>>>>>> 42122585199d52a1f134641c27b0cbf81cebbada
