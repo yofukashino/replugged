@@ -3,9 +3,11 @@ import type React from "react";
 
 type ContextMenuComponents = Omit<ContextMenuType, "ItemColors" | "ContextMenu">;
 
-interface BaseRawContextItem<T> {
-  type: T;
-}
+type RawContextMenuProps = {
+  [K in keyof ContextMenuComponents]: React.ComponentProps<ContextMenuComponents[K]> & {
+    type: ContextMenuComponents[K];
+  };
+};
 
 type WithRawChildren<T> = T extends { children: React.ReactNode }
   ? Omit<T, "children"> & { children: RawContextItem | RawContextItem[] }
@@ -13,8 +15,8 @@ type WithRawChildren<T> = T extends { children: React.ReactNode }
 
 export type RawContextItem<
   T extends
-    ContextMenuComponents[keyof ContextMenuComponents] = ContextMenuComponents[keyof ContextMenuComponents],
-> = BaseRawContextItem<T> & WithRawChildren<React.ComponentProps<T>>;
+    RawContextMenuProps[keyof RawContextMenuProps] = RawContextMenuProps[keyof RawContextMenuProps],
+> = WithRawChildren<T>;
 
 export type GetContextItem<T extends Record<string, unknown> = Record<string, unknown>> = (
   data: T,

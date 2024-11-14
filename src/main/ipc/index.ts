@@ -2,11 +2,7 @@ import { BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 import { readFileSync } from "fs";
 import "./plugins";
-import "./themes";
 import "./quick-css";
-import "./settings";
-import "./installer";
-import "./i18n";
 import "./react-devtools";
 
 import { RepluggedIpcChannels, type RepluggedWebContents } from "../../types";

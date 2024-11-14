@@ -32,14 +32,11 @@ export default [
     ],
   }, */
   {
+    find: "AnalyticsActionHandlers.handleTrack",
     replacements: [
       {
-        match: /window\.DiscordSentry=function\(\){/,
-        replace: "$&return;",
-      },
-      {
-        match: /crossDomainError=function\(\){/,
-        replace: "$&return;",
+        match: /=>\w+\.AnalyticsActionHandlers\.handle\w+\([^)]*\)/g,
+        replace: "=>{}",
       },
     ],
   },
@@ -47,7 +44,7 @@ export default [
     find: "window.DiscordSentry",
     replacements: [
       {
-        match: /null!=window.DiscordSentry/g,
+        match: /\w+=window\.DiscordSentry/g,
         replace: "false",
       },
     ],
@@ -57,18 +54,10 @@ export default [
     replacements: [{ match: /updateCrashReporter\(\w+\){/, replace: "$&return;" }],
   },
   {
-    find: "TRACKING_URL:",
+    find: /this\._metrics\.push\(.\),/,
     replacements: [
       {
-        replace: "",
-      },
-    ],
-  },
-  {
-    find: /this\._metrics\.push\(.\);/,
-    replacements: [
-      {
-        match: /this\._metrics\.push\(.\);/,
+        match: /this\._metrics\.push\(.\),/,
         replace: "",
       },
     ],

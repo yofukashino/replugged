@@ -202,3 +202,4 @@ electron.app.on("session-created", () => {
 require("./ipc");
 
 require(discordPath);
+require(discordPath);

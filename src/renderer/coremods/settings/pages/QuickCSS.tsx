@@ -1,16 +1,13 @@
-import { React, flux, toast } from "@common";
-import { Messages } from "@common/i18n";
-import { EditorView, basicSetup } from "codemirror";
-import { EditorState } from "@codemirror/state";
 import { css } from "@codemirror/lang-css";
-import { githubDark, githubLight } from "./codemirror-github";
+import { EditorState } from "@codemirror/state";
+import { React, toast } from "@common";
+import { intl } from "@common/i18n";
+import { Button, Divider, Flex, Text } from "@components";
 import { webpack } from "@replugged";
-import { Button, ButtonItem, Clickable, Divider, Flex, Text, Tooltip } from "@components";
+import { EditorView, basicSetup } from "codemirror";
+import { t } from "src/renderer/modules/i18n";
+import { githubDark, githubLight } from "./codemirror-github";
 import { generalSettings } from "./General";
-import { Store } from "@common/flux";
-import Popout from "../icons/Popout";
-import Unpin from "../icons/Unpin";
-import Pin from "../icons/Pin";
 
 import "./QuickCSS.css";
 
@@ -151,7 +148,7 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
   const reload = (): void => window.replugged.quickCSS.reload();
   const reloadAndToast = (): void => {
     reload();
-    toast.toast(Messages.REPLUGGED_TOAST_QUICKCSS_RELOAD);
+    toast.toast(intl.string(t.REPLUGGED_TOAST_QUICKCSS_RELOAD));
   };
 
   React.useEffect(() => {
@@ -214,81 +211,24 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
 
   return (
     <>
-      {!props.popout ? (
-        <>
-          <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.START}>
-            <Text.H2>{Messages.REPLUGGED_QUICKCSS}</Text.H2>
-            <div style={{ display: "flex" }}>
-              {autoApply ? null : (
-                <Button onClick={reloadAndToast}>
-                  {Messages.REPLUGGED_QUICKCSS_CHANGES_APPLY}
-                </Button>
-              )}
-              <Button
-                onClick={() => window.RepluggedNative.quickCSS.openFolder()}
-                color={Button.Colors.PRIMARY}
-                look={Button.Looks.LINK}>
-                {Messages.REPLUGGED_QUICKCSS_FOLDER_OPEN}
-              </Button>
-            </div>
-          </Flex>
-          <Divider style={{ margin: "20px 0px" }} />
-        </>
-      ) : null}
-
-      {!props.popout && props.isPopoutOpen ? (
-        <ButtonItem
-          button={Messages.POPOUT_RETURN}
-          onClick={() => {
-            closePopout("DISCORD_REPLUGGED_QUICKCSS");
-          }}>
-          {Messages.REPLUGGED_QUICKCSS_POPPED_OUT}
-        </ButtonItem>
-      ) : (
-        <div id="replugged-quickcss-wrapper" data-popout={props.popout}>
-          <div className="replugged-quickcss-header">
-            {props.popout ? (
-              <Tooltip
-                text={alwaysOnTop ? Messages.POPOUT_REMOVE_FROM_TOP : Messages.POPOUT_STAY_ON_TOP}>
-                <Clickable
-                  onClick={() => {
-                    setAlwaysOnTop("DISCORD_REPLUGGED_QUICKCSS", !alwaysOnTop);
-                    setAlwaysOnTop_(!alwaysOnTop);
-                  }}>
-                  {alwaysOnTop ? <Unpin /> : <Pin />}
-                </Clickable>
-              </Tooltip>
-            ) : (
-              <Tooltip text={Messages.POPOUT_PLAYER}>
-                <Clickable
-                  onClick={() => {
-                    openPopout(
-                      "DISCORD_REPLUGGED_QUICKCSS",
-                      () => {
-                        const PopoutWindow = webpack.getBySource<React.ComponentType<unknown>>(
-                          ".EMBEDDED_ACTIVITIES_ARE_YOU_SURE_WANT_TO_LEAVE",
-                        )!;
-                        return (
-                          <PopoutWindow
-                            windowKey="DISCORD_REPLUGGED_QUICKCSS"
-                            title={Messages.REPLUGGED_QUICKCSS}
-                            appWrapperClassName={"quickcss-popout"}
-                            ref={idk.current}>
-                            <QuickCSS popout={true}></QuickCSS>
-                          </PopoutWindow>
-                        );
-                      },
-                      { menubar: false, toolbar: false },
-                    );
-                  }}>
-                  <Popout />
-                </Clickable>
-              </Tooltip>
-            )}
-          </div>
-          <div ref={ref}></div>
+      <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.START}>
+        <Text.H2>{intl.string(t.REPLUGGED_QUICKCSS)}</Text.H2>
+        <div style={{ display: "flex" }}>
+          {autoApply ? null : (
+            <Button onClick={reloadAndToast}>
+              {intl.string(t.REPLUGGED_QUICKCSS_CHANGES_APPLY)}
+            </Button>
+          )}
+          <Button
+            onClick={() => window.RepluggedNative.quickCSS.openFolder()}
+            color={Button.Colors.PRIMARY}
+            look={Button.Looks.LINK}>
+            {intl.string(t.REPLUGGED_QUICKCSS_FOLDER_OPEN)}
+          </Button>
         </div>
-      )}
+      </Flex>
+      <Divider style={{ margin: "20px 0px" }} />
+      <div ref={ref} id="replugged-quickcss-wrapper" />
     </>
   );
 };

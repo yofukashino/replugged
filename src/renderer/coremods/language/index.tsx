@@ -1,20 +1,17 @@
-import { Messages } from "@common/i18n";
+import { getLanguages, intl } from "@common/i18n";
 import { Flex, FormNotice, Text } from "@components";
+import { messagesLoader } from "i18n/en-US.messages";
 import React from "react";
 import { WEBLATE_URL } from "src/constants";
-import i18n from "../../modules/common/i18n";
-import { messages } from "../../modules/i18n";
-import { webpack } from "@replugged";
-
-const defaultLocale = "en-US";
+import { t } from "../../modules/i18n";
 
 export const percentages = new Map<string, number>();
 
 export function Card(): React.ReactElement {
   return (
     <FormNotice
-      title={Messages.REPLUGGED_I18N}
-      body={Messages.REPLUGGED_I18N_CONTRIBUTE.format({ weblateUrl: WEBLATE_URL })}
+      title={intl.string(t.REPLUGGED_I18N)}
+      body={intl.format(t.REPLUGGED_I18N_CONTRIBUTE, { weblateUrl: WEBLATE_URL })}
       type={FormNotice.Types.PRIMARY}
       style={{ marginBottom: 20 }}
     />
@@ -28,9 +25,7 @@ export function Percentage(
 ): React.ReactElement {
   console.log(localeName);
   const name = localeName.props.children as string;
-  const locale = webpack
-    .getBySource('"name":"English, UK"')
-    .find((language) => language.name === name)?.code;
+  const locale = getLanguages().find((language) => language.name === name)!.code;
   const percentage = percentages.get(locale);
 
   return (
@@ -38,7 +33,7 @@ export function Percentage(
       <Flex direction={Flex.Direction.VERTICAL}>
         {localeName}
         <Text variant="text-sm/normal" color="interactive-normal">
-          {Messages.REPLUGGED_I18N_TRANSLATED_PERCENTAGE.format({ translated: percentage })}
+          {intl.format(t.REPLUGGED_I18N_TRANSLATED_PERCENTAGE, { translated: Number(percentage) })}
         </Text>
       </Flex>
       {localizedName}
@@ -48,10 +43,11 @@ export function Percentage(
 }
 
 export function start(): void {
-  const totalStrCount = Object.keys(messages.get(defaultLocale)).length;
+  const totalStrCount = Object.keys(t).length;
 
-  messages.forEach((strings, locale) => {
-    const strCount = Object.values(strings).filter((str) => str !== "").length;
+  Object.entries(messagesLoader.localeImportMap).forEach(async ([locale, getStrings]) => {
+    const strings = (await getStrings()).default;
+    const strCount = Object.values(strings).filter((str) => Boolean(str)).length;
     const percentage = Math.floor((strCount / totalStrCount) * 100);
     percentages.set(locale, percentage);
   });

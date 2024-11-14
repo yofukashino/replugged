@@ -9,18 +9,23 @@ import { Logger } from "../../modules/logger";
 
 const logger = Logger.api("ContextMenu");
 
-export const menuItems: Record<
-  string,
-  | Array<{ getItem: GetContextItem; sectionId: number | undefined; indexInSection: number }>
-  | undefined
-> = {};
+interface MenuItem {
+  getItem: GetContextItem;
+  sectionId: number | ((props: ContextMenuProps) => number) | undefined;
+  indexInSection: number | ((props: ContextMenuProps) => number);
+}
+
+export type ContextMenuProps = MenuProps & {
+  data: Array<Record<string, unknown>>;
+};
+
+export const menuItems: Record<string, MenuItem[] | undefined> = {};
 
 /**
  * Converts data into a React element. Any elements or falsy value will be returned as is
  * @param raw The data to convert
  * @returns The converted item
  */
-
 function makeItem(raw: ReturnType<GetContextItem>): React.ReactElement | undefined {
   if (!raw) return;
   if (React.isValidElement(raw)) return raw;
@@ -49,8 +54,8 @@ function makeItem(raw: ReturnType<GetContextItem>): React.ReactElement | undefin
 export function addContextMenuItem(
   navId: ContextMenuTypes,
   getItem: GetContextItem,
-  sectionId: number | undefined,
-  indexInSection: number,
+  sectionId: number | ((props: ContextMenuProps) => number) | undefined,
+  indexInSection: number | ((props: ContextMenuProps) => number),
 ): () => void {
   menuItems[navId] ||= [];
 
@@ -67,10 +72,6 @@ export function addContextMenuItem(
 export function removeContextMenuItem(navId: ContextMenuTypes, getItem: GetContextItem): void {
   menuItems[navId] = menuItems[navId]?.filter((item) => item.getItem !== getItem);
 }
-
-type ContextMenuProps = MenuProps & {
-  data: Array<Record<string, unknown>>;
-};
 
 /**
  * @internal
@@ -98,6 +99,7 @@ export function _insertMenuItems(props: ContextMenuProps): ContextMenuProps {
       if (!item) return;
 
       if (sectionId !== undefined && Array.isArray(props.children)) {
+        sectionId = typeof sectionId === "function" ? sectionId(props) : sectionId;
         const section = props.children.at(sectionId);
 
         if (!section) {
@@ -108,6 +110,8 @@ export function _insertMenuItems(props: ContextMenuProps): ContextMenuProps {
         if (!Array.isArray(section.props.children))
           section.props.children = [section.props.children];
 
+        indexInSection =
+          typeof indexInSection === "function" ? indexInSection(props) : indexInSection;
         section.props.children.splice(indexInSection, 0, item);
       } else {
         repluggedGroup.props.children.push(item);

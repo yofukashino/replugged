@@ -2,12 +2,12 @@ import type { PlaintextPatch } from "src/types";
 
 export default [
   {
-    find: "Messages.MESSAGE_UTILITIES_A11Y_LABEL",
+    find: 'navId:"message-actions"',
     replacements: [
       {
-        match: /ExpandingButtons.{10,50}\.Fragment,{children:\[/,
-        replace: (prefix) =>
-          `${prefix}replugged.coremods.coremods.messagePopover?._buildPopoverElements(arguments[0]?.message,arguments[0]?.channel),`,
+        match: /(\.Fragment,{children:\[)(.{1,75},{label:.{1,100}"copy-id")/,
+        replace: (_, prefix, suffix) =>
+          `${prefix}...(replugged.coremods.coremods.messagePopover?._buildPopoverElements(arguments[0]?.message,arguments[0]?.channel) ?? []),${suffix}`,
       },
     ],
   },
