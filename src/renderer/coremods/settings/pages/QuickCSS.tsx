@@ -1,6 +1,6 @@
 import { css } from "@codemirror/lang-css";
 import { EditorState } from "@codemirror/state";
-import { React, toast } from "@common";
+import { React, flux, toast } from "@common";
 import { intl } from "@common/i18n";
 import { Button, Divider, Flex, Text } from "@components";
 import { webpack } from "@replugged";

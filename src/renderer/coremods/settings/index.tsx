@@ -29,7 +29,7 @@ export function start(): void {
     Section({
       name: "rp-quickcss",
       label: () => intl.string(t.REPLUGGED_QUICKCSS),
-      elem: QuickCSS,
+      elem: ConnectedQuickCSS,
     }),
     Section({
       name: "rp-plugins",

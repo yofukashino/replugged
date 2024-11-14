@@ -7,10 +7,7 @@ import { readFileSync } from "fs";
 
 const CSS_PATH = join(CONFIG_PATHS.quickcss, "main.css");
 
-ipcMain.on(
-  RepluggedIpcChannels.GET_QUICK_CSS,
-  (event) => (event.returnValue = readFileSync(CSS_PATH, "utf-8")),
-);
+ipcMain.handle(RepluggedIpcChannels.GET_QUICK_CSS, (_) => readFileSync(CSS_PATH, "utf-8"));
 
 ipcMain.on(RepluggedIpcChannels.SAVE_QUICK_CSS, (_, css: string) =>
   writeFile(CSS_PATH, css, { encoding: "utf-8" }),

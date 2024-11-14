@@ -5,7 +5,7 @@ import { CONFIG_PATHS } from "src/util.mjs";
 import type { RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
 const electronPath = require.resolve("electron");
-console.log(require(join(dirname(require.main!.filename), "package.json")));
+
 const discordPath = join(dirname(require.main!.filename), "app.orig");
 let customTitlebar: boolean = getSetting("dev.replugged.Settings", "titlebar", false);
 
@@ -201,5 +201,4 @@ electron.app.on("session-created", () => {
 // This module is required this way at runtime.
 require("./ipc");
 
-require(discordPath);
 require(discordPath);

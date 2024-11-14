@@ -1,6 +1,9 @@
 import { BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 import { readFileSync } from "fs";
+import "./themes";
+import "./installer";
+import "./settings";
 import "./plugins";
 import "./quick-css";
 import "./react-devtools";
