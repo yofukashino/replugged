@@ -16,6 +16,7 @@ import { getSetting } from "./settings";
 import { promisify } from "util";
 
 import { WEBSITE_URL } from "src/constants";
+import { Logger } from "..";
 
 const writeFile = promisify(originalWriteFile);
 
@@ -229,7 +230,7 @@ ipcMain.handle(
       };
     }
 
-    console.log(url, filePath);
+    Logger.log(url, filePath);
 
     try {
       await writeFile(filePath, buf);

@@ -19,6 +19,7 @@ import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedTheme } from "../../types";
 import { theme } from "../../types/addon";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
+import { Logger } from "..";
 
 const THEMES_DIR = CONFIG_PATHS.themes;
 const TEMP_THEMES_DIR = CONFIG_PATHS.temp_themes;
@@ -80,7 +81,7 @@ ipcMain.on(RepluggedIpcChannels.LIST_THEMES, (event) => {
     try {
       themes.push(getTheme(themeDir.name));
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
     }
   }
 

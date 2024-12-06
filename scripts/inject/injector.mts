@@ -17,7 +17,7 @@ import {
 import { execSync } from "child_process";
 import { DiscordPlatform, PlatformModule, ProcessInfo } from "./types.mjs";
 import { CONFIG_PATH } from "../../src/util.mjs";
-import { existsSync, rmdir } from "fs";
+import { existsSync } from "fs";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 let processInfo: ProcessInfo;
@@ -41,26 +41,26 @@ export const isDiscordInstalled = async (appDir: string, silent?: boolean): Prom
 export const correctMissingMainAsar = async (appDir: string): Promise<boolean> => {
   try {
     await stat(join(appDir, "..", "app.orig.asar"));
+    console.warn(
+      `${AnsiEscapes.YELLOW}Your Discord installation was not properly unplugged, attempting to fix...${AnsiEscapes.RESET}`,
+    );
     try {
       await stat(join(appDir, "..", "app.asar"));
-    } catch {
-      console.warn(
-        `${AnsiEscapes.YELLOW}Your Discord installation was not properly unplugged, attempting to fix...${AnsiEscapes.RESET}`,
+      await rm(join(appDir, "..", "app.asar"), { recursive: true, force: true });
+    } catch {}
+    try {
+      await rename(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "app.asar"));
+      console.log(
+        `${AnsiEscapes.GREEN}Fixed your Discord installation successfully! Continuing with Replugged installation...${AnsiEscapes.RESET}`,
+        "\n",
       );
-      try {
-        await rename(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "app.asar"));
-        console.log(
-          `${AnsiEscapes.GREEN}Fixed your Discord installation successfully! Continuing with Replugged installation...${AnsiEscapes.RESET}`,
-          "\n",
-        );
-      } catch {
-        console.error(
-          `${AnsiEscapes.RED}Failed to fix your Discord installation, please try unplugging and plugging again.${AnsiEscapes.RESET}`,
-          "\n",
-        );
-        console.error("If the error persists, please reinstall Discord and try again.");
-        return false;
-      }
+    } catch {
+      console.error(
+        `${AnsiEscapes.RED}Failed to fix your Discord installation, please try unplugging and plugging again.${AnsiEscapes.RESET}`,
+        "\n",
+      );
+      console.error("If the error persists, please reinstall Discord and try again.");
+      return false;
     }
   } catch {}
 
@@ -225,9 +225,9 @@ export const uninject = async (
     return false;
   }
   await asar.extractAll(appDir, join(appDir, "..", "temp"));
-  await rm(appDir, { recursive: true, force: true });
+  //await rm(appDir, { recursive: true, force: true });
   await asar.createPackage(join(appDir, "..", "temp", "app.orig"), appDir);
-  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
+  //  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
   // For discord_arch_electron
   if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
     await rename(

@@ -56,9 +56,7 @@ export default {
           );
         }
 
-        if (Object.keys(messageKeys).length < Object.keys(result.messageKeys ?? {}).length) {
-          messageKeys = result.messageKeys;
-        }
+        messageKeys = result.messageKeys;
 
         const transformedOutput = new MessageDefinitionsTransformer({
           messageKeys: Object.fromEntries(
@@ -67,7 +65,7 @@ export default {
           localeMap: result.translationsLocaleMap,
           defaultLocale: result.locale,
           getTranslationImport: (importPath) => `import("${importPath}")`,
-          debug: !production,
+          debug: false,
           preGenerateBinds: false,
           getPrelude: () => `import {waitForProps} from '@webpack';`,
         }).getOutput();

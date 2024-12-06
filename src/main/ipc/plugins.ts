@@ -20,6 +20,7 @@ import {
 } from "fs";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
 import { getSetting } from "./settings";
+import { Logger, mainWin } from "..";
 
 let PluginIpcMappings: Record<string, Record<string, string>>;
 
@@ -49,7 +50,6 @@ function getPlugin(pluginName: string): RepluggedPlugin {
       encoding: "utf-8",
     }),
   );
-
   const data = {
     path: pluginName,
     manifest: plugin.parse(manifest),
@@ -91,11 +91,11 @@ function listPlugins(): RepluggedPlugin[] {
     try {
       plugins.push(getPlugin(pluginDir.name));
     } catch (e) {
-      console.error(`Invalid plugin: ${pluginDir.name}`);
-      console.error(e);
+      Logger.error(`Invalid plugin: ${pluginDir.name}`);
+      Logger.error(e);
     }
   }
-  console.log("gg");
+  Logger.log("gg");
   return plugins;
 }
 

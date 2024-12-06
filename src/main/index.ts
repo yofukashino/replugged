@@ -4,13 +4,29 @@ import electron from "electron";
 import { CONFIG_PATHS } from "src/util.mjs";
 import type { RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
+import { statSync } from "fs";
 const electronPath = require.resolve("electron");
 
-const discordPath = join(dirname(require.main!.filename), "app.orig");
+let discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
+try {
+  // If using older replugged file system
+  statSync(discordPath);
+  const discordPackage = require(join(discordPath, "package.json"));
+  require.main!.filename = join(discordPath, discordPackage.main);
+} catch {
+  // If using newer replugged file system
+  discordPath = join(dirname(require.main!.filename), "app.orig");
+  const discordPackage = require(join(discordPath, "package.json"));
+  require.main!.filename = join(discordPath, "..", discordPackage.main);
+}
+
 let customTitlebar: boolean = getSetting("dev.replugged.Settings", "titlebar", false);
 
-const realMain = require(join(discordPath, "package.json")).main;
-require.main!.filename = join(discordPath, "..", realMain);
+export const Logger = {
+  log: (..._args: unknown[]) => {},
+  warn: (..._args: unknown[]) => {},
+  error: (..._args: unknown[]) => {},
+};
 
 Object.defineProperty(global, "appSettings", {
   set: (v /* : typeof global.appSettings*/) => {
@@ -64,6 +80,11 @@ class BrowserWindow extends electron.BrowserWindow {
 
     super(opts);
     (this.webContents as RepluggedWebContents).originalPreload = originalPreload;
+
+    Logger.log = (...args) => this.webContents.send("log", ...args);
+    Logger.warn = (...args) => this.webContents.send("warn", ...args);
+    Logger.error = (...args) => this.webContents.send("error", ...args);
+
     this.webContents.on("devtools-opened", () => {
       electron.nativeTheme.themeSource = "light";
       setTimeout(() => (electron.nativeTheme.themeSource = "dark"), 25);

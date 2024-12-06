@@ -20,4 +20,15 @@ export default [
       },
     ],
   },
+
+  {
+    find: ".getBinds()",
+    replacements: [
+      {
+        match: /"en-US"\)\.getBinds\(\);((\w+)\.\w+=(\w+))/g,
+        replace: (_, suffix, mod, variable) =>
+          `"en-US");${suffix}.getBinds();${mod}.ZP=${variable}`,
+      },
+    ],
+  },
 ] as PlaintextPatch[];
