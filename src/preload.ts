@@ -23,18 +23,19 @@ void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => 
   version = v;
 });
 
-const pluginNatives = {} as Record<string, Record<string, (...args: any[]) => Promise<unknown>>>;
+const pluginNatives = {} as Record<
+  string,
+  Record<string, (...args: unknown[]) => Promise<unknown>>
+>;
 
 void ipcRenderer.invoke(RepluggedIpcChannels.LIST_PLUGINS_NATIVE).then((nativeList) => {
   for (const pluginId in nativeList) {
     const methods = nativeList[pluginId];
-    const map = (pluginNatives[pluginId] = {} as Record<
-      string,
-      (...args: any[]) => Promise<unknown>
-    >);
+    const map = {} as Record<string, (...args: unknown[]) => Promise<unknown>>;
     for (const methodName in methods) {
-      map[methodName] = (...args: any[]) => ipcRenderer.invoke(methods[methodName], ...args);
+      map[methodName] = (...args: unknown[]) => ipcRenderer.invoke(methods[methodName], ...args);
     }
+    pluginNatives[pluginId] = map;
   }
 });
 
