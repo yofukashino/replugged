@@ -80,9 +80,11 @@ function listPlugins(): RepluggedPlugin[] {
         try {
           const actualPath = readlinkSync(join(PLUGINS_DIR, f.name));
           const actualFile = statSync(actualPath);
+
           if (isFileAPlugin(actualFile, actualPath)) return f;
         } catch {}
       }
+
       return void 0;
     })
     .filter(Boolean) as Dirent[];
@@ -95,7 +97,6 @@ function listPlugins(): RepluggedPlugin[] {
       Logger.error(e);
     }
   }
-  Logger.log("gg");
   return plugins;
 }
 
@@ -167,8 +168,10 @@ ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES, (event) => {
     }
 
     acc[p.manifest.id] = readFileSync(plaintextPatchPath, "utf-8");
+
     return acc;
   }, {});
+  Logger.log(pluginPlaintextPatches);
   event.returnValue = pluginPlaintextPatches;
 });
 

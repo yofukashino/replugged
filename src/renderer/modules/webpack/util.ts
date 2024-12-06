@@ -1,4 +1,4 @@
-import { Logger } from "../logger";
+import { Logger } from "@logger";
 
 export const logger = Logger.api("webpack");
 

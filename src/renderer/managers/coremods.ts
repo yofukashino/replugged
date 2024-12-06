@@ -11,7 +11,7 @@ import { default as languagePlaintext } from "../coremods/language/plaintextPatc
 import { default as settingsPlaintext } from "../coremods/settings/plaintextPatches";
 import { default as badgesPlaintext } from "../coremods/badges/plaintextPatches";
 import { default as titlebarPlaintext } from "../coremods/titlebar/plaintextPatches";
-import { Logger } from "../modules/logger";
+import { Logger } from "@logger";
 
 const logger = Logger.api("Coremods");
 

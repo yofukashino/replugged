@@ -7,7 +7,6 @@ import "./settings";
 import "./plugins";
 import "./quick-css";
 import "./react-devtools";
-
 import { RepluggedIpcChannels, type RepluggedWebContents } from "../../types";
 
 ipcMain.on(RepluggedIpcChannels.GET_DISCORD_PRELOAD, (event) => {
