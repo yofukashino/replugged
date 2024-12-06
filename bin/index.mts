@@ -353,7 +353,7 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
           if (args.kind !== "import-statement") return undefined;
 
           return {
-            path: `replugged/plugins/native["${manifest.id}"]`,
+            path: `replugged/plugins/pluginNatives.get("${manifest.id}")`,
             namespace: "replugged",
           };
         },

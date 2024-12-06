@@ -9,12 +9,10 @@ import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
 import { plugin } from "../../types/addon";
-import type { Dirent, Stats } from "fs";
+import { type Dirent, type Stats } from "fs";
 import { CONFIG_PATHS } from "src/util.mjs";
 import { getSetting } from "./settings";
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
-
-let PluginIpcMappings: Record<string, Record<string, string>>;
 
 export const isFileAPlugin = (f: Dirent | Stats, name: string): boolean => {
   return f.isDirectory() || (f.isFile() && extname(name) === ".asar");
@@ -102,27 +100,27 @@ ipcMain.handle(
     const disabled = await getSetting<string[]>("plugins", "disabled", []);
     const plugins = await listPlugins();
 
-    PluginIpcMappings ??= plugins.reduce((acc: Record<string, Record<string, string>>, plugin) => {
+    return plugins.reduce((acc: Record<string, Record<string, string>>, plugin) => {
       if (!plugin.manifest.native || disabled.includes(plugin.manifest.id)) return acc;
       const nativePath = join(PLUGINS_DIR, plugin.path, plugin.manifest.native);
       if (!nativePath.startsWith(`${PLUGINS_DIR}${sep}`)) {
         // Ensure file changes are restricted to the base path
         throw new Error("Invalid plugin name");
       }
+
       const entries = Object.entries<(...args: unknown[]) => unknown>(require(nativePath));
       if (!entries.length) return acc;
 
-      const mappings: Record<string, string> = (acc[plugin.manifest.id] = {});
+      const mappings: Record<string, string> = {};
 
       for (const [methodName, method] of entries) {
-        const key = `RPPlugin-Native_${plugin.manifest.id}_${methodName}`;
+        const key = `Replugged_Plugin_Native_[${plugin.manifest.id}]_${methodName}`;
         ipcMain.handle(key, (_, ...args) => method(...args) /* For easy type when importing */);
         mappings[methodName] = key;
       }
+      acc[plugin.manifest.id] = mappings;
       return acc;
     }, {});
-
-    return PluginIpcMappings;
   },
 );
 

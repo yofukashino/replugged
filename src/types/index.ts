@@ -74,7 +74,13 @@ export interface RepluggedPlugin {
   hasCSS: boolean;
 }
 
-export type { AnyAddonManifest, PluginExports, PluginManifest, ThemeManifest } from "./addon";
+export type {
+  AnyAddonManifest,
+  PluginExports,
+  PluginNativeMap,
+  PluginManifest,
+  ThemeManifest,
+} from "./addon";
 export * from "./coremods/commands";
 export * from "./coremods/contextMenu";
 export * from "./coremods/message";

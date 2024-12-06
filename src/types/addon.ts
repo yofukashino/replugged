@@ -83,6 +83,8 @@ export interface PluginExports {
   [x: string]: unknown;
 }
 
+export type PluginNativeMap = Record<string, (...args: unknown[]) => Promise<unknown>>;
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type AddonSettings = {
   disabled?: string[];
