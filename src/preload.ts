@@ -43,7 +43,7 @@ const mapNative = (
         try {
           return await ipcRenderer.invoke(methods[methodName], ...args);
         } catch (err) {
-          throw new Error(err.message.split(": Error: ")[1]);
+          throw new Error((err as { message: string }).message.split(": Error: ")[1]);
         }
       };
     }
@@ -54,8 +54,9 @@ const mapNative = (
 
 const RepluggedNative = {
   themes: {
-    list: (): RepluggedTheme[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_THEMES),
-    uninstall: (themeName: string) =>
+    list: async (): Promise<RepluggedTheme[]> =>
+      ipcRenderer.invoke(RepluggedIpcChannels.LIST_THEMES),
+    uninstall: async (themeName: string) =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_THEME, themeName), // whether theme was successfully uninstalled
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_THEMES_FOLDER),
   },

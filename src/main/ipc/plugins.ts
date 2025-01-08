@@ -4,8 +4,6 @@ IPC events:
 - REPLUGGED_UNINSTALL_PLUGIN: returns whether a plugin by the provided name was successfully uninstalled
 */
 
-import { rm } from "fs/promises";
-
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
@@ -26,9 +24,6 @@ import { getSetting } from "./settings";
 import { Logger } from "..";
 
 let PluginIpcMappings: Record<string, Record<string, string>>;
-
-import { type Dirent, type Stats, readFileSync, readdirSync, readlinkSync, statSync } from "fs";
-import { CONFIG_PATHS } from "src/util.mjs";
 
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
 const TEMP_PLUGINS_DIR = CONFIG_PATHS.temp_plugins;

@@ -1,7 +1,7 @@
 import { css } from "@codemirror/lang-css";
 import { EditorState } from "@codemirror/state";
 
-import { React, i18n, toast } from "@common";
+import { React, flux, i18n, toast } from "@common";
 
 import { Button, Divider, Flex, Text } from "@components";
 import { webpack } from "@replugged";
@@ -11,6 +11,7 @@ import { githubDark, githubLight } from "./codemirror-github";
 import { generalSettings } from "./General";
 
 import "./QuickCSS.css";
+import { Store } from "@common/flux";
 
 const { intl } = i18n;
 
@@ -27,9 +28,7 @@ type ThemeModule = {
   removeChangeListener: (listener: () => unknown) => unknown;
 };
 
-const PopoutModule = await webpack.waitForModule(
-  webpack.filters.bySource('type:"POPOUT_WINDOW_OPEN"'),
-);
+const PopoutModule = webpack.getBySource('type:"POPOUT_WINDOW_OPEN"');
 const openPopout = webpack.getFunctionBySource<
   (key: string, render: React.ComponentType, features: Record<string, string>) => void
 >(PopoutModule, "POPOUT_WINDOW_OPEN")!;
