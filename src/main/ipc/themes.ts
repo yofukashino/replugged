@@ -4,23 +4,31 @@ IPC events:
 - REPLUGGED_UNINSTALL_THEME: uninstalls a theme by name
 */
 
-import { readFile, readdir, readlink, rm, stat } from "fs/promises";
+import { readFile, readdir, readlink, rm, stat, unlink } from "fs/promises";
+import { type Dirent, type Stats } from "fs";
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedTheme } from "../../types";
 import { theme } from "../../types/addon";
-import { CONFIG_PATHS } from "src/util.mjs";
-import type { Dirent, Stats } from "fs";
+import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
+import { Logger } from "..";
 
 const THEMES_DIR = CONFIG_PATHS.themes;
+const TEMP_THEMES_DIR = CONFIG_PATHS.temp_themes;
 
 export const isFileATheme = (f: Dirent | Stats, name: string): boolean => {
   return f.isDirectory() || (f.isFile() && extname(name) === ".asar");
 };
 
 async function getTheme(path: string): Promise<RepluggedTheme> {
-  const manifestPath = join(THEMES_DIR, path, "manifest.json");
-  if (!manifestPath.startsWith(`${THEMES_DIR}${sep}`)) {
+  const isAsar = path.includes(".asar");
+  const themePath = join(THEMES_DIR, path);
+  const realThemePath = isAsar ? join(TEMP_THEMES_DIR, path.replace(/\.asar$/, "")) : themePath; // Remove ".asar" from the directory name
+  if (isAsar) extractAddon(themePath, realThemePath);
+
+  const manifestPath = join(realThemePath, "manifest.json");
+
+  if (!manifestPath.startsWith(`${realThemePath}${sep}`)) {
     // Ensure file changes are restricted to the base path
     throw new Error("Invalid theme name");
   }

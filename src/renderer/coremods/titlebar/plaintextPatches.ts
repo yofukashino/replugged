@@ -6,7 +6,7 @@ const generalSettings = init<GeneralSettings, keyof typeof defaultSettings>(
   defaultSettings,
 );
 
-export default (true && generalSettings.get("titlebar")
+export default (navigator.userAgent.includes("Linux") && generalSettings.get("titlebar")
   ? [
       {
         find: "macOSFrame:!0",
