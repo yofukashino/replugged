@@ -40,12 +40,17 @@ function writeSettings(namespace: string, settings: SettingsMap): void {
   );
 }
 
-const locks: Record<string, unknown | undefined> = {};
+const locks: Record<string, (() => unknown) | undefined> = {};
 
 function transaction<T>(namespace: string, handler: TransactionHandler<T>): T {
+  const lock = locks[namespace];
+
+  if (lock) lock();
+
   const result = handler();
 
-  locks[namespace] = result;
+  locks[namespace] = () => result;
+
   return result;
 }
 
@@ -93,26 +98,35 @@ export function getSetting<T>(namespace: string, key: string, fallback?: T): T |
   return setting ?? fallback;
 }
 
-ipcMain.handle(RepluggedIpcChannels.GET_SETTING, (_, namespace: string, key: string) =>
-  getSetting(namespace, key),
+ipcMain.on(
+  RepluggedIpcChannels.GET_SETTING,
+  (event, namespace: string, key: string) => (event.returnValue = getSetting(namespace, key)),
 );
 
-ipcMain.handle(RepluggedIpcChannels.HAS_SETTING, (_, namespace: string, key: string) =>
-  readTransaction(namespace, (settings) => settings.has(key)),
+ipcMain.on(
+  RepluggedIpcChannels.HAS_SETTING,
+  (event, namespace: string, key: string) =>
+    (event.returnValue = readTransaction(namespace, (settings) => settings.has(key))),
 );
 
-ipcMain.handle(
+ipcMain.on(
   RepluggedIpcChannels.SET_SETTING,
-  (_, namespace: string, key: string, value: unknown) =>
-    writeTransaction(namespace, (settings) => settings.set(key, value)),
+  (event, namespace: string, key: string, value: unknown) =>
+    (event.returnValue = writeTransaction(namespace, (settings) => settings.set(key, value))),
 );
 
-ipcMain.handle(RepluggedIpcChannels.DELETE_SETTING, (_, namespace: string, key: string) =>
-  writeTransaction(namespace, (settings) => settings.delete(key)),
+ipcMain.on(
+  RepluggedIpcChannels.DELETE_SETTING,
+  (event, namespace: string, key: string) =>
+    (event.returnValue = writeTransaction(namespace, (settings) => settings.delete(key))),
 );
 
-ipcMain.handle(RepluggedIpcChannels.GET_ALL_SETTINGS, (_, namespace: string) =>
-  readTransaction(namespace, (settings) => Object.fromEntries(settings.entries())),
+ipcMain.on(
+  RepluggedIpcChannels.GET_ALL_SETTINGS,
+  (event, namespace: string) =>
+    (event.returnValue = readTransaction(namespace, (settings) =>
+      Object.fromEntries(settings.entries()),
+    )),
 );
 
 ipcMain.on(RepluggedIpcChannels.OPEN_SETTINGS_FOLDER, () => shell.openPath(SETTINGS_DIR));

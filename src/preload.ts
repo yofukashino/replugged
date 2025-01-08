@@ -61,13 +61,11 @@ const RepluggedNative = {
   },
 
   plugins: {
-    get: async (pluginPath: string): Promise<RepluggedPlugin | undefined> =>
-      ipcRenderer.invoke(RepluggedIpcChannels.GET_PLUGIN, pluginPath),
+    get: (pluginPath: string): RepluggedPlugin | undefined =>
+      ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN, pluginPath),
     list: (): RepluggedPlugin[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
-    resolvePlaintextPath: (id: string): string =>
-      ipcRenderer.sendSync(RepluggedIpcChannels.RESOLVE_PLUGINS_PLAINTEXT_PATH, id),
-    readPlaintextPath: (id: string): string =>
-      ipcRenderer.sendSync(RepluggedIpcChannels.READ_PLUGINS_PLAINTEXT, id),
+    readPlaintextPatch: (pluginPath: string): string | undefined =>
+      ipcRenderer.sendSync(RepluggedIpcChannels.READ_PLUGIN_PLAINTEXT_PATCHES, pluginPath),
     listNative: (): Array<[string, PluginNativeMap]> =>
       mapNative(ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS_NATIVE)),
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
@@ -115,15 +113,15 @@ const RepluggedNative = {
 
   settings: {
     get: (namespace: string, key: string) =>
-      ipcRenderer.invoke(RepluggedIpcChannels.GET_SETTING, namespace, key),
+      ipcRenderer.sendSync(RepluggedIpcChannels.GET_SETTING, namespace, key),
     set: (namespace: string, key: string, value: unknown) =>
-      ipcRenderer.invoke(RepluggedIpcChannels.SET_SETTING, namespace, key, value), // invoke or send?
+      ipcRenderer.sendSync(RepluggedIpcChannels.SET_SETTING, namespace, key, value), // invoke or send?
     has: (namespace: string, key: string) =>
-      ipcRenderer.invoke(RepluggedIpcChannels.HAS_SETTING, namespace, key),
+      ipcRenderer.sendSync(RepluggedIpcChannels.HAS_SETTING, namespace, key),
     delete: (namespace: string, key: string) =>
-      ipcRenderer.invoke(RepluggedIpcChannels.DELETE_SETTING, namespace, key),
+      ipcRenderer.sendSync(RepluggedIpcChannels.DELETE_SETTING, namespace, key),
     all: (namespace: string) =>
-      ipcRenderer.invoke(RepluggedIpcChannels.GET_ALL_SETTINGS, namespace),
+      ipcRenderer.sendSync(RepluggedIpcChannels.GET_ALL_SETTINGS, namespace),
     startTransaction: (namespace: string) =>
       ipcRenderer.invoke(RepluggedIpcChannels.START_SETTINGS_TRANSACTION, namespace),
     endTransaction: (namespace: string, settings: Record<string, unknown> | null) =>

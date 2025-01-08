@@ -107,7 +107,7 @@ async function github(
 }
 
 async function store(id: string): Promise<CheckResultSuccess | CheckResultFailure> {
-  const apiUrl = await getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
+  const apiUrl = getSetting("dev.replugged.Settings", "apiUrl", WEBSITE_URL);
   const STORE_BASE_URL = `${apiUrl}/api/v1/store`;
   const manifestUrl = `${STORE_BASE_URL}/${id}`;
   const asarUrl = `${manifestUrl}.asar`;

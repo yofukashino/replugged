@@ -1,9 +1,11 @@
-import { t as discordT, intl } from "@common/i18n";
+import { i18n } from "@common";
 import { Text } from "@components";
 import { Injector } from "@replugged";
 import { t } from "src/renderer/modules/i18n";
 import { Divider, Header, Section, insertSections, settingsTools } from "./lib";
 import { ConnectedQuickCSS, General, Plugins, Themes, Updater } from "./pages";
+
+const { t: discordT, intl } = i18n;
 
 const injector = new Injector();
 

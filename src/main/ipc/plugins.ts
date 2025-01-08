@@ -4,10 +4,13 @@ IPC events:
 - REPLUGGED_UNINSTALL_PLUGIN: returns whether a plugin by the provided name was successfully uninstalled
 */
 
+import { rm } from "fs/promises";
+
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
 import { plugin } from "../../types/addon";
+
 import {
   type Dirent,
   type Stats,
@@ -23,6 +26,9 @@ import { getSetting } from "./settings";
 import { Logger } from "..";
 
 let PluginIpcMappings: Record<string, Record<string, string>>;
+
+import { type Dirent, type Stats, readFileSync, readdirSync, readlinkSync, statSync } from "fs";
+import { CONFIG_PATHS } from "src/util.mjs";
 
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
 const TEMP_PLUGINS_DIR = CONFIG_PATHS.temp_plugins;
@@ -141,16 +147,6 @@ function mapPluginNatives(): void {
 }
 mapPluginNatives();
 
-const getPlaintextPath = (pluginName: string): string | void => {
-  const plugin = getPlugin(pluginName);
-  if (!plugin.manifest.plaintextPatches) return;
-  return join(
-    pluginName.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins,
-    pluginName.replace(".asar", ""),
-    plugin.manifest.plaintextPatches,
-  );
-};
-
 ipcMain.handle(
   RepluggedIpcChannels.GET_PLUGIN,
   (_, pluginName: string): RepluggedPlugin | undefined => {
@@ -168,11 +164,16 @@ ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS_NATIVE, (event) => {
   event.returnValue = PluginIpcMappings;
 });
 
-ipcMain.on(RepluggedIpcChannels.RESOLVE_PLUGINS_PLAINTEXT_PATH, (event, pluginName) => {
-  event.returnValue = getPlaintextPath(pluginName);
-});
-ipcMain.on(RepluggedIpcChannels.READ_PLUGINS_PLAINTEXT, (event, pluginName) => {
-  const path = getPlaintextPath(pluginName);
+ipcMain.on(RepluggedIpcChannels.READ_PLUGIN_PLAINTEXT_PATCHES, (event, pluginName) => {
+  const plugin = getPlugin(pluginName);
+  if (!plugin.manifest.plaintextPatches) return;
+
+  const path = join(CONFIG_PATHS.plugins, pluginName, plugin.manifest.plaintextPatches);
+  if (!path.startsWith(`${PLUGINS_DIR}${sep}`)) {
+    // Ensure file changes are restricted to the base path
+    throw new Error("Invalid plugin name");
+  }
+
   if (path) event.returnValue = readFileSync(path, "utf-8");
 });
 

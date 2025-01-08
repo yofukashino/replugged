@@ -134,7 +134,7 @@ electron.protocol.registerSchemesAsPrivileged([
 ]);
 
 function loadReactDevTools(): void {
-  const rdtSetting = getSetting("dev.replugged.Settings", "reactDevTools", false);
+  const rdtSetting = getSetting<boolean>("dev.replugged.Settings", "reactDevTools", false);
 
   if (rdtSetting) {
     void electron.session.defaultSession.loadExtension(CONFIG_PATHS["react-devtools"]);
@@ -220,6 +220,8 @@ electron.app.on("session-created", () => {
     }
     cb({ path: filePath });
   });
+
+  loadReactDevTools();
 });
 
 // This module is required this way at runtime.

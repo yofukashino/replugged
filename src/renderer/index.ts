@@ -2,13 +2,10 @@ import * as replugged from "./replugged";
 
 window.replugged = replugged;
 
-type DiscordSplashWindow = Window & {
-  DiscordSplash?: object;
-};
-
 // Splash screen
-if ((window as DiscordSplashWindow).DiscordSplash) {
-  await replugged.ignition.startSplash();
+
+if (window.location.href.endsWith("/app_bootstrap/splash/index.html")) {
+  replugged.ignition.startSplash();
 } else {
-  await replugged.ignition.ignite();
+  replugged.ignition.ignite();
 }
