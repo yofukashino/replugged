@@ -20,7 +20,7 @@ export async function start(): Promise<void> {
 
   let started = false;
   await Promise.race([
-    Promise.allSettled([
+    Promise.all([
       themes.loadMissing().then(themes.loadAll),
       coremods.startAll(),
       plugins.startAll(),
@@ -84,15 +84,14 @@ Load order:
 export async function ignite(): Promise<void> {
   // This is the function that will be called when loading the window.
   // Plaintext patches must run first.
-  setTimeout(() => {
-    interceptChunksGlobal();
-  }, 0);
+
+  interceptChunksGlobal();
 
   coremods.runPlaintextPatches();
 
-  plugins.runPlaintextPatches();
+  plugins.loadAll();
 
-  await plugins.loadAll();
+  plugins.runPlaintextPatches();
 
   // At this point, Discord's code should run.
   // Wait for the designated common modules to load before continuing.

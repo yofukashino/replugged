@@ -194,3 +194,11 @@
 .replugged-quickcss-header * {
   height: 25px;
 }
+
+[class^="sidebarRegion"]
+  > div
+  > [class^="sidebar"]
+  > div:has(> [class^="item"])
+  > div:has(> [class^="emptySearchIcon"]) {
+  display: none;
+}

@@ -1,6 +1,6 @@
 // btw, pluginID is the directory name, not the RDNN. We really need a better name for this.
 import { loadStyleSheet } from "../util";
-import type { PluginExports, RepluggedPlugin } from "../../types";
+import type { PlaintextPatch, PluginExports, RepluggedPlugin } from "../../types";
 import { Logger } from "@logger";
 import { patchPlaintext } from "../modules/webpack/plaintext-patch";
 import { init } from "../apis/settings";
@@ -16,7 +16,11 @@ interface PluginWrapper extends RepluggedPlugin {
 /**
  * @hidden
  */
+
 export const native = RepluggedNative.plugins.listNative();
+
+export const pluginNatives = new Map<string, Record<string, (...args: unknown[]) => unknown>>();
+
 export const plugins = new Map<string, PluginWrapper>();
 const running = new Set<string>();
 
@@ -49,14 +53,22 @@ function register(plugin: RepluggedPlugin): void {
   });
 }
 
+function registerNative([name, map]: [
+  string,
+  Record<string, (...args: unknown[]) => unknown>,
+]): void {
+  pluginNatives.set(name, map);
+}
+
 /**
  * Load all plugins
  *
  * @remarks
  * You may need to reload Discord after adding a new plugin before it's available.
  */
-export async function loadAll(): Promise<void> {
-  (await window.RepluggedNative.plugins.list()).forEach(register);
+export function loadAll(): void {
+  window.RepluggedNative.plugins.list().forEach(register);
+  RepluggedNative.plugins.listNative().forEach(registerNative);
 }
 
 /**
@@ -173,10 +185,49 @@ export async function stopAll(): Promise<void> {
  * @internal
  */
 export function runPlaintextPatches(): void {
-  const list = RepluggedNative.plugins.listPlaintextPatches();
-  for (const pluginId in list) {
-    void import(list[pluginId]).then(({ default: patch }) => patchPlaintext(patch, pluginId));
-  }
+  const disabled: string[] = settings.get("disabled", []);
+  const list = [...plugins.values()].filter((x) => !disabled.includes(x.manifest.id));
+
+  const getPlaintextPatch = (pluginName: string): { default: PlaintextPatch[] } => {
+    const wrapModule = (code: string, pluginName: string): string => `((module) => {
+      ${code}\n//# sourceURL=replugged://plugin/${pluginName}/plaintextPatches.js?t=${Date.now()}\nreturn module.exports
+      })({exports:{}})`;
+
+    const code = RepluggedNative.plugins.readPlaintextPath(pluginName);
+
+    try {
+      // eslint-disable-next-line no-eval
+      return (0, eval)(wrapModule(code, pluginName));
+    } catch {
+      const cjsCode = [
+        { match: /export\s+default\s+/g, replace: () => "module.exports = " },
+        {
+          match: /export[\s+]?\{([^}]+)\}[;]?/g,
+          replace: (_: string, exports: string) =>
+            exports
+              .split(",")
+              .map((exp) => exp.split(" as ").map((s) => s.trim()))
+              .map(([original, alias]) => `module.exports.${alias || original} = ${original};`)
+              .join("\n"),
+        },
+      ]
+        .reduce((code, { match, replace }) => code.replace(match, replace), code)
+        .trim();
+      try {
+        // eslint-disable-next-line no-eval
+        return (0, eval)(wrapModule(cjsCode, pluginName));
+      } catch (err) {
+        logger.error(`Error getting PlaintextPatches for ${pluginName}`, err);
+      }
+    }
+
+    return { default: [] };
+  };
+
+  list.forEach((plugin) => {
+    if (plugin.manifest.plaintextPatches)
+      patchPlaintext(getPlaintextPatch(plugin.path).default, plugin.manifest.id);
+  });
 }
 
 /**

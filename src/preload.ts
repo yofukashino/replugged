@@ -4,7 +4,6 @@ import {
   ipcRenderer,
   webFrame,
 } from "electron";
-
 import https from "https";
 
 import { Logger } from "@logger";
@@ -17,11 +16,10 @@ import type {
   InstallResultFailure,
   InstallResultSuccess,
   InstallerType,
+  PluginNativeMap,
   RepluggedPlugin,
   RepluggedTheme,
 } from "./types";
-import { readFileSync } from "fs";
-
 const MainLogger = new Logger("Preload", "Backend", "#ea5a5a");
 
 ipcRenderer.on(RepluggedIpcChannels.CONSOLE_LOG, (_event, ...args) => MainLogger.log(...args));
@@ -33,34 +31,26 @@ void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => 
   version = v;
 });
 
-const pluginNatives = {} as Record<string, Record<string, (...args: any[]) => Promise<unknown>>>;
-
-const nativeList = ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS_NATIVE);
-
-for (const pluginId in nativeList) {
-  const methods = nativeList[pluginId];
-  const map = (pluginNatives[pluginId] = {} as Record<
-    string,
-    (...args: any[]) => Promise<unknown>
-  >);
-  for (const methodName in methods) {
-    map[methodName] = (...args: any[]) => ipcRenderer.invoke(methods[methodName], ...args);
+const mapNative = (
+  nativeList: Record<string, Record<string, string>>,
+): Array<[string, PluginNativeMap]> => {
+  const pluginNatives = {} as Record<string, PluginNativeMap>;
+  for (const pluginId in nativeList) {
+    const methods = nativeList[pluginId];
+    const map = {} as Record<string, (...args: unknown[]) => Promise<unknown>>;
+    for (const methodName in methods) {
+      map[methodName] = async (...args: unknown[]) => {
+        try {
+          return await ipcRenderer.invoke(methods[methodName], ...args);
+        } catch (err) {
+          throw new Error(err.message.split(": Error: ")[1]);
+        }
+      };
+    }
+    pluginNatives[pluginId] = map;
   }
-}
-const pluginPlaintextPatches = {} as Record<string, string>;
-
-const plaintextPatchList = ipcRenderer.sendSync(
-  RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES,
-);
-
-for (const id in plaintextPatchList) {
-  const plaintextPatchCode = plaintextPatchList[id];
-  const plaintextPatchBlob = new Blob([`${plaintextPatchCode}//# sourceURL=PlaintextPatch-${id}`], {
-    type: "application/javascript",
-  });
-
-  pluginPlaintextPatches[id] = URL.createObjectURL(plaintextPatchBlob);
-}
+  return Object.entries(pluginNatives);
+};
 
 const RepluggedNative = {
   themes: {
@@ -73,10 +63,13 @@ const RepluggedNative = {
   plugins: {
     get: async (pluginPath: string): Promise<RepluggedPlugin | undefined> =>
       ipcRenderer.invoke(RepluggedIpcChannels.GET_PLUGIN, pluginPath),
-    list: (): Promise<RepluggedPlugin[]> => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
-    listPlaintextPatches: (): Record<string, string> => pluginPlaintextPatches,
-    listNative: (): Record<string, Record<string, (...args: any[]) => Promise<unknown>>> =>
-      pluginNatives,
+    list: (): RepluggedPlugin[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
+    resolvePlaintextPath: (id: string): string =>
+      ipcRenderer.sendSync(RepluggedIpcChannels.RESOLVE_PLUGINS_PLAINTEXT_PATH, id),
+    readPlaintextPath: (id: string): string =>
+      ipcRenderer.sendSync(RepluggedIpcChannels.READ_PLUGINS_PLAINTEXT, id),
+    listNative: (): Array<[string, PluginNativeMap]> =>
+      mapNative(ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS_NATIVE)),
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),

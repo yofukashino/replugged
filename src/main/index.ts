@@ -4,7 +4,6 @@ import { CONFIG_PATHS } from "src/util.mjs";
 import { RepluggedIpcChannels, type RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
 import { statSync } from "fs";
-
 export const Logger = {
   log: console.log,
   warn: console.warn,
@@ -56,12 +55,12 @@ class BrowserWindow extends electron.BrowserWindow {
     if (opts.frame && process.platform.includes("linux") && customTitlebar) opts.frame = void 0;
 
     const originalPreload = opts.webPreferences?.preload;
-
+    if (opts.webPreferences) {
+      opts.webPreferences.nodeIntegration = true; // Enable Node.js in the renderer process
+      opts.webPreferences.contextIsolation = false; // Disable context isolation
+    }
     if (opts.webContents) {
       // General purpose pop-outs used by Discord
-    } else if (opts.webPreferences?.nodeIntegration) {
-      // Splash Screen
-      // opts.webPreferences.preload = join(__dirname, './preloadSplash.js');
     } else if (opts.webPreferences?.offscreen) {
       // Overlay
       //      originalPreload = opts.webPreferences.preload;
@@ -213,6 +212,10 @@ electron.app.on("session-created", () => {
           reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins,
           reqUrl.pathname.replace(".asar", ""),
         );
+
+        break;
+      case "assets":
+        filePath = join(__dirname, reqUrl.pathname);
         break;
     }
     cb({ path: filePath });

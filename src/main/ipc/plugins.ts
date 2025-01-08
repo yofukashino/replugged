@@ -20,7 +20,7 @@ import {
 } from "fs";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
 import { getSetting } from "./settings";
-import { Logger, mainWin } from "..";
+import { Logger } from "..";
 
 let PluginIpcMappings: Record<string, Record<string, string>>;
 
@@ -105,35 +105,52 @@ function mapPluginNatives(): void {
   const plugins = listPlugins();
 
   PluginIpcMappings = plugins.reduce((acc: Record<string, Record<string, string>>, plugin) => {
-    if (!plugin.manifest.native || disabled.includes(plugin.manifest.id)) return acc;
+    try {
+      if (!plugin.manifest.native || disabled.includes(plugin.manifest.id)) return acc;
 
-    const isAsar = plugin.path.includes(".asar");
-    const pluginPath = join(PLUGINS_DIR, plugin.path);
-    const realPluginPath = isAsar
-      ? join(TEMP_PLUGINS_DIR, plugin.path.replace(/\.asar$/, ""))
-      : pluginPath; // Remove ".asar" from the directory name
+      const isAsar = plugin.path.includes(".asar");
+      const pluginPath = join(PLUGINS_DIR, plugin.path);
+      const realPluginPath = isAsar
+        ? join(TEMP_PLUGINS_DIR, plugin.path.replace(/\.asar$/, ""))
+        : pluginPath; // Remove ".asar" from the directory name
 
-    const nativePath = join(realPluginPath, plugin.manifest.native);
+      const nativePath = join(realPluginPath, plugin.manifest.native);
 
-    if (!nativePath.startsWith(`${PLUGINS_DIR}${sep}`)) {
-      // Ensure file changes are restricted to the base path
-      throw new Error("Invalid plugin name");
+      if (!nativePath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+        // Ensure file changes are restricted to the base path
+        throw new Error("Invalid plugin name");
+      }
+      const entries = Object.entries(require(nativePath));
+      if (!entries.length) return acc;
+
+      acc[plugin.manifest.id] = {} as Record<string, string>;
+      const mappings = acc[plugin.manifest.id];
+
+      for (const [methodName, method] of entries) {
+        const key = `RPPlugin-Native_${plugin.manifest.id}_${methodName}`;
+        ipcMain.handle(key, (_, ...args) => (method as (...args: unknown[]) => unknown)(...args));
+        mappings[methodName] = key;
+      }
+      return acc;
+    } catch (e) {
+      Logger.error(`Error Loading Plugin Native`, plugin.manifest);
+      Logger.error(e);
+      return acc;
     }
-    const entries = Object.entries(require(nativePath));
-    if (!entries.length) return acc;
-
-    acc[plugin.manifest.id] = {} as Record<string, string>;
-    const mappings = acc[plugin.manifest.id];
-
-    for (const [methodName, method] of entries) {
-      const key = `RPPlugin-Native_${plugin.manifest.id}_${methodName}`;
-      ipcMain.handle(key, (_, ...args) => (method as (...args: unknown[]) => unknown)(...args));
-      mappings[methodName] = key;
-    }
-    return acc;
   }, {});
 }
 mapPluginNatives();
+
+const getPlaintextPath = (pluginName: string): string | void => {
+  const plugin = getPlugin(pluginName);
+  if (!plugin.manifest.plaintextPatches) return;
+  return join(
+    pluginName.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins,
+    pluginName.replace(".asar", ""),
+    plugin.manifest.plaintextPatches,
+  );
+};
+
 ipcMain.handle(
   RepluggedIpcChannels.GET_PLUGIN,
   (_, pluginName: string): RepluggedPlugin | undefined => {
@@ -147,36 +164,16 @@ ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
   event.returnValue = listPlugins();
 });
 
-ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS_PLAINTEXT_PATCHES, (event) => {
-  const disabled = getSetting<string[]>("plugins", "disabled", []);
-  const plugins = listPlugins();
-
-  const pluginPlaintextPatches = plugins.reduce((acc: Record<string, string>, p) => {
-    if (!p.manifest.plaintextPatches || disabled.includes(p.manifest.id)) {
-      return acc;
-    }
-    const isAsar = p.path.includes(".asar");
-    const pluginPath = join(PLUGINS_DIR, p.path);
-    const realPluginPath = isAsar
-      ? join(TEMP_PLUGINS_DIR, p.path.replace(/\.asar$/, ""))
-      : pluginPath; // Remove ".asar" from the directory name
-
-    const plaintextPatchPath = join(realPluginPath, p.manifest.plaintextPatches);
-    if (!plaintextPatchPath.startsWith(`${realPluginPath}${sep}`)) {
-      // Ensure file changes are restricted to the base path
-      throw new Error("Invalid plugin name");
-    }
-
-    acc[p.manifest.id] = readFileSync(plaintextPatchPath, "utf-8");
-
-    return acc;
-  }, {});
-  Logger.log(pluginPlaintextPatches);
-  event.returnValue = pluginPlaintextPatches;
-});
-
 ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS_NATIVE, (event) => {
   event.returnValue = PluginIpcMappings;
+});
+
+ipcMain.on(RepluggedIpcChannels.RESOLVE_PLUGINS_PLAINTEXT_PATH, (event, pluginName) => {
+  event.returnValue = getPlaintextPath(pluginName);
+});
+ipcMain.on(RepluggedIpcChannels.READ_PLUGINS_PLAINTEXT, (event, pluginName) => {
+  const path = getPlaintextPath(pluginName);
+  if (path) event.returnValue = readFileSync(path, "utf-8");
 });
 
 ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, (_, pluginName: string) => {

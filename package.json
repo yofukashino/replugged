@@ -88,6 +88,7 @@
     "codemirror": "^6.0.1",
     "esbuild": "^0.24.0",
     "esbuild-sass-plugin": "^3.3.1",
+    "import-sync": "^2.2.3",
     "prompts": "^2.4.2",
     "semver": "^7.6.3",
     "standalone-electron-types": "^1.0.0",
