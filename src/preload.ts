@@ -5,7 +5,6 @@ import {
   ipcRenderer,
   webFrame,
 } from "electron";
-import https from "https";
 
 import { Logger } from "@logger";
 
@@ -159,7 +158,6 @@ const RepluggedNative = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   openBrowserWindow: (opts: BrowserWindowConstructorOptions) => {}, // later
   getWindows: async (): Promise<unknown> => ipcRenderer.invoke("windows"),
-  https,
 
   // @todo: We probably want to move these somewhere else, but I'm putting them here for now because I'm too lazy to set anything else up
 };
