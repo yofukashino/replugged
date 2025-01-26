@@ -8,7 +8,7 @@ export default [
     replacements: [
       {
         match: /\w+\.base,children:\[/,
-        replace: `$&${coremodStr}?.AnnouncementContainer?.(),`,
+        replace: `$&${coremodStr}?._renderAnnouncementContainer?.(),`,
       },
     ],
   },

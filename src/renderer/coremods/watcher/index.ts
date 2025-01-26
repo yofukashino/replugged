@@ -37,7 +37,7 @@ export function start(): void {
 
       try {
         if (plugin) {
-          await plugins.reload(id);
+          void plugins.reload(id);
         } else {
           themes.reload(id);
         }

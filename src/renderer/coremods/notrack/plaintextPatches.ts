@@ -35,8 +35,8 @@ export default [
     find: "AnalyticsActionHandlers.handleTrack",
     replacements: [
       {
-        match: /=>\w+\.AnalyticsActionHandlers\.handle\w+\([^)]*\)/g,
-        replace: "=>{}",
+        match: /(\(\)|\w+)=>\w+\.AnalyticsActionHandlers\.handle\w+\([^)]*\)/g,
+        replace: (_) => `arg=>{arg?.resolve?.()}`,
       },
     ],
   },

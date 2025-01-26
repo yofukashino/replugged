@@ -106,7 +106,7 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
           }
         };
 
-        patchChunk([[], wpRequire!.m]);
+        patchChunk([[], wpRequire.m]);
       }
     },
   ]);
@@ -142,32 +142,4 @@ export function interceptChunksGlobal(): void {
       configurable: true,
     });
   }
-  // eslint-disable-next-line no-extend-native, accessor-pairs
-  Object.defineProperty(Function.prototype, "m", {
-    configurable: true,
-
-    set(v: unknown) {
-      Object.defineProperty(this, "m", {
-        value: v,
-        configurable: true,
-        enumerable: true,
-        writable: true,
-      });
-
-      // When using react devtools or other extensions, we may also catch their webpack here.
-      // This ensures we actually got the right one
-      const { stack } = new Error();
-      if (
-        !(stack?.includes("discord.com") || stack?.includes("discordapp.com")) ||
-        Array.isArray(v)
-      ) {
-        return;
-      }
-
-      const fileName = stack.match(/\/assets\/(.+?\.js)/)?.[1] ?? "";
-      console.log("Found Webpack module factory", fileName);
-
-      patchChunk([[], v]);
-    },
-  });
 }

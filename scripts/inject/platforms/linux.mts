@@ -20,11 +20,15 @@ const ProcessRegex = {
 
 const findAppAsarInDir = (dir: string): string | null => {
   const name = basename(dir);
-  if (name === "app.asar") return dir;
+  if (name === "app.asar" || name === "app.orig.asar") return dir;
   const topLevelAsar = join(dir, "app.asar");
   if (existsSync(topLevelAsar)) return topLevelAsar;
+  const topLevelOrigAsar = join(dir, "app.orig.asar");
+  if (existsSync(topLevelOrigAsar)) return topLevelAsar;
   const resourcesAsar = join(dir, "resources", "app.asar");
   if (existsSync(resourcesAsar)) return resourcesAsar;
+  const resourcesOrigAsar = join(dir, "resources", "app.orig.asar");
+  if (existsSync(resourcesOrigAsar)) return resourcesAsar;
 
   return null;
 };

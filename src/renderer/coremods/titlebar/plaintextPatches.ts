@@ -12,14 +12,14 @@ export default (navigator.userAgent.includes("Linux") && generalSettings.get("ti
         find: "macOSFrame:!0",
         replacements: [
           {
-            match: /\[.&&(null!=.\?)/,
-            replace: (_, suffix: string) => `[${suffix}`,
+            match: /(\[.&&).&&/,
+            replace: (_, suffix: string) => `${suffix}`,
           },
         ],
       },
       {
         find: "renderWindow:window",
-        replacements: [{ match: /\(0,.\.getPlatform\)\(\)/, replace: () => `"WINDOWS"` }],
+        replacements: [{ match: /\(0,\w+\.getPlatform\)\(\)/, replace: () => `"WINDOWS"` }],
       },
     ]
   : []) as PlaintextPatch[];

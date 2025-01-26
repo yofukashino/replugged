@@ -4,7 +4,7 @@ window.replugged = replugged;
 
 // Splash screen
 
-if (window.location.href.endsWith("/app_bootstrap/splash/index.html")) {
+if (!window.location.hostname.includes("discord.com")) {
   replugged.ignition.startSplash();
 } else {
   replugged.ignition.ignite();

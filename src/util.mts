@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 import { execSync } from "child_process";
+
 import { extractAll } from "@electron/asar";
 import { tmpdir } from "os";
 import { chownSync, existsSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from "fs";

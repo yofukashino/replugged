@@ -1,7 +1,9 @@
 import { dirname, join } from "path";
 import electron from "electron";
+
 import { CONFIG_PATHS } from "src/util.mjs";
 import { RepluggedIpcChannels, type RepluggedWebContents } from "../types";
+
 import { getSetting } from "./ipc/settings";
 import { statSync } from "fs";
 export const Logger = {
@@ -10,6 +12,7 @@ export const Logger = {
   error: console.error,
 };
 
+const transparent: boolean = getSetting("dev.replugged.Settings", "transparentWindow", false);
 const electronPath = require.resolve("electron");
 
 let discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
@@ -40,6 +43,40 @@ Object.defineProperty(global, "appSettings", {
   configurable: true,
 });
 
+enum DiscordWindowType {
+  UNKNOWN,
+  POP_OUT,
+  SPLASH_SCREEN,
+  OVERLAY,
+  DISCORD_CLIENT,
+}
+
+type InternalBrowserWindowConstructorOptions = electron.BrowserWindowConstructorOptions & {
+  webContents?: electron.WebContents;
+  webPreferences?: {
+    nativeWindowOpen: boolean;
+  };
+};
+
+function windowTypeFromOpts(opts: InternalBrowserWindowConstructorOptions): DiscordWindowType {
+  if (opts.webContents) {
+    return DiscordWindowType.POP_OUT;
+  } else if (opts.webPreferences?.nodeIntegration) {
+    return DiscordWindowType.SPLASH_SCREEN;
+  } else if (opts.webPreferences?.offscreen) {
+    return DiscordWindowType.OVERLAY;
+  } else if (opts.webPreferences?.preload) {
+    if (opts.webPreferences.nativeWindowOpen) {
+      return DiscordWindowType.DISCORD_CLIENT;
+    } else {
+      // Splash Screen on macOS (Host 0.0.262+) & Windows (Host 0.0.293 / 1.0.17+)
+      return DiscordWindowType.DISCORD_CLIENT;
+    }
+  }
+
+  return DiscordWindowType.UNKNOWN;
+}
+
 // This class has to be named "BrowserWindow" exactly
 // https://github.com/discord/electron/blob/13-x-y/lib/browser/api/browser-window.ts#L60-L62
 // Thank you, Ven, for pointing this out!
@@ -55,29 +92,52 @@ class BrowserWindow extends electron.BrowserWindow {
     if (opts.frame && process.platform.includes("linux") && customTitlebar) opts.frame = void 0;
 
     const originalPreload = opts.webPreferences?.preload;
-    if (opts.webPreferences) {
-      opts.webPreferences.nodeIntegration = true; // Enable Node.js in the renderer process
-      opts.webPreferences.contextIsolation = false; // Disable context isolation
-    }
-    if (opts.webContents) {
-      // General purpose pop-outs used by Discord
-    } else if (opts.webPreferences?.offscreen) {
-      // Overlay
-      //      originalPreload = opts.webPreferences.preload;
-      // opts.webPreferences.preload = join(__dirname, './preload.js');
-    } else if (opts.webPreferences?.preload) {
-      // originalPreload = opts.webPreferences.preload;
-      if (opts.webPreferences.nativeWindowOpen) {
-        // Discord Client
-        opts.webPreferences.preload = join(__dirname, "./preload.js");
-        // opts.webPreferences.contextIsolation = false; // shrug
-      } else {
-        // Splash Screen on macOS (Host 0.0.262+) & Windows (Host 0.0.293 / 1.0.17+)
-        opts.webPreferences.preload = join(__dirname, "./preload.js");
+
+    const currentWindow = windowTypeFromOpts(opts);
+
+    switch (currentWindow) {
+      case DiscordWindowType.DISCORD_CLIENT: {
+        opts.webPreferences!.preload = join(__dirname, "./preload.js");
+
+        if (transparent) {
+          switch (process.platform) {
+            case "win32":
+              opts.transparent = true;
+              opts.backgroundColor = "#00000000";
+              break;
+            case "linux":
+              opts.backgroundColor = "#00000000";
+              opts.transparent = true;
+              break;
+          }
+        }
+        break;
+      }
+      case DiscordWindowType.SPLASH_SCREEN: {
+        // opts.webPreferences.preload = join(__dirname, "./preloadSplash.js");
+        break;
+      }
+      case DiscordWindowType.OVERLAY: {
+        // opts.webPreferences.preload = join(__dirname, "./preload.js");
+        break;
       }
     }
 
     super(opts);
+
+    // Center the unmaximized location
+    if (transparent) {
+      const currentDisplay = electron.screen.getDisplayNearestPoint(
+        electron.screen.getCursorScreenPoint(),
+      );
+      this.repluggedPreviousBounds.x =
+        currentDisplay.workArea.width / 2 - this.repluggedPreviousBounds.width / 2;
+      this.repluggedPreviousBounds.y =
+        currentDisplay.workArea.height / 2 - this.repluggedPreviousBounds.height / 2;
+      this.maximize = this.repluggedToggleMaximize;
+      this.unmaximize = this.repluggedToggleMaximize;
+    }
+
     (this.webContents as RepluggedWebContents).originalPreload = originalPreload;
 
     this.webContents.on("devtools-opened", () => {
@@ -88,6 +148,38 @@ class BrowserWindow extends electron.BrowserWindow {
     Logger.log = (...args) => this.webContents.send(RepluggedIpcChannels.CONSOLE_LOG, ...args);
     Logger.warn = (...args) => this.webContents.send(RepluggedIpcChannels.CONSOLE_WARN, ...args);
     Logger.error = (...args) => this.webContents.send(RepluggedIpcChannels.CONSOLE_ERROR, ...args);
+  }
+
+  private repluggedPreviousBounds: Electron.Rectangle = {
+    width: 1400,
+    height: 900,
+    x: 0,
+    y: 0,
+  };
+
+  public repluggedToggleMaximize(): void {
+    // Determine whether the display is actually maximized already
+    let currentBounds = this.getBounds();
+    const currentDisplay = electron.screen.getDisplayNearestPoint(
+      electron.screen.getCursorScreenPoint(),
+    );
+    const workAreaSize = currentDisplay.workArea;
+    if (
+      currentBounds.width === workAreaSize.width &&
+      currentBounds.height === workAreaSize.height
+    ) {
+      // Un-maximize
+      this.setBounds(this.repluggedPreviousBounds);
+      return;
+    }
+
+    this.repluggedPreviousBounds = this.getBounds();
+    this.setBounds({
+      x: workAreaSize.x + 1,
+      y: workAreaSize.y + 1,
+      width: workAreaSize.width,
+      height: workAreaSize.height,
+    });
   }
 }
 

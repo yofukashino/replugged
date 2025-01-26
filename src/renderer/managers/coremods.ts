@@ -31,9 +31,11 @@ export namespace coremods {
   export let contextMenu: Coremod;
   export let language: Coremod;
   export let rpc: Coremod;
+  export let reactDevtoolsSourceInspector: Coremod;
   export let watcher: Coremod;
   export let commands: Coremod;
   export let welcome: Coremod;
+  export let transparency: Coremod;
 }
 
 export async function start(name: keyof typeof coremods): Promise<void> {
@@ -58,9 +60,11 @@ export async function startAll(): Promise<void> {
   coremods.contextMenu = await import("../coremods/contextMenu");
   coremods.language = await import("../coremods/language");
   coremods.rpc = await import("../coremods/rpc");
+  coremods.reactDevtoolsSourceInspector = await import("../coremods/rdtComponentSourceFix");
   coremods.watcher = await import("../coremods/watcher");
   coremods.commands = await import("../coremods/commands");
   coremods.welcome = await import("../coremods/welcome");
+  coremods.transparency = await import("../coremods/transparency");
 
   await Promise.all(
     Object.entries(coremods).map(async ([name, mod]) => {

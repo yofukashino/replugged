@@ -12,7 +12,10 @@ export type GeneralSettings = {
   showWelcomeNoticeOnOpen?: boolean;
   addonEmbeds?: boolean;
   reactDevTools?: boolean;
+
   titlebar?: boolean;
+
+  transparentWindow?: boolean;
 };
 
 export const defaultSettings = {
@@ -21,6 +24,7 @@ export const defaultSettings = {
   badges: true,
   autoApplyQuickCss: false,
   showWelcomeNoticeOnOpen: true,
+  transparentWindow: false,
   reactDevTools: false,
   addonEmbeds: true,
   titlebar: false,

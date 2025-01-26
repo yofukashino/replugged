@@ -1,4 +1,20 @@
 import type { PlaintextPatch } from "src/types";
+/* function unifyClass(fn: (...args: string[]) => string, ...classes: string[]): string {
+  const names = new Set(
+    fn
+      .call(this, ...classes)
+      .split(" ")
+      .filter((c) => /_|-/.test(c)),
+  );
+
+  const suffixes = new Set<string>();
+  names.forEach((name) => {
+    const match = name.match(/^(\w+)_/);
+    if (match) suffixes.add(match[1]);
+  });
+
+  return `${[...names].join(" ")} ${[...suffixes].join("_")}`;
+} */
 
 export default [
   {
@@ -21,14 +37,18 @@ export default [
     ],
   },
 
-  {
-    find: ".getBinds()",
+  /*   {
+    find: "className:",
     replacements: [
+        {
+        match: /className:(\w+\.(\w+))/g,
+        replace: (_, name, key) => `className:${name}+" ${key}"`,
+      }, 
       {
-        match: /"en-US"\)\.getBinds\(\);((\w+)\.\w+=(\w+))/g,
-        replace: (_, suffix, mod, variable) =>
-          `"en-US");${suffix}.getBinds();${mod}.ZP=${variable}`,
+        match: /className:(\w+\(\))/g,
+        replace: (_, merger) =>
+          `className:(unifyClass?.bind?.(this, ${merger}) ?? ${merger})`,
       },
     ],
-  },
+  }, */
 ] as PlaintextPatch[];

@@ -142,14 +142,11 @@ function mapPluginNatives(): void {
 }
 mapPluginNatives();
 
-ipcMain.handle(
-  RepluggedIpcChannels.GET_PLUGIN,
-  (_, pluginName: string): RepluggedPlugin | undefined => {
-    try {
-      return getPlugin(pluginName);
-    } catch {}
-  },
-);
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN, (event, pluginName: string) => {
+  try {
+    event.returnValue = getPlugin(pluginName);
+  } catch {}
+});
 
 ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
   event.returnValue = listPlugins();
