@@ -82,7 +82,6 @@ export const settingsTools: SettingsTools = {
 };
 
 export function insertSections(sections: SectionType[]): SectionType[] {
-  console.log(sections);
   for (const section of settingsTools.rpSections) {
     sections.splice(section.fromEnd ? sections.length + section.pos : section.pos, 0, section);
   }

@@ -25,7 +25,6 @@ export function Percentage(
   localizedName: React.ReactElement,
   flag: React.ReactElement,
 ): React.ReactElement {
-  console.log(localeName);
   const name = localeName.props.children as string;
   const locale = getLanguages().find((language) => language.name === name)!.code;
   const percentage = percentages.get(locale);

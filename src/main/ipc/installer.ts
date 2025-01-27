@@ -230,8 +230,6 @@ ipcMain.handle(
       };
     }
 
-    Logger.log(url, filePath);
-
     try {
       await writeFile(filePath, buf);
     } catch (err) {
