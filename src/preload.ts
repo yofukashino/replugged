@@ -26,10 +26,7 @@ ipcRenderer.on(RepluggedIpcChannels.CONSOLE_LOG, (_event, ...args) => MainLogger
 ipcRenderer.on(RepluggedIpcChannels.CONSOLE_WARN, (_event, ...args) => MainLogger.warn(...args));
 ipcRenderer.on(RepluggedIpcChannels.CONSOLE_ERROR, (_event, ...args) => MainLogger.error(...args));
 
-let version = "";
-void ipcRenderer.invoke(RepluggedIpcChannels.GET_REPLUGGED_VERSION).then((v) => {
-  version = v;
-});
+let version = "dev";
 
 const mapNative = (
   nativeList: Record<string, Record<string, string>>,

@@ -40,6 +40,7 @@ export default [
       },
     ],
   },
+
   {
     find: "window.DiscordSentry",
     replacements: [
