@@ -166,24 +166,20 @@ const getMenu = async (): Promise<ContextMenuType> => {
     customitem: "MenuItem",
   } as const;
 
-  const menuMod = await waitForModule<Record<string, React.ComponentType>>(
-    filters.bySource(/function \w+\(\w+\){return null}function \w+\(\w+\){return null}/),
-  );
-
   const rawMod = await waitForModule(filters.bySource("menuitemcheckbox"), { raw: true });
   const source = sourceStrings[rawMod?.id].matchAll(
     /if\(\w+\.type===\w+\.(\w+)(?:\.\w+)?\).+?type:"(.+?)"/gs,
   );
 
-  const menuComponents = Object.entries(menuMod)
+  const menuComponents = Object.entries(await components)
     .filter(([_, m]) => /^function.+\(e?\){(\s+)?return null(\s+)?}$/.test(m?.toString?.()))
     .reduce((components, [name, component]) => {
-      components[name] = component;
+      components[name.substring(0, 2)] = component;
       return components;
     }, {});
   const Menu = {
     ItemColors,
-    ContextMenu: getFunctionBySource(rawMod.exports, "getContainerProps"),
+    ContextMenu: getFunctionBySource(await components, "getContainerProps"),
   } as ContextMenuType;
 
   for (const [, identifier, type] of source) {
