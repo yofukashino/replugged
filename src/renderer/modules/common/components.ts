@@ -58,4 +58,4 @@ interface DiscordComponents {
   Tooltip: OriginalTooltipType;
 }
 
-export default waitForProps<DiscordComponents>("FormText", "MenuItem");
+export default waitForProps<DiscordComponents>("ConfirmModal", "ToastPosition");

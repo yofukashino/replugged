@@ -1,5 +1,6 @@
 import type React from "react";
 import components from "../common/components";
+import { webpack } from "@replugged";
 
 const Types = {
   WANDERING_CUBES: "wanderingCubes",
@@ -26,4 +27,4 @@ export type LoaderType = React.FC<LoaderProps | SpinningCircleLoaderProps> & {
   Type: typeof Types;
 };
 
-export default components.then((v) => v.Spinner);
+export default components.then((v) => webpack.getFunctionBySource(v, "wanderingCubes"));

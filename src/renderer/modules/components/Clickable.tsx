@@ -1,5 +1,6 @@
 import type React from "react";
 import components from "../common/components";
+import { webpack } from "@replugged";
 
 // @todo: generic type for tags?
 type ClickableProps = React.ComponentPropsWithoutRef<"div"> & {
@@ -16,7 +17,10 @@ export type ClickableCompType = React.ComponentClass<React.PropsWithChildren<Cli
 export type ClickableType = React.FC<React.PropsWithChildren<ClickableProps>>;
 
 const getClickable = async (): Promise<ClickableType> => {
-  const { Clickable } = await components;
+  const Clickable = webpack.getFunctionBySource<ClickableType>(
+    await components,
+    "this.renderNonInteractive()",
+  )!;
   return (props: React.PropsWithChildren<ClickableProps>): React.ReactElement => {
     const style = props.style || {};
     style.cursor = "pointer";

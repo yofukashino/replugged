@@ -1,6 +1,7 @@
 import type React from "react";
 import { FormItem } from ".";
 import components from "../common/components";
+import { webpack } from "@replugged";
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 type RadioOptionType = {
@@ -49,7 +50,7 @@ const getRadioItem = async (): Promise<{
   RadioItem: RadioItemType;
   Radio: RadioType;
 }> => {
-  const Radio = (await components).RadioGroup;
+  const Radio = webpack.getFunctionBySource(await components, "itemInfoClassName:");
 
   const RadioItem = (props: React.PropsWithChildren<RadioItemProps>): React.ReactElement => {
     return (

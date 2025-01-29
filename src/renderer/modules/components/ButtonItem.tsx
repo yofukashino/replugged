@@ -2,6 +2,7 @@ import type React from "react";
 import { Divider, Flex, FormText, Tooltip } from ".";
 import components from "../common/components";
 import { waitForProps } from "../webpack";
+import { webpack } from "@replugged";
 
 interface ButtonProps extends React.ComponentPropsWithoutRef<"button"> {
   look?: string;
@@ -77,7 +78,7 @@ const getButtonItems = async (): Promise<{
   ButtonItem: ButtonItemType;
   Button: ButtonType;
 }> => {
-  const { Button } = await components;
+  const Button = webpack.getFunctionBySource<ButtonType>(await components, "button")!;
 
   const classes =
     await waitForProps<Record<"dividerDefault" | "labelRow" | "note" | "title", string>>(

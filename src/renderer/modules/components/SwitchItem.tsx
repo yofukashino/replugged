@@ -1,5 +1,6 @@
 import type React from "react";
 import components from "../common/components";
+import { webpack } from "@replugged";
 
 interface SwitchProps {
   checked?: boolean;
@@ -28,8 +29,11 @@ interface SwitchItemProps {
 export type SwitchItemType = React.FC<React.PropsWithChildren<SwitchItemProps>>;
 
 const getSwitchItem = async (): Promise<{ Switch: SwitchType; SwitchItem: SwitchItemType }> => ({
-  Switch: (await components).Switch,
-  SwitchItem: (await components).FormSwitch,
+  Switch: webpack.getFunctionBySource(await components, "Switch"),
+  SwitchItem: webpack.getFunctionBySource(
+    await components,
+    /hideBorder:\w+=!1,tooltipNote:\w+,onChange/,
+  ),
 });
 
 export default getSwitchItem();

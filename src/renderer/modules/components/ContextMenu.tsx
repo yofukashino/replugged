@@ -1,5 +1,7 @@
 import type React from "react";
 import components from "../common/components";
+import { filters, getFunctionBySource, waitForModule } from "@webpack";
+import { sourceStrings } from "../webpack/patch-load";
 
 const ItemColors = {
   DEFAULT: "default",
@@ -154,15 +156,41 @@ export interface ContextMenuType {
   MenuSeparator: React.FC;
 }
 
-const getMenu = async (): Promise<ContextMenuType> => ({
-  ContextMenu: (await components).Menu,
-  ItemColors,
-  MenuCheckboxItem: (await components).MenuCheckboxItem,
-  MenuControlItem: (await components).MenuControlItem,
-  MenuGroup: (await components).MenuGroup,
-  MenuItem: (await components).MenuItem,
-  MenuRadioItem: (await components).MenuRadioItem,
-  MenuSeparator: (await components).MenuSeparator,
-});
+const getMenu = async (): Promise<ContextMenuType> => {
+  const componentMap: Record<string, keyof ContextMenuType> = {
+    separator: "MenuSeparator",
+    checkbox: "MenuCheckboxItem",
+    radio: "MenuRadioItem",
+    control: "MenuControlItem",
+    groupstart: "MenuGroup",
+    customitem: "MenuItem",
+  } as const;
+
+  const menuMod = await waitForModule<Record<string, React.ComponentType>>(
+    filters.bySource(/function \w+\(\w+\){return null}function \w+\(\w+\){return null}/),
+  );
+
+  const rawMod = await waitForModule(filters.bySource("menuitemcheckbox"), { raw: true });
+  const source = sourceStrings[rawMod?.id].matchAll(
+    /if\(\w+\.type===\w+\.(\w+)(?:\.\w+)?\).+?type:"(.+?)"/gs,
+  );
+
+  const menuComponents = Object.entries(menuMod)
+    .filter(([_, m]) => /^function.+\(e?\){(\s+)?return null(\s+)?}$/.test(m?.toString?.()))
+    .reduce((components, [name, component]) => {
+      components[name] = component;
+      return components;
+    }, {});
+  const Menu = {
+    ItemColors,
+    ContextMenu: getFunctionBySource(rawMod.exports, "getContainerProps"),
+  } as ContextMenuType;
+
+  for (const [, identifier, type] of source) {
+    // @ts-expect-error Doesn't like that the generic changes
+    Menu[componentMap[type]] = menuComponents[identifier];
+  }
+  return Menu;
+};
 
 export default getMenu();

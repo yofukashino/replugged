@@ -1,5 +1,6 @@
 import type React from "react";
 import components from "../common/components";
+import { webpack } from "@replugged";
 
 export type FormTextTypeKey =
   | "DEFAULT"
@@ -34,8 +35,14 @@ export const FormText: FormTextType = {
 };
 
 const mapFormText = async (): Promise<void> => {
-  const FormTextComp = (await components).FormText;
-  const types = (await components).FormTextTypes;
+  const FormTextComp = webpack.getFunctionBySource<FormTextCompType>(
+    await components,
+    /type:\w+=\w+\.DEFAULT/,
+  )!;
+  const types = webpack.getExportsForProps<Record<FormTextTypeKey, string>>(await components, [
+    "LABEL_DESCRIPTOR",
+    "INPUT_PLACEHOLDER",
+  ]);
   if (typeof types === "object" && types !== null)
     Object.keys(types).forEach((key) => {
       FormText[key] = (props: React.PropsWithChildren<FormTextProps>) => (

@@ -1,7 +1,6 @@
 import type React from "react";
 import { Divider, FormText } from ".";
-import components from "../common/components";
-import { waitForProps } from "../webpack";
+import { filters, waitForModule, waitForProps } from "../webpack";
 
 interface FormItemCompProps extends Omit<React.ComponentPropsWithoutRef<"div">, "title"> {
   children: React.ReactNode;
@@ -31,7 +30,7 @@ interface FormItemProps extends FormItemCompProps {
 export type FormItemType = React.FC<FormItemProps>;
 
 const getFormItem = async (): Promise<FormItemType> => {
-  const FormItemComp = (await components).FormItem;
+  const FormItemComp = await waitForModule<FormItemCompType>(filters.bySource(".fieldWrapper"));
 
   const classes = await waitForProps<Record<"dividerDefault", string>>("dividerDefault");
   return (props) => {

@@ -1,6 +1,7 @@
 import components from "@common/components";
 import type React from "react";
 import type { Variant } from "./Text";
+import { webpack } from "@replugged";
 
 const HelpMessageTypes = {
   WARNING: 0,
@@ -22,8 +23,8 @@ export type NoticeType = React.FC<HelpMessageProps> & {
   HelpMessageTypes: typeof HelpMessageTypes;
 };
 const getNotice = async (): Promise<NoticeType> => {
-  const { HelpMessage } = await components;
-  HelpMessage.HelpMessageTypes = (await components).HelpMessageTypes;
+  const HelpMessage = webpack.getFunctionBySource(await components, "messageType:")!;
+  HelpMessage.HelpMessageTypes = HelpMessageTypes;
   HelpMessage.Types = HelpMessage.HelpMessageTypes;
   return HelpMessage;
 };
