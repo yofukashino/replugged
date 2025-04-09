@@ -166,6 +166,7 @@ export function runPlaintextPatches(): void {
   const disabled: string[] = settings.get("disabled", []);
   const list = [...plugins.values()].filter((x) => !disabled.includes(x.manifest.id));
 
+
   for (const plugin of list) {
     if (!plugin.manifest.plaintextPatches) continue;
 
@@ -195,7 +196,7 @@ export function runPlaintextPatches(): void {
         }
       }
 
-      patchPlaintext(patches.default);
+      patchPlaintext(patches.default, plugin.manifest.id);
     } catch (err) {
       logger.error(`Error applying plaintext patches for ${plugin.manifest.id}`, err);
     }
