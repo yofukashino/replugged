@@ -1,6 +1,6 @@
+import { filters, getFunctionBySource, waitForModule } from "@webpack";
 import type React from "react";
 import components from "../common/components";
-import { filters, getFunctionBySource, waitForModule } from "@webpack";
 import { sourceStrings } from "../webpack/patch-load";
 
 const ItemColors = {
@@ -156,34 +156,33 @@ export interface ContextMenuType {
   MenuSeparator: React.FC;
 }
 
-const getMenu = async (): Promise<ContextMenuType> => {
-  const componentMap: Record<string, keyof ContextMenuType> = {
-    separator: "MenuSeparator",
-    checkbox: "MenuCheckboxItem",
-    radio: "MenuRadioItem",
-    control: "MenuControlItem",
-    groupstart: "MenuGroup",
-    customitem: "MenuItem",
-  } as const;
+const componentMap: Record<string, keyof Omit<ContextMenuType, "ContextMenu" | "ItemColors">> = {
+  separator: "MenuSeparator",
+  checkbox: "MenuCheckboxItem",
+  radio: "MenuRadioItem",
+  control: "MenuControlItem",
+  groupstart: "MenuGroup",
+  customitem: "MenuItem",
+} as const;
 
+const getMenu = async (): Promise<ContextMenuType> => {
   const rawMod = await waitForModule(filters.bySource("menuitemcheckbox"), { raw: true });
   const source = sourceStrings[rawMod?.id].matchAll(
     /if\(\w+\.type===\w+\.(\w+)(?:\.\w+)?\).+?type:"(.+?)"/gs,
   );
 
-  const menuComponents = Object.entries(await components)
+  const menuComponents = Object.entries((await components) as Record<string, () => null>)
     .filter(([_, m]) => /^function.+\(e?\){(\s+)?return null(\s+)?}$/.test(m?.toString?.()))
-    .reduce((components, [name, component]) => {
+    .reduce<Record<string, () => null>>((components, [name, component]) => {
       components[name.substring(0, 2)] = component;
       return components;
     }, {});
   const Menu = {
     ItemColors,
-    ContextMenu: getFunctionBySource(await components, "getContainerProps"),
+    ContextMenu: getFunctionBySource(await components, "menuItemProps:"),
   } as ContextMenuType;
 
   for (const [, identifier, type] of source) {
-    // @ts-expect-error Doesn't like that the generic changes
     Menu[componentMap[type]] = menuComponents[identifier];
   }
   return Menu;

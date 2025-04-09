@@ -30,8 +30,8 @@ interface FormItemProps extends FormItemCompProps {
 export type FormItemType = React.FC<FormItemProps>;
 
 const getFormItem = async (): Promise<FormItemType> => {
-  const FormItemComp = await waitForModule<FormItemCompType>(filters.bySource(".fieldWrapper"));
-
+  const FormItemCompMod = await waitForModule<FormItemCompType>(filters.bySource(".fieldWrapper"));
+  const FormItemComp = Object.values(FormItemCompMod)[0];
   const classes = await waitForProps<Record<"dividerDefault", string>>("dividerDefault");
   return (props) => {
     const {

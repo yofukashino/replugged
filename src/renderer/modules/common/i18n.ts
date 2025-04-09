@@ -8,7 +8,8 @@ import type {
   markdownFormatter,
   stringFormatter,
 } from "@discord/intl";
-import { waitForProps } from "../webpack";
+import { getExportsForProps, getFunctionBySource, waitForModule, waitForProps } from "../webpack";
+import { bySource } from "../webpack/filters";
 
 type MessagesBinds = Record<string, TypedIntlMessageGetter<object>>;
 
@@ -38,6 +39,7 @@ export interface I18n {
     formatToMarkdownString: FormatFunction<typeof markdownFormatter>;
     formatToParts: FormatFunction<typeof astFormatter>;
   };
+  runtimeHashMessageKey: Hash["runtimeHashMessageKey"];
   t: MessagesBinds;
 }
 
@@ -46,20 +48,25 @@ export interface Hash {
 }
 
 const getI18n = async (): Promise<I18n> => {
-  const {
-    getAvailableLocales,
-    getLanguages,
-    getSystemLocale,
-    international,
-    intl,
-    t: discordT,
-  } = await waitForProps<I18n>("getAvailableLocales", "intl");
+  const intlMod = await waitForModule<I18n>(bySource(/new \w+\.IntlManager/));
+  const getAvailableLocales = getFunctionBySource(intlMod, /{return \w+\(\d+\)}/);
+  const getLanguages = getFunctionBySource(intlMod, ".runtimeHashMessageKey");
+
+  const intl = getExportsForProps(intlMod, ["defaultLocale", "currentLocale"]);
+  const discordT = getExportsForProps(intlMod, ["$$loader", "$$baseObject"]);
+
   const { runtimeHashMessageKey } = await waitForProps<Hash>("runtimeHashMessageKey");
 
   const t = new Proxy(discordT, {
     get: (t, key: string) => t[runtimeHashMessageKey(key)],
   });
-  return { getAvailableLocales, getLanguages, getSystemLocale, international, intl, t };
+  return {
+    getAvailableLocales,
+    getLanguages,
+    intl,
+    runtimeHashMessageKey,
+    t,
+  };
 };
 
 export default getI18n();

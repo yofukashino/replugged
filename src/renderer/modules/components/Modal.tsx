@@ -56,11 +56,11 @@ export interface ModalType {
 }
 
 const getModal = async (): Promise<ModalType> => ({
-  ModalRoot: getFunctionBySource(await components, "().root")!,
-  ModalHeader: getFunctionBySource(await components, "().header")!,
-  ModalContent: getFunctionBySource(await components, "().content")!,
-  ModalFooter: getFunctionBySource(await components, "().footerSeparator")!,
-  ModalCloseButton: getFunctionBySource(await components, "().closeWithCircleBackground")!,
+  ModalRoot: getFunctionBySource(await components, /\w+\.root/)!,
+  ModalHeader: getFunctionBySource(await components, /.header,\w+\.className/)!,
+  ModalContent: getFunctionBySource(await components, /.content,\w+\),ref/)!,
+  ModalFooter: getFunctionBySource(await components, /\w+\.footerSeparator/)!,
+  ModalCloseButton: getFunctionBySource(await components, /\w+\.closeWithCircleBackground/)!,
 });
 
 export default getModal();

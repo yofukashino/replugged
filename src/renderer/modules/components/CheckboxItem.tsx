@@ -35,7 +35,7 @@ const getCheckboxItem = async (): Promise<{
   Checkbox: CheckboxType;
   CheckboxItem: CheckboxItemType;
 }> => {
-  const Checkbox = webpack.getFunctionBySource<CheckboxType>(await components, "checkbox")!;
+  const Checkbox = webpack.getFunctionBySource<CheckboxType>(await components, 'type:"checkbox"')!;
 
   const CheckboxItem = (props: React.PropsWithChildren<CheckboxProps>): React.ReactElement => {
     return (

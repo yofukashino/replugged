@@ -38,8 +38,8 @@
     "url": "https://github.com/replugged-org/replugged/issues"
   },
   "devDependencies": {
-    "@discord/intl": "^0.13.1",
-    "@discord/intl-loader-core": "^0.13.1",
+    "@discord/intl": "^0.20.1",
+    "@discord/intl-loader-core": "^0.20.1",
     "@marshift/argus": "^1.2.1",
     "@types/adm-zip": "^0.5.6",
     "@types/lodash": "^4.17.13",
@@ -88,6 +88,7 @@
     "codemirror": "^6.0.1",
     "esbuild": "^0.24.0",
     "esbuild-sass-plugin": "^3.3.1",
+    "idb-keyval": "^6.2.1",
     "import-sync": "^2.2.3",
     "prompts": "^2.4.2",
     "semver": "^7.6.3",

@@ -26,7 +26,8 @@ export function Percentage(
   flag: React.ReactElement,
 ): React.ReactElement {
   const name = localeName.props.children as string;
-  const locale = getLanguages().find((language) => language.name === name)!.code;
+  const locale = getLanguages().find((language) => language.name === name)!.value;
+
   const percentage = percentages.get(locale);
 
   return (
@@ -44,12 +45,14 @@ export function Percentage(
 }
 
 export function start(): void {
-  const totalStrCount = Object.keys(t).length;
-
+  const totalStrCount = Object.keys(messagesLoader.messages[messagesLoader.defaultLocale]).length;
   Object.entries(messagesLoader.localeImportMap).forEach(async ([locale, getStrings]) => {
     const strings = (await getStrings()).default;
+
     const strCount = Object.values(strings).filter((str) => Boolean(str)).length;
+
     const percentage = Math.floor((strCount / totalStrCount) * 100);
+
     percentages.set(locale, percentage);
   });
 }

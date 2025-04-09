@@ -65,6 +65,17 @@ importTimeout("RadioItem", import("./RadioItem"), async (mod) => {
   RadioItem = comps.RadioItem;
 });
 
+import type { KeybindItemType, KeybindType } from "./KeybindItem";
+export type { KeybindType, KeybindItemType };
+export let Keybind: KeybindType;
+export let KeybindItem: KeybindItemType;
+
+importTimeout("KeybindItem", import("./KeybindItem"), async (mod) => {
+  const comps = await mod.default;
+  Keybind = comps.Keybind;
+  KeybindItem = comps.KeybindItem;
+});
+
 import type { SelectItemType, SelectType } from "./SelectItem";
 export type { SelectType, SelectItemType };
 export let Select: SelectType;

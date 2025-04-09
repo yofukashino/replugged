@@ -3,7 +3,16 @@ import { execSync } from "child_process";
 
 import { extractAll } from "@electron/asar";
 import { tmpdir } from "os";
-import { chownSync, existsSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from "fs";
+import {
+  chownSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "fs";
 import path, { join } from "path";
 import chalk from "chalk";
 
@@ -50,6 +59,16 @@ export const CONFIG_PATH = configPathFn();
 
 if (!existsSync(CONFIG_PATH)) {
   mkdirSync(CONFIG_PATH, { recursive: true });
+}
+
+for (const file of readdirSync(tmpdir())) {
+  if (file.startsWith("replugged-theme-") || file.startsWith("replugged-plugin-")) {
+    const tempDir = join(tmpdir(), file);
+    try {
+      rmSync(tempDir, { recursive: true, force: true });
+      console.log(`Deleted old temp dir: ${tempDir}`);
+    } catch {}
+  }
 }
 
 const CONFIG_FOLDER_NAMES = [

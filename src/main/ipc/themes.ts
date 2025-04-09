@@ -4,15 +4,14 @@ IPC events:
 - REPLUGGED_UNINSTALL_THEME: uninstalls a theme by name
 */
 
-import { readFile, readdir, readlink, rm, stat, unlink } from "fs/promises";
+import { readFile, readdir, readlink, rm, stat } from "fs/promises";
 import { type Dirent, type Stats } from "fs";
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
 import { RepluggedIpcChannels, type RepluggedTheme } from "../../types";
 import { theme } from "../../types/addon";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
-import { Logger } from "..";
-
+import Logger from "../logger";
 const THEMES_DIR = CONFIG_PATHS.themes;
 const TEMP_THEMES_DIR = CONFIG_PATHS.temp_themes;
 
@@ -78,7 +77,7 @@ ipcMain.handle(RepluggedIpcChannels.LIST_THEMES, async (): Promise<RepluggedThem
     try {
       themes.push(await getTheme(themeDir.name));
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
     }
   }
 

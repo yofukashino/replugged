@@ -6,10 +6,10 @@ import {
   Divider,
   Flex,
   FormItem,
-  Notice,
   SwitchItem,
   Text,
   TextInput,
+  KeybindItem,
 } from "@components";
 import { t } from "src/renderer/modules/i18n";
 import { type GeneralSettings, defaultSettings } from "src/types";
@@ -54,10 +54,6 @@ export const General = (): React.ReactElement => {
   const { value: rdtValue, onChange: rdtOnChange } = util.useSetting(
     generalSettings,
     "reactDevTools",
-  );
-  const { value: transValue, onChange: transOnChange } = util.useSetting(
-    generalSettings,
-    "transparentWindow",
   );
 
   const { value: titlbarValue, onChange: titlebarOnChange } = util.useSetting(
@@ -116,7 +112,7 @@ export const General = (): React.ReactElement => {
         note={i18n.intl.string(t.REPLUGGED_SETTINGS_ADDON_EMBEDS_DESC)}>
         {i18n.intl.string(t.REPLUGGED_SETTINGS_ADDON_EMBEDS)}
       </SwitchItem>
-
+      <KeybindItem />
       <SwitchItem
         {...util.useSetting(generalSettings, "autoApplyQuickCss")}
         note={i18n.intl.string(t.REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY_DESC)}>
@@ -137,26 +133,6 @@ export const General = (): React.ReactElement => {
           </SwitchItem>
         )
       }
-
-      <div style={{ marginBottom: "15px" }}>
-        {(DiscordNative.process.platform === "linux" ||
-          DiscordNative.process.platform === "win32") && (
-          <Notice messageType={Notice.Types.WARNING} className="">
-            {DiscordNative.process.platform === "linux"
-              ? i18n.intl.format(t.REPLUGGED_SETTINGS_TRANSPARENT_ISSUES_LINUX, {})
-              : i18n.intl.format(t.REPLUGGED_SETTINGS_TRANSPARENT_ISSUES_WINDOWS, {})}
-          </Notice>
-        )}
-      </div>
-      <SwitchItem
-        value={transValue}
-        onChange={(value) => {
-          transOnChange(value);
-          restartModal(true);
-        }}
-        note={i18n.intl.format(t.REPLUGGED_SETTINGS_TRANSPARENT_DESC, {})}>
-        {i18n.intl.string(t.REPLUGGED_SETTINGS_TRANSPARENT)}
-      </SwitchItem>
 
       <Category
         title={i18n.intl.string(t.REPLUGGED_SETTINGS_ADVANCED)}

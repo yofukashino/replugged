@@ -16,7 +16,6 @@ import { getSetting } from "./settings";
 import { promisify } from "util";
 
 import { WEBSITE_URL } from "src/constants";
-import { Logger } from "..";
 
 const writeFile = promisify(originalWriteFile);
 

@@ -18,8 +18,6 @@ export let wpRequire: WebpackRequire | undefined;
 
 export let webpackChunks: WebpackRawModules | undefined;
 
-const patchedModules = new Set<string>();
-
 /**
  * Original stringified module (without plaintext patches applied) for source searches
  * @internal
@@ -27,17 +25,13 @@ const patchedModules = new Set<string>();
  */
 export const sourceStrings: Record<number, string> = {};
 
-function patchChunk(chunk: WebpackChunk): void {
-  const modules = chunk[1];
+function patchChunk(modules: WebpackChunk[1]): void {
   for (const id in modules) {
-    if (patchedModules.has(id)) continue;
-    patchedModules.add(id);
     const originalMod = modules[id];
     sourceStrings[id] = originalMod.toString();
     const mod = patchModuleSource(originalMod, id);
     modules[id] = function (module, exports, require) {
       mod(module, exports, require);
-
       for (const [filter, callback] of listeners) {
         try {
           if (filter(module)) {
@@ -59,7 +53,7 @@ function patchPush(webpackChunk: WebpackChunkGlobal): void {
   let original = webpackChunk.push;
 
   function handlePush(chunk: WebpackChunk): unknown {
-    patchChunk(chunk);
+    patchChunk(chunk[1]);
     return original.call(webpackChunk, chunk);
   }
 
@@ -90,12 +84,9 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
       if (r) {
         // The first batch of modules are added inline via r.m rather than being pushed
 
-        r.d = (module: unknown, exports: Record<string, () => unknown>) => {
+        r.d = (module: Record<string, unknown>, exports: Record<string, () => unknown>) => {
           for (const prop in exports) {
-            if (
-              Object.hasOwnProperty.call(exports, prop) &&
-              !Object.hasOwnProperty.call(module, prop)
-            ) {
+            if (prop in exports && !(prop in module)) {
               Object.defineProperty(module, prop, {
                 enumerable: true,
                 configurable: true,
@@ -106,7 +97,7 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
           }
         };
 
-        patchChunk([[], wpRequire.m]);
+        patchChunk(wpRequire.m);
       }
     },
   ]);
@@ -114,7 +105,7 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
   // Patch previously loaded chunks
   if (Array.isArray(chunksGlobal)) {
     for (const loadedChunk of chunksGlobal) {
-      patchChunk(loadedChunk);
+      patchChunk(loadedChunk[1]);
     }
   }
 }

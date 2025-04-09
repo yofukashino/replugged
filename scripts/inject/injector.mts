@@ -154,7 +154,13 @@ export const inject = async (
         } com.discordapp.${discordName} --filesystem=${join(dirname, "..", "..")}`,
       );
       console.log(
-        `${AnsiEscapes.YELLOW}Flatpak Development detected, allowing Discord access to Replugged files (${join(dirname, "..", "..")})${AnsiEscapes.RESET}`,
+        `${
+          AnsiEscapes.YELLOW
+        }Flatpak Development detected, allowing Discord access to Replugged files (${join(
+          dirname,
+          "..",
+          "..",
+        )})${AnsiEscapes.RESET}`,
       );
     }
     console.log("Done!");
@@ -229,9 +235,9 @@ export const uninject = async (
     return false;
   }
   await asar.extractAll(appDir, join(appDir, "..", "temp"));
-  //await rm(appDir, { recursive: true, force: true });
+  await rm(appDir, { recursive: true, force: true });
   await asar.createPackage(join(appDir, "..", "temp", "app.orig"), appDir);
-  //  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
+  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
   // For discord_arch_electron
   if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
     await rename(
@@ -286,7 +292,7 @@ export const smartInject = async (
           });
           break;
         case "darwin":
-          openProcess(`open -a ${join(PlatformNames[platform], "..", "..", "..")}`);
+          openProcess(`open -a ${PlatformNames[platform]}.app`);
           break;
       }
     }

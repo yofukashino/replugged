@@ -19,7 +19,7 @@ export type WebpackRawModules = Record<string | number, RawModule>;
 
 export type WebpackRequire = ((e: number) => unknown) & {
   c?: WebpackRawModules;
-  d: (module: unknown, exports: Record<string, () => unknown>) => void;
+  d: (module: Record<string, unknown>, exports: Record<string, () => unknown>) => void;
   m: WebpackChunk[1];
 };
 

@@ -1,6 +1,7 @@
 export * as injector from "./modules/injector";
 export { Injector } from "./modules/injector";
-
+export * as intl from "@discord/intl";
+export * as IndexedDB from "idb-keyval";
 /**
  * The logger module provides a convenient and consistent way to associate things printed to the console
  * with their origin. This makes it easier to associate console messages with their origins, which can

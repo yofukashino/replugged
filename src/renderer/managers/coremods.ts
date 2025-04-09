@@ -1,16 +1,18 @@
 import type { Promisable } from "type-fest";
 import { patchPlaintext } from "../modules/webpack/plaintext-patch";
 
-import { default as experimentsPlaintext } from "../coremods/experiments/plaintextPatches";
-import { default as notrackPlaintext } from "../coremods/notrack/plaintextPatches";
-import { default as noDevtoolsWarningPlaintext } from "../coremods/noDevtoolsWarning/plaintextPatches";
-import { default as messagePopover } from "../coremods/messagePopover/plaintextPatches";
-import { default as notices } from "../coremods/notices/plaintextPatches";
-import { default as contextMenu } from "../coremods/contextMenu/plaintextPatches";
-import { default as languagePlaintext } from "../coremods/language/plaintextPatches";
-import { default as settingsPlaintext } from "../coremods/settings/plaintextPatches";
-import { default as badgesPlaintext } from "../coremods/badges/plaintextPatches";
-import { default as titlebarPlaintext } from "../coremods/titlebar/plaintextPatches";
+import experimentsPlaintext from "../coremods/experiments/plaintextPatches";
+import notrackPlaintext from "../coremods/notrack/plaintextPatches";
+import noDevtoolsWarningPlaintext from "../coremods/noDevtoolsWarning/plaintextPatches";
+import messagePopover from "../coremods/messagePopover/plaintextPatches";
+import notices from "../coremods/notices/plaintextPatches";
+import contextMenu from "../coremods/contextMenu/plaintextPatches";
+import languagePlaintext from "../coremods/language/plaintextPatches";
+import settingsPlaintext from "../coremods/settings/plaintextPatches";
+import badgesPlaintext from "../coremods/badges/plaintextPatches";
+import titlebarPlaintext from "../coremods/titlebar/plaintextPatches";
+import popoutThemingPlaintext from "../coremods/popoutTheming/plaintextPatches";
+import UTCPlaintext from "../coremods/UTC/plaintextPatches";
 import { Logger } from "@logger";
 
 const logger = Logger.api("Coremods");
@@ -36,7 +38,7 @@ export namespace coremods {
   export let watcher: Coremod;
   export let commands: Coremod;
   export let welcome: Coremod;
-  export let transparency: Coremod;
+  export let UTC: Coremod;
 }
 
 export async function start(name: keyof typeof coremods): Promise<void> {
@@ -66,7 +68,7 @@ export async function startAll(): Promise<void> {
   coremods.watcher = await import("../coremods/watcher");
   coremods.commands = await import("../coremods/commands");
   coremods.welcome = await import("../coremods/welcome");
-  coremods.transparency = await import("../coremods/transparency");
+  coremods.UTC = await import("../coremods/UTC");
 
   await Promise.all(
     Object.entries(coremods).map(async ([name, mod]) => {
@@ -101,5 +103,7 @@ export function runPlaintextPatches(): void {
     { patch: settingsPlaintext, name: "replugged.coremod.settings" },
     { patch: badgesPlaintext, name: "replugged.coremod.badges" },
     { patch: titlebarPlaintext, name: "replugged.coremod.titlebar" },
+    { patch: popoutThemingPlaintext, name: "replugged.coremod.popoutThemingPlaintext" },
+    { patch: UTCPlaintext, name: "replugged.coremod.UTC" },
   ].forEach(({ patch, name }) => patchPlaintext(patch, name));
 }

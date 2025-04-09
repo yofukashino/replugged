@@ -7,6 +7,7 @@ export async function start(): Promise<void> {
   const clientCheckerMod = await waitForModule<Record<string, () => boolean>>(
     filters.bySource(".$||"),
   );
+
   const clientCheckerKey = getFunctionKeyBySource(clientCheckerMod, ".$||")!;
 
   injector.instead(clientCheckerMod, clientCheckerKey, () => false);

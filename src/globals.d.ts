@@ -22,6 +22,8 @@ declare global {
     $type?: (...args: unknown[]) => unknown;
   }
 
+  export const replugged: typeof replugged;
+
   export const RepluggedNative: RepluggedNativeType;
 
   export const DiscordNative: {

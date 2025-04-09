@@ -6,20 +6,32 @@ const generalSettings = init<GeneralSettings, keyof typeof defaultSettings>(
   defaultSettings,
 );
 
+const replacements = [
+  {
+    match: /\(0,.\.getPlatform\)\(\)/,
+    replace: `"WINDOWS"`,
+  },
+];
+
 export default (navigator.userAgent.includes("Linux") && generalSettings.get("titlebar")
   ? [
       {
-        find: "macOSFrame:!0",
-        replacements: [
-          {
-            match: /(\[.&&).&&/,
-            replace: (_, suffix: string) => `${suffix}`,
-          },
-        ],
+        find: ".appAsidePanelWrapper,",
+        replacements,
       },
       {
-        find: "renderWindow:window",
-        replacements: [{ match: /\(0,\w+\.getPlatform\)\(\)/, replace: () => `"WINDOWS"` }],
+        find: ".winButtons",
+        replacements,
+      },
+      { find: "this.registerPopoutGlobalKeybinds", replacements },
+      {
+        find: "menubar:!1,toolbar:!1",
+        replacements: [
+          {
+            match: "menubar:",
+            replace: "frame:!1,menubar:",
+          },
+        ],
       },
     ]
   : []) as PlaintextPatch[];

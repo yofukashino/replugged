@@ -78,7 +78,7 @@ const getButtonItems = async (): Promise<{
   ButtonItem: ButtonItemType;
   Button: ButtonType;
 }> => {
-  const Button = webpack.getFunctionBySource<ButtonType>(await components, "button")!;
+  const Button = webpack.getFunctionBySource<ButtonType>(await components, "Type.PULSING_ELLIPSIS")!;
 
   const classes =
     await waitForProps<Record<"dividerDefault" | "labelRow" | "note" | "title", string>>(

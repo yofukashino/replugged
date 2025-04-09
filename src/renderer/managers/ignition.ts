@@ -39,6 +39,7 @@ export async function start(): Promise<void> {
 
   // Quick CSS needs to be called after themes are loaded so that it will override the theme's CSS
   quickCSS.load();
+  RepluggedNative.quickCSS.addListener(() => quickCSS.reload());
 
   // Want to make sure all addons are initialized before starting auto-update checking
   startAutoUpdateChecking();

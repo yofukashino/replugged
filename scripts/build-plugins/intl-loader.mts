@@ -66,15 +66,10 @@ export default {
           defaultLocale: result.locale,
           getTranslationImport: (importPath) => `import("${importPath}")`,
           debug: false,
-          preGenerateBinds: false,
-          getPrelude: () => `import {getByProps} from '@webpack';`,
         }).getOutput();
 
         return {
-          contents: transformedOutput.replace(
-            /require\('@discord\/intl'\);/,
-            "getByProps('createLoader','IntlManager');",
-          ),
+          contents: transformedOutput,
           loader: "js",
         };
       } else {

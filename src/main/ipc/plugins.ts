@@ -21,7 +21,7 @@ import {
 } from "fs";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
 import { getSetting } from "./settings";
-import { Logger } from "..";
+import Logger from "../logger";
 
 let PluginIpcMappings: Record<string, Record<string, string>>;
 
