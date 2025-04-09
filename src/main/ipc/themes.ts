@@ -11,7 +11,6 @@ import { extname, join, sep } from "path";
 import { RepluggedIpcChannels, type RepluggedTheme } from "../../types";
 import { theme } from "../../types/addon";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
-
 const THEMES_DIR = CONFIG_PATHS.themes;
 const TMP_DIR = CONFIG_PATHS.temp_addons;
 

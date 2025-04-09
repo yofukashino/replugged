@@ -109,7 +109,6 @@ if (!existsSync(QUICK_CSS_FILE)) {
     chownSync(QUICK_CSS_FILE, REAL_UID, REAL_GID);
   }
 }
-
 export const extractAddon = (srcPath: string, destPath: string): void => {
   mkdirSync(destPath, { recursive: true });
   extractAll(srcPath, destPath);

@@ -44,12 +44,19 @@ function getPlugin(pluginName: string): RepluggedPlugin {
   };
 
   const cssPath = data.manifest.renderer?.replace(/\.js$/, ".css");
-  try {
-    const hasCSS = cssPath && statSync(join(realPluginPath, cssPath));
-    if (hasCSS) data.hasCSS = true;
-  } catch {
-    data.hasCSS = false;
+
+  let hasCSS = false;
+
+  if (cssPath) {
+    try {
+      statSync(join(PLUGINS_DIR, pluginName, cssPath));
+      hasCSS = true;
+    } catch {
+      hasCSS = false;
+    }
   }
+
+  if (hasCSS) data.hasCSS = true;
 
   return data;
 }
@@ -113,6 +120,21 @@ ipcMain.on(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER, () => shell.openPath(PLUGIN
 ipcMain.on(RepluggedIpcChannels.GET_PLUGIN_PLAINTEXT_PATCHES, (event, pluginName: string) => {
   const plugin = getPlugin(pluginName);
   if (!plugin.manifest.plaintextPatches) return;
+  const path = join(CONFIG_PATHS.plugins, pluginName, plugin.manifest.plaintextPatches);
+  if (!path.startsWith(`${PLUGINS_DIR}${sep}`)) {
+    // Ensure file changes are restricted to the base path
+    throw new Error("Invalid plugin name");
+  }
+
+  event.returnValue = readFileSync(path, "utf-8");
+});
+
+ipcMain.on(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER, () => shell.openPath(PLUGINS_DIR));
+
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN_PLAINTEXT_PATCHES, (event, pluginName: string) => {
+  const plugin = getPlugin(pluginName);
+  if (!plugin.manifest.plaintextPatches) return;
+
   const path = join(CONFIG_PATHS.plugins, pluginName, plugin.manifest.plaintextPatches);
   if (!path.startsWith(`${PLUGINS_DIR}${sep}`)) {
     // Ensure file changes are restricted to the base path
