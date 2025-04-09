@@ -1,10 +1,19 @@
-import esbuild from "esbuild";
 import { execSync } from "child_process";
-import { extractAll } from "@electron/asar";
+import {
+  chownSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "fs";
+import { join } from "path";
 import { tmpdir } from "os";
-import { chownSync, existsSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from "fs";
-import path, { join } from "path";
-import chalk from "chalk";
+import { extractAll } from "@electron/asar";
+import { rm } from "fs/promises";
+
+const TMP_DIR = tmpdir();
 
 const REPLUGGED_FOLDER_NAME = "replugged";
 export const configPathFn = (): string => {
@@ -51,24 +60,27 @@ if (!existsSync(CONFIG_PATH)) {
   mkdirSync(CONFIG_PATH, { recursive: true });
 }
 
+for (const file of readdirSync(TMP_DIR)) {
+  if (file.startsWith("replugged-addons-")) {
+    const tempDir = join(TMP_DIR, file);
+    void rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 const CONFIG_FOLDER_NAMES = [
   "plugins",
   "themes",
   "settings",
   "quickcss",
   "react-devtools",
-  "temp_themes",
-  "temp_plugins",
+  "temp_addons",
 ] as const;
 
 export const CONFIG_PATHS = Object.fromEntries(
   CONFIG_FOLDER_NAMES.map((name) => {
     switch (name) {
-      case "temp_themes": {
-        return [name, mkdtempSync(join(tmpdir(), "replugged-theme-"))];
-      }
-      case "temp_plugins": {
-        return [name, mkdtempSync(join(tmpdir(), "replugged-plugin-"))];
+      case "temp_addons": {
+        return [name, mkdtempSync(join(TMP_DIR, "replugged-addons-"))];
       }
       default: {
         const path = join(CONFIG_PATH, name);
@@ -85,12 +97,9 @@ const { uid: REAL_UID, gid: REAL_GID } = statSync(join(CONFIG_PATH, ".."));
 const shouldChown = process.platform === "linux";
 if (shouldChown) {
   chownSync(CONFIG_PATH, REAL_UID, REAL_GID);
-  CONFIG_FOLDER_NAMES.forEach(
-    (folder) =>
-      folder !== "temp_themes" &&
-      folder !== "temp_plugins" &&
-      chownSync(join(CONFIG_PATH, folder), REAL_UID, REAL_GID),
-  );
+  for (const folder of CONFIG_FOLDER_NAMES) {
+    if (folder !== "temp_addons") chownSync(join(CONFIG_PATH, folder), REAL_UID, REAL_GID);
+  }
 }
 
 const QUICK_CSS_FILE = join(CONFIG_PATHS.quickcss, "main.css");
@@ -101,77 +110,13 @@ if (!existsSync(QUICK_CSS_FILE)) {
   }
 }
 
-export const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return "0b";
-
-  const k = 1024;
-  const dm = 1;
-  const sizes = ["b", "kb", "mb", "gb"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))}${sizes[i]}`;
+export const extractAddon = (srcPath: string, destPath: string): void => {
+  mkdirSync(destPath, { recursive: true });
+  extractAll(srcPath, destPath);
 };
 
-export const logBuildPlugin: esbuild.Plugin = {
-  name: "logBuild",
-  setup: (build) => {
-    let start: number;
-
-    build.onStart(() => {
-      start = Date.now();
-    });
-    build.onEnd((result) => {
-      const time = Date.now() - start;
-      const files = result.metafile?.outputs || {};
-
-      const fileData = Object.entries(files)
-        .sort(([a], [b]) => {
-          const aIsMap = a.endsWith(".map");
-          const bIsMap = b.endsWith(".map");
-          if (aIsMap && !bIsMap) return 1;
-          if (!aIsMap && bIsMap) return -1;
-
-          return 0;
-        })
-        .map(([file, { bytes }]) => {
-          const { sep } = path;
-          const dirname = path.dirname(file);
-          const basename = path.basename(file);
-
-          const coloredName = [dirname, sep, chalk.bold(basename)].join("");
-
-          const sizeText = formatBytes(bytes);
-          const isBigFile = bytes > Math.pow(1024, 2) && !file.endsWith(".map"); // 1mb
-          const coloredSize = isBigFile ? chalk.yellow(sizeText) : chalk.cyan(sizeText);
-          const suffix = isBigFile ? chalk.yellow(" ⚠️") : "";
-
-          return {
-            name: coloredName,
-            size: coloredSize,
-            suffix,
-          };
-        });
-      const maxNameLength = Math.max(...fileData.map(({ name }) => name.length));
-      const maxSizeLength = Math.max(...fileData.map(({ size }) => size.length));
-
-      console.log("");
-      fileData.forEach(({ name, size, suffix }) => {
-        console.log(`  ${name.padEnd(maxNameLength + 1)} ${size.padStart(maxSizeLength)}${suffix}`);
-      });
-      console.log("");
-
-      console.log(`⚡ ${chalk.green(`Done in ${time.toLocaleString()}ms`)}`);
-    });
-  },
-};
-
-export const extractAddon = async (srcPath: string, destPath: string): Promise<void> => {
-  return new Promise<void>((res) => {
-    // Ensure the destination directory exists
-    mkdirSync(destPath, { recursive: true });
-
-    // Extract the contents of the asar archive directly into the destination directory
-    extractAll(srcPath, destPath);
-    res();
-  });
-};
+export const getAddonPath = (pathname: string, mainPath: string): string =>
+  join(
+    pathname.includes(".asar") ? CONFIG_PATHS.temp_addons : mainPath,
+    pathname.replace(".asar", ""),
+  );

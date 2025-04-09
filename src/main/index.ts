@@ -1,13 +1,14 @@
-import { dirname, join } from "path";
-
 import electron from "electron";
-import { CONFIG_PATHS } from "src/util.mjs";
+import { dirname, join } from "path";
+import { CONFIG_PATHS, getAddonPath } from "src/util.mjs";
+import type { PackageJson } from "type-fest";
+import { pathToFileURL } from "url";
 import type { RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
 const electronPath = require.resolve("electron");
 const discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
-const discordPackage = require(join(discordPath, "package.json"));
-require.main!.filename = join(discordPath, discordPackage.main);
+const discordPackage: PackageJson = require(join(discordPath, "package.json"));
+require.main!.filename = join(discordPath, discordPackage.main!);
 
 Object.defineProperty(global, "appSettings", {
   set: (v /* : typeof global.appSettings*/) => {
@@ -104,8 +105,8 @@ electron.protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-async function loadReactDevTools(): Promise<void> {
-  const rdtSetting = await getSetting("dev.replugged.Settings", "reactDevTools", false);
+function loadReactDevTools(): void {
+  const rdtSetting = getSetting<boolean>("dev.replugged.Settings", "reactDevTools", false);
 
   if (rdtSetting) {
     void electron.session.defaultSession.loadExtension(CONFIG_PATHS["react-devtools"]);
@@ -163,13 +164,11 @@ electron.app.once("ready", () => {
     done({ responseHeaders: headersWithoutCSP });
   });
 
-  electron.protocol.registerFileProtocol("replugged", (request, cb) => {
+  // TODO: Eventually in the future, this should be migrated to IPC for better performance
+  electron.protocol.handle("replugged", (request) => {
     let filePath = "";
     const reqUrl = new URL(request.url);
     switch (reqUrl.hostname) {
-      case "renderer":
-        filePath = join(__dirname, "./renderer.js");
-        break;
       case "renderer.css":
         filePath = join(__dirname, "./renderer.css");
         break;
@@ -177,22 +176,16 @@ electron.app.once("ready", () => {
         filePath = join(CONFIG_PATHS.quickcss, reqUrl.pathname);
         break;
       case "theme":
-        filePath = join(
-          reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_themes : CONFIG_PATHS.themes,
-          reqUrl.pathname.replace(".asar", ""),
-        );
+        filePath = getAddonPath(reqUrl.pathname, CONFIG_PATHS.themes);
         break;
       case "plugin":
-        filePath = join(
-          reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins,
-          reqUrl.pathname.replace(".asar", ""),
-        );
+        filePath = getAddonPath(reqUrl.pathname, CONFIG_PATHS.plugins);
         break;
     }
-    cb({ path: filePath });
+    return electron.net.fetch(pathToFileURL(filePath).toString());
   });
 
-  void loadReactDevTools();
+  loadReactDevTools();
 });
 
 // This module is required this way at runtime.

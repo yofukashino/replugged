@@ -4,28 +4,26 @@ IPC events:
 - REPLUGGED_UNINSTALL_PLUGIN: returns whether a plugin by the provided name was successfully uninstalled
 */
 
-import { readFile, readdir, readlink, stat } from "fs/promises";
+import { rm, unlink } from "fs/promises";
 import { extname, join, sep } from "path";
 import { ipcMain, shell } from "electron";
+import { type Dirent, type Stats, readFileSync, readdirSync, readlinkSync, statSync } from "fs";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
 import { plugin } from "../../types/addon";
-import { type Dirent, type Stats, rmdirSync, unlinkSync } from "fs";
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
 
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
-const TEMP_PLUGINS_DIR = CONFIG_PATHS.temp_plugins;
+const TMP_DIR = CONFIG_PATHS.temp_addons;
 
 export const isFileAPlugin = (f: Dirent | Stats, name: string): boolean => {
   return f.isDirectory() || (f.isFile() && extname(name) === ".asar");
 };
 
-async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
+function getPlugin(pluginName: string): RepluggedPlugin {
   const isAsar = pluginName.includes(".asar");
   const pluginPath = join(PLUGINS_DIR, pluginName);
-  const realPluginPath = isAsar
-    ? join(TEMP_PLUGINS_DIR, pluginName.replace(/\.asar$/, ""))
-    : pluginPath; // Remove ".asar" from the directory name
-  if (isAsar) await extractAddon(pluginPath, realPluginPath);
+  const realPluginPath = isAsar ? join(TMP_DIR, pluginName.replace(/\.asar$/, "")) : pluginPath; // Remove ".asar" from the directory name
+  if (isAsar) extractAddon(pluginPath, realPluginPath);
 
   const manifestPath = join(realPluginPath, "manifest.json");
   if (!manifestPath.startsWith(`${realPluginPath}${sep}`)) {
@@ -34,7 +32,7 @@ async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
   }
 
   const manifest: unknown = JSON.parse(
-    await readFile(manifestPath, {
+    readFileSync(manifestPath, {
       encoding: "utf-8",
     }),
   );
@@ -46,80 +44,80 @@ async function getPlugin(pluginName: string): Promise<RepluggedPlugin> {
   };
 
   const cssPath = data.manifest.renderer?.replace(/\.js$/, ".css");
-  const hasCSS =
-    cssPath &&
-    (await stat(join(realPluginPath, cssPath))
-      .then(() => true)
-      .catch(() => false));
-
-  if (hasCSS) data.hasCSS = true;
+  try {
+    const hasCSS = cssPath && statSync(join(realPluginPath, cssPath));
+    if (hasCSS) data.hasCSS = true;
+  } catch {
+    data.hasCSS = false;
+  }
 
   return data;
 }
 
-ipcMain.handle(
-  RepluggedIpcChannels.GET_PLUGIN,
-  async (_, pluginName: string): Promise<RepluggedPlugin | undefined> => {
-    try {
-      return await getPlugin(pluginName);
-    } catch {}
-  },
-);
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN, (event, pluginName: string) => {
+  try {
+    event.returnValue = getPlugin(pluginName);
+  } catch {}
+});
 
-ipcMain.handle(RepluggedIpcChannels.LIST_PLUGINS, async (): Promise<RepluggedPlugin[]> => {
+ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
   const plugins = [];
 
-  const pluginDirs = (
-    await Promise.all(
-      (
-        await readdir(PLUGINS_DIR, {
-          withFileTypes: true,
-        })
-      ).map(async (f) => {
-        if (isFileAPlugin(f, f.name)) return f;
-        if (f.isSymbolicLink()) {
-          const actualPath = await readlink(join(PLUGINS_DIR, f.name));
-          const actualFile = await stat(actualPath);
+  const pluginDirs = readdirSync(PLUGINS_DIR, {
+    withFileTypes: true,
+  })
+    .map((f) => {
+      if (isFileAPlugin(f, f.name)) return f;
+      if (f.isSymbolicLink()) {
+        try {
+          const actualPath = readlinkSync(join(PLUGINS_DIR, f.name));
+          const actualFile = statSync(actualPath);
+
           if (isFileAPlugin(actualFile, actualPath)) return f;
-        }
-      }),
-    )
-  ).filter(Boolean) as Dirent[];
+        } catch {}
+      }
+
+      return void 0;
+    })
+    .filter(Boolean) as Dirent[];
 
   for (const pluginDir of pluginDirs) {
     try {
-      plugins.push(await getPlugin(pluginDir.name));
+      plugins.push(getPlugin(pluginDir.name));
     } catch (e) {
       console.error(`Invalid plugin: ${pluginDir.name}`);
       console.error(e);
     }
   }
 
-  return plugins;
+  event.returnValue = plugins;
 });
 
-ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, (_, pluginName: string) => {
+ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, async (_, pluginName: string) => {
   const isAsar = pluginName.includes(".asar");
   const pluginPath = join(PLUGINS_DIR, pluginName);
-  const realPluginPath = isAsar
-    ? join(TEMP_PLUGINS_DIR, pluginName.replace(".asar", ""))
-    : pluginPath; // Remove ".asar" from the directory name
+  const realPluginPath = isAsar ? join(TMP_DIR, pluginName.replace(/\.asar$/, "")) : pluginPath; // Remove ".asar" from the directory name
 
-  if (!realPluginPath.startsWith(`${isAsar ? TEMP_PLUGINS_DIR : PLUGINS_DIR}${sep}`)) {
-    // Ensure file changes are restricted to the base path
+  if (!realPluginPath.startsWith(`${isAsar ? TMP_DIR : PLUGINS_DIR}${sep}`)) {
     throw new Error("Invalid plugin name");
   }
 
   if (isAsar) {
-    unlinkSync(pluginPath);
-    rmdirSync(realPluginPath, { recursive: true });
-  } else rmdirSync(pluginPath, { recursive: true });
+    await unlink(pluginPath);
+    await rm(realPluginPath, { recursive: true });
+  } else await rm(pluginPath, { recursive: true });
 });
 
 ipcMain.on(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER, () => shell.openPath(PLUGINS_DIR));
 
-ipcMain.on(RepluggedIpcChannels.CLEAR_TEMP_THEME, () => {
-  try {
-    rmdirSync(TEMP_PLUGINS_DIR, { recursive: true });
-  } catch {}
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN_PLAINTEXT_PATCHES, (event, pluginName: string) => {
+  const plugin = getPlugin(pluginName);
+  if (!plugin.manifest.plaintextPatches) return;
+  const path = join(CONFIG_PATHS.plugins, pluginName, plugin.manifest.plaintextPatches);
+  if (!path.startsWith(`${PLUGINS_DIR}${sep}`)) {
+    // Ensure file changes are restricted to the base path
+    throw new Error("Invalid plugin name");
+  }
+
+  event.returnValue = readFileSync(path, "utf-8");
 });
