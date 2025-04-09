@@ -1,8 +1,8 @@
 import type { GetModuleOptions, RawModule, WaitForOptions } from "src/types";
-import { getExportsForProps, getModule } from "./get-modules";
-import * as filters from "./filters";
-import type { Store } from "../common/flux";
 import { flux } from "../common";
+import type { Store } from "../common/flux";
+import * as filters from "./filters";
+import { getExportsForProps, getModule } from "./get-modules";
 import { waitForModule } from "./lazy";
 
 // Get by source
@@ -250,15 +250,4 @@ export function getByValue<T>(
 export function getByStoreName<T extends Store>(name: string): T | undefined {
   const stores = flux.Store.getAll();
   return stores.find((store) => store.getName() === name) as T | undefined;
-}
-
-export async function waitForStoreName<T extends Store>(
-  name: string,
-  options?: { timeout: number },
-): Promise<T | undefined> {
-  const module = await waitForModule<{ default?: T; ZP?: T; Z?: T } & T>(
-    filters.byStoreName(name),
-    options,
-  );
-  return module.default ?? module.ZP ?? module.Z ?? module;
 }

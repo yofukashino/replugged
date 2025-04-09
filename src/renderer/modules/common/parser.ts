@@ -1,5 +1,5 @@
-import { waitForProps } from "../webpack";
 import type SimpleMarkdown from "simple-markdown";
+import { waitForProps } from "../webpack";
 
 type DefaultRules = Pick<
   SimpleMarkdown.DefaultRules,
@@ -97,4 +97,4 @@ export interface Parser {
   astParserFor(rules: SimpleMarkdown.ParserRules): ParseFn;
 }
 
-export default waitForProps<Parser>("parse", "parseTopic");
+export default await waitForProps<Parser>("parse", "parseTopic");

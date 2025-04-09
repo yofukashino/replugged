@@ -163,4 +163,7 @@ export interface FluxDispatcher {
   ) => string;
 }
 
-export default waitForProps<FluxDispatcher>("_currentDispatchActionType", "_processingWaitQueue");
+export default await waitForProps<FluxDispatcher>(
+  "_currentDispatchActionType",
+  "_processingWaitQueue",
+);

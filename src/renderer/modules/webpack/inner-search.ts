@@ -1,4 +1,4 @@
-import { UnknownFunction } from "src/types";
+import type { UnknownFunction } from "src/types";
 
 /**
  * Get a function in a module to inject into.
@@ -14,7 +14,7 @@ function findFunctionEntryBySource<T>(
     for (const k in module) {
       try {
         // This could throw an error, hence the try-catch
-        const v = module[k]?.type || module[k]?.render || module[k];
+        const v = module[k];
         if (typeof v === "function") {
           let isSourceMatch = false;
           switch (typeof match) {

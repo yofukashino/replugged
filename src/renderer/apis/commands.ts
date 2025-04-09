@@ -14,11 +14,15 @@ import type {
 // eslint-disable-next-line no-duplicate-imports
 import { ApplicationCommandOptionType } from "../../types";
 import icon from "../assets/logo.png";
-import { constants, i18n, messages, users } from "../modules/common";
+import { constants, fluxDispatcher, i18n, messages, users } from "../modules/common";
 import type { Store } from "../modules/common/flux";
-import { Logger } from "@logger";
-import { filters, getByStoreName, waitForModule } from "../modules/webpack";
+import type {
+  SendMessageForReplyOptions,
+  SendMessageOptionsForReply,
+} from "../modules/common/messages";
 import { t } from "../modules/i18n";
+import { Logger } from "../modules/logger";
+import { filters, getByStoreName, waitForModule } from "../modules/webpack";
 
 const logger = Logger.api("Commands");
 
@@ -32,7 +36,7 @@ interface CommandsAndSection {
 void waitForModule<typeof User>(filters.bySource("hasHadPremium(){")).then((User) => {
   RepluggedUser = new User({
     avatar: "replugged",
-    id: "69",
+    id: REPLUGGED_CLYDE_ID,
     bot: true,
     username: "Replugged",
     system: true,
@@ -143,8 +147,6 @@ async function executeCommand<T extends CommandOptions>(
     if ((!result?.result && !result?.embeds) || !currentChannelId) return;
 
     if (result.send) {
-      if (replyOptions?.messageReference)
-        fluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId: currentChannelId });
       void messages.sendMessage(
         currentChannelId,
         {
@@ -156,6 +158,9 @@ async function executeCommand<T extends CommandOptions>(
         undefined,
         replyOptions,
       );
+      if (replyOptions.messageReference) {
+        fluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId: currentChannelId });
+      }
     } else {
       const botMessage = messages.createBotMessage({
         channelId: currentChannelId,
@@ -242,7 +247,7 @@ export class CommandManager {
     command.displayDescription ??= command.description;
     command.type = 2;
     command.id ??= command.name;
-    command.section = currentSection;
+
     command.execute ??= (args, currentInfo) => {
       void executeCommand(command.executor, args, currentInfo, command);
     };

@@ -1,14 +1,14 @@
-import { app, ipcMain } from "electron";
-import { join } from "path";
+import { ipcMain } from "electron";
 import { readFileSync } from "fs";
-import "./themes";
+import { join } from "path";
+import { RepluggedIpcChannels, type RepluggedWebContents } from "../../types";
+
 import "./installer";
-import "./settings";
 import "./plugins";
 import "./quick-css";
 import "./react-devtools";
-
-import { RepluggedIpcChannels, type RepluggedWebContents } from "../../types";
+import "./settings";
+import "./themes";
 
 ipcMain.on(RepluggedIpcChannels.GET_DISCORD_PRELOAD, (event) => {
   event.returnValue = (event.sender as RepluggedWebContents).originalPreload;

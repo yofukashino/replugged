@@ -1,6 +1,6 @@
 import type React from "react";
 import { filters, getFunctionBySource, waitForModule } from "src/renderer/modules/webpack";
-import { ValueOf } from "type-fest";
+import type { ValueOf } from "type-fest";
 
 interface AnchorProps extends React.ComponentPropsWithoutRef<"a"> {
   useDefaultUnderlineStyles?: boolean;
@@ -17,7 +17,7 @@ interface PrimaryCTANoticeButtonProps extends NoticeButtonProps {
   additionalTrackingProps?: Record<string, unknown>;
 }
 
-interface NoticeButtonAnchorProps extends AnchorProps {}
+type NoticeButtonAnchorProps = AnchorProps;
 
 interface NoticeCloseButtonProps {
   onClick: () => void;
@@ -54,30 +54,17 @@ interface NoticeMod {
   Notice: React.FC<React.PropsWithChildren<NoticeProps>>;
 }
 
+const actualNoticeMod = await waitForModule<Record<string, ValueOf<NoticeMod>>>(
+  filters.bySource(".colorPremiumTier1,"),
+);
+
 const remappedNoticeMod: NoticeMod = {
-  NoticeColors: {} as NoticeMod["NoticeColors"],
-  NoticeButton: () => null,
-  PrimaryCTANoticeButton: () => null,
-  NoticeButtonAnchor: () => null,
-  NoticeCloseButton: () => null,
-  Notice: () => null,
+  NoticeColors: Object.values(actualNoticeMod).find((v) => typeof v === "object")!,
+  NoticeButton: getFunctionBySource(actualNoticeMod, "buttonMinor")!,
+  PrimaryCTANoticeButton: getFunctionBySource(actualNoticeMod, "additionalTrackingProps")!,
+  NoticeButtonAnchor: getFunctionBySource(actualNoticeMod, ".button,href:")!,
+  NoticeCloseButton: getFunctionBySource(actualNoticeMod, "closeIcon")!,
+  Notice: getFunctionBySource(actualNoticeMod, "isMobile")!,
 };
-
-const mapNoticeMod = async (): Promise<void> => {
-  const actualNoticeMod = await waitForModule<Record<string, ValueOf<NoticeMod>>>(
-    filters.bySource(".colorPremiumTier1,"),
-  );
-
-  remappedNoticeMod.NoticeColors = Object.values(actualNoticeMod).find(
-    (v) => typeof v === "object",
-  ) as NoticeMod["NoticeColors"];
-  remappedNoticeMod.NoticeButton = getFunctionBySource(actualNoticeMod, "buttonMinor")!;
-  remappedNoticeMod.PrimaryCTANoticeButton = getFunctionBySource(actualNoticeMod, "CTA")!;
-  remappedNoticeMod.NoticeButtonAnchor = getFunctionBySource(actualNoticeMod, ".Anchor")!;
-  remappedNoticeMod.NoticeCloseButton = getFunctionBySource(actualNoticeMod, "closeIcon")!;
-  remappedNoticeMod.Notice = getFunctionBySource(actualNoticeMod, "isMobile")!;
-};
-
-void mapNoticeMod();
 
 export default remappedNoticeMod;

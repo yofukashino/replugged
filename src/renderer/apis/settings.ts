@@ -15,7 +15,7 @@ type SettingsUpdate<T> =
  * This class should not be instantiated directly; use {@link init init()} for convenience and reliability.
  *
  * The {@link SettingsManager.load load()} method copies the namespaces' settings data from the file system into the manager.
- * All communication between a `SettingsManager` and the file system occurs asynchronously over IPC.
+ * All communication between a `SettingsManager` and the file system occurs synchronously over IPC.
  *
  * Once the settings data has been copied into the `SettingsManager`, it can be read and written synchronously.
  * The `SettingsManager` automatically queues and dispatches updates to the file system in the background.
@@ -128,9 +128,9 @@ export class SettingsManager<T extends Record<string, Jsonifiable>, D extends ke
     this.#saveTimeout = setTimeout(() => {
       this.#queuedUpdates.forEach((u, k) => {
         if (u.type === "delete") {
-          void window.RepluggedNative.settings.delete(this.namespace, k);
+          window.RepluggedNative.settings.delete(this.namespace, k);
         } else {
-          void window.RepluggedNative.settings.set(this.namespace, k, u.value);
+          window.RepluggedNative.settings.set(this.namespace, k, u.value);
         }
       });
       this.#queuedUpdates.clear();
@@ -164,7 +164,7 @@ const managers = new Map<string, unknown>();
  * Creates, initializes, and returns a {@link SettingsManager} for the given settings namespace. If a manager for the namespace already exists,
  * then that instance will be returned. Use this function rather than creating instances of `SettingsManager` directly.
  *
- * Settings are stored synchronously in the window, and updates are dispatched asynchronously to the file system.
+ * Settings are stored synchronously in the window, and updates are dispatched synchronously to the file system.
  * See {@link SettingsManager} for more information on how this works.
  *
  * Here's an example of how to use this in a plugin:
@@ -176,7 +176,7 @@ const managers = new Map<string, unknown>();
  *   hello: "world",
  * };
  *
- * const cfg = await settings.init<{ hello: string; something: string }, "something">(
+ * const cfg = settings.init<{ hello: string; something: string }, "something">(
  *   "dev.replugged.Example",
  *   { something: "everything" },
  * );

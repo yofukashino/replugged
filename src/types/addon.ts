@@ -1,5 +1,5 @@
-import { z } from "zod";
 import type { Promisable } from "type-fest";
+import { z } from "zod";
 
 export const id = z
   .string()
@@ -62,7 +62,6 @@ export const plugin = common.extend({
   type: z.literal("replugged-plugin"),
   renderer: z.string().optional(),
   plaintextPatches: z.string().optional(),
-  native: z.string().optional(),
   reloadRequired: z.boolean().optional(),
 });
 
@@ -82,8 +81,6 @@ export interface PluginExports {
   Settings?: React.ComponentType;
   [x: string]: unknown;
 }
-
-export type PluginNativeMap = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type AddonSettings = {

@@ -165,27 +165,25 @@ const componentMap: Record<string, keyof Omit<ContextMenuType, "ContextMenu" | "
   customitem: "MenuItem",
 } as const;
 
-const getMenu = async (): Promise<ContextMenuType> => {
-  const rawMod = await waitForModule(filters.bySource("menuitemcheckbox"), { raw: true });
-  const source = sourceStrings[rawMod?.id].matchAll(
-    /if\(\w+\.type===\w+\.(\w+)(?:\.\w+)?\).+?type:"(.+?)"/gs,
-  );
+const rawMod = await waitForModule(filters.bySource("menuitemcheckbox"), { raw: true });
+const source = sourceStrings[rawMod?.id].matchAll(
+  /if\(\w+\.type===\w+\.(\w+)(?:\.\w+)?\).+?type:"(.+?)"/gs,
+);
 
-  const menuComponents = Object.entries((await components) as Record<string, () => null>)
-    .filter(([_, m]) => /^function.+\(e?\){(\s+)?return null(\s+)?}$/.test(m?.toString?.()))
-    .reduce<Record<string, () => null>>((components, [name, component]) => {
-      components[name.substring(0, 2)] = component;
-      return components;
-    }, {});
-  const Menu = {
-    ItemColors,
-    ContextMenu: getFunctionBySource(await components, "menuItemProps:"),
-  } as ContextMenuType;
+const menuComponents = Object.entries(components as Record<string, () => null>)
+  .filter(([_, m]) => /^function.+\(e?\){(\s+)?return null(\s+)?}$/.test(m?.toString?.()))
+  .reduce<Record<string, () => null>>((components, [name, component]) => {
+    components[name.substring(0, 2)] = component;
+    return components;
+  }, {});
 
-  for (const [, identifier, type] of source) {
-    Menu[componentMap[type]] = menuComponents[identifier];
-  }
-  return Menu;
-};
+const Menu = {
+  ItemColors,
+  ContextMenu: getFunctionBySource(components, "getContainerProps"),
+} as ContextMenuType;
 
-export default getMenu();
+for (const [, identifier, type] of source) {
+  Menu[componentMap[type]] = menuComponents[identifier];
+}
+
+export default Menu;

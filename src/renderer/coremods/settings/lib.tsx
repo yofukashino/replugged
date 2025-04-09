@@ -1,18 +1,11 @@
-import { filters, getFunctionBySource, waitForModule } from "@webpack";
+import type React from "react";
 import type {
   LabelCallback,
   Section as SectionType,
   SettingsTools,
 } from "../../../types/coremods/settings";
-import type React from "react";
 
 const getPos = (pos: number | undefined): number => pos ?? -4;
-
-let getQuery: (() => string) | undefined;
-
-void waitForModule(filters.bySource(/return \w+\(\)\.query/)).then((UserSettingQueryMod) => {
-  getQuery = getFunctionBySource<() => string>(UserSettingQueryMod, "().query")!;
-});
 
 export const Section = ({
   name,
@@ -22,7 +15,6 @@ export const Section = ({
   elem,
   pos,
   fromEnd,
-  predicate,
 }: {
   name: string;
   _id?: string;
@@ -31,13 +23,11 @@ export const Section = ({
   elem: (args: unknown) => React.ReactElement;
   pos?: number;
   fromEnd?: boolean;
-  predicate?: (query: string) => boolean;
 }): SectionType => ({
   section: name,
   _id,
   label,
   color,
-  tabPredicate: () => predicate?.(getQuery?.() || "") ?? true,
   element: elem,
   pos: getPos(pos),
   fromEnd: fromEnd ?? getPos(pos) < 0,
@@ -46,14 +36,12 @@ export const Section = ({
 export const Divider = (pos?: number): SectionType => ({
   section: "DIVIDER",
   pos: getPos(pos),
-  tabPredicate: () => !getQuery?.(),
 });
 
 export const Header = (label: string | LabelCallback, pos?: number): SectionType => ({
   section: "HEADER",
   label,
   pos: getPos(pos),
-  tabPredicate: () => !getQuery?.(),
 });
 
 export const settingsTools: SettingsTools = {

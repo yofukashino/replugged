@@ -1,5 +1,5 @@
-import { SpawnOptions, execSync, spawn } from "child_process";
-import { DiscordPlatform, ProcessInfo, UserData } from "./types.mjs";
+import { type SpawnOptions, execSync, spawn } from "child_process";
+import type { DiscordPlatform, ProcessInfo, UserData } from "./types.mjs";
 
 export const AnsiEscapes = {
   RESET: "\x1b[0m",
@@ -31,32 +31,34 @@ export const getCommand = ({
   return cmd;
 };
 
-export const getProcessInfoByName = (processName: string): ProcessInfo | null => {
-  if (process.platform === "win32") {
-    const command = `tasklist /FI "IMAGENAME eq ${processName}.exe" /FO CSV`;
+export const getProcessInfoByName = (processName: string): ProcessInfo[] | null => {
+  try {
+    const isWindows = process.platform === "win32";
+    const command = isWindows
+      ? `powershell -Command "(Get-CimInstance Win32_Process | Where-Object { $_.Name -eq '${processName}.exe' } | Select-Object ParentProcessId,ProcessId | ConvertTo-Csv -NoTypeInformation)"`
+      : `ps -eo ppid,pid,command | grep -E "${processName}${process.platform === "darwin" ? ".app" : " --type"}" | grep -v grep`;
     const output = execSync(command).toString().trim();
 
-    const lines = output.split("\r\n");
-    if (lines.length <= 2) {
-      return null;
-    }
+    if (!output) return null;
+    const lines = output.split(isWindows ? "\r\n" : "\n").slice(1);
 
-    const [_header, data] = lines.slice(0, 2);
-    const [name, pid] = data.split('","');
+    const processInfo = lines.map((line) => {
+      const [ppid, pid] = line
+        .trim()
+        .replaceAll('"', "")
+        .split(isWindows ? "," : /\s+/);
 
-    return { pid: Number(pid), cmd: name.substring(1).split(/\s+/) };
-  }
-  const command = `ps -eo pid,command | grep -E "(^|/)${processName}(\\s|$)" | grep -v grep`;
+      return {
+        ppid: Number(ppid),
+        pid: Number(pid),
+      };
+    });
 
-  const output = execSync(command).toString().trim();
-
-  if (output.length === 0) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return processInfo || null;
+  } catch {
     return null;
   }
-
-  const [pid, ...cmd] = output.split(/\s+/);
-
-  return { pid: Number(pid), cmd };
 };
 
 export const killCheckProcessExists = (pid: number): boolean => {
@@ -86,12 +88,14 @@ export const killProcessByPID = (pid: number): Promise<void> => {
 };
 
 export const openProcess = (command: string, args?: string[], options?: SpawnOptions): void => {
-  void (process.platform === "darwin"
-    ? execSync(command)
-    : spawn(command, args ?? [], options ?? {}).unref());
+  if (process.platform === "darwin") {
+    void execSync(command);
+  } else {
+    spawn(command, args ?? [], options ?? {}).unref();
+  }
 };
 
-export const GetUserData = (): UserData => {
+export const getUserData = (): UserData => {
   const name = execSync("logname", { encoding: "utf8" }).toString().trim().replace(/\n$/, "");
   const env = Object.assign({}, process.env, { HOME: `/home/${name}` });
   const uid = execSync(`id -u ${name}`, { encoding: "utf8" }).toString().trim().replace(/\n$/, "");

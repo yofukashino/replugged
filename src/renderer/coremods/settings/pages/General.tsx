@@ -1,4 +1,6 @@
-import { React, i18n, modal, toast } from "@common";
+import { modal, toast } from "@common";
+import { intl } from "@common/i18n";
+import React from "@common/react";
 import {
   Button,
   ButtonItem,
@@ -9,8 +11,8 @@ import {
   SwitchItem,
   Text,
   TextInput,
-  KeybindItem,
 } from "@components";
+import { WEBSITE_URL } from "src/constants";
 import { t } from "src/renderer/modules/i18n";
 import { type GeneralSettings, defaultSettings } from "src/types";
 import * as settings from "../../../apis/settings";
@@ -22,7 +24,18 @@ export const generalSettings = settings.init<GeneralSettings, keyof typeof defau
   defaultSettings,
 );
 
-const konamiCode = ["38", "38", "40", "40", "37", "39", "37", "39", "66", "65"];
+const konamiCode = [
+  "ArrowUp",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowRight",
+  "KeyB",
+  "KeyA",
+];
 
 function reload(): void {
   setTimeout(() => window.location.reload(), 250);
@@ -36,9 +49,9 @@ function restartModal(doRelaunch = false, onConfirm?: () => void, onCancel?: () 
   const restart = doRelaunch ? relaunch : reload;
   void modal
     .confirm({
-      title: i18n.intl.string(t.REPLUGGED_SETTINGS_RESTART_TITLE),
-      body: i18n.intl.string(t.REPLUGGED_SETTINGS_RESTART),
-      confirmText: i18n.intl.string(t.REPLUGGED_RESTART),
+      title: intl.string(t.REPLUGGED_SETTINGS_RESTART_TITLE),
+      body: intl.string(t.REPLUGGED_SETTINGS_RESTART),
+      confirmText: intl.string(t.REPLUGGED_RESTART),
       confirmColor: Button.Colors.RED,
       onConfirm,
       onCancel,
@@ -56,15 +69,14 @@ export const General = (): React.ReactElement => {
     "reactDevTools",
   );
 
-  const { value: titlbarValue, onChange: titlebarOnChange } = util.useSetting(
+  const { value: titleBarValue, onChange: titleBarOnChange } = util.useSetting(
     generalSettings,
-    "titlebar",
+    "titleBar",
   );
 
-  const [kKeys, setKKeys] = React.useState<number[]>([]);
+  const [kKeys, setKKeys] = React.useState<string[]>([]);
 
   const isEasterEgg = kKeys.toString().includes(konamiCode.join(","));
-
   const [hue, setHue] = React.useState(0);
 
   React.useEffect(() => {
@@ -78,7 +90,7 @@ export const General = (): React.ReactElement => {
 
   const listener = (e: KeyboardEvent): void => {
     if (isEasterEgg) return;
-    setKKeys((val) => [...val.slice(-1 * (konamiCode.length - 1)), e.keyCode]);
+    setKKeys((val) => [...val.slice(-1 * (konamiCode.length - 1)), e.code]);
   };
 
   React.useEffect(() => {
@@ -90,61 +102,52 @@ export const General = (): React.ReactElement => {
   return (
     <>
       <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.START}>
-        <Text.H2>{i18n.intl.string(t.REPLUGGED_GENERAL_SETTINGS)}</Text.H2>
+        <Text.H2>{intl.string(t.REPLUGGED_GENERAL_SETTINGS)}</Text.H2>
       </Flex>
 
       <Divider style={{ margin: "20px 0px" }} />
 
-      {/* <SwitchItem
-        {...util.useSetting(generalSettings, "pluginEmbeds", false)}
-        note="Enable embedding plugins in chat">
-        Plugin Embeds
-      </SwitchItem> */}
-
       <SwitchItem
         {...util.useSetting(generalSettings, "badges")}
-        note={i18n.intl.string(t.REPLUGGED_SETTINGS_BADGES_DESC)}>
-        {i18n.intl.string(t.REPLUGGED_SETTINGS_BADGES)}
+        note={intl.string(t.REPLUGGED_SETTINGS_BADGES_DESC)}>
+        {intl.string(t.REPLUGGED_SETTINGS_BADGES)}
       </SwitchItem>
 
       <SwitchItem
         {...util.useSetting(generalSettings, "addonEmbeds")}
-        note={i18n.intl.string(t.REPLUGGED_SETTINGS_ADDON_EMBEDS_DESC)}>
-        {i18n.intl.string(t.REPLUGGED_SETTINGS_ADDON_EMBEDS)}
+        note={intl.string(t.REPLUGGED_SETTINGS_ADDON_EMBEDS_DESC)}>
+        {intl.string(t.REPLUGGED_SETTINGS_ADDON_EMBEDS)}
       </SwitchItem>
-      <KeybindItem />
+
       <SwitchItem
         {...util.useSetting(generalSettings, "autoApplyQuickCss")}
-        note={i18n.intl.string(t.REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY_DESC)}>
-        {i18n.intl.string(t.REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY)}
+        note={intl.string(t.REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY_DESC)}>
+        {intl.string(t.REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY)}
       </SwitchItem>
 
-      {
-        // TODO: i18n
-        DiscordNative.process.platform.includes("linux") && (
-          <SwitchItem
-            value={titlbarValue}
-            onChange={(value) => {
-              titlebarOnChange(value);
-              restartModal(true);
-            }}
-            note={"Use custom window titlebars instead of the default OS titlebars"}>
-            Custom Titlebar
-          </SwitchItem>
-        )
-      }
+      {DiscordNative.process.platform.includes("linux") && (
+        <SwitchItem
+          value={titleBarValue}
+          onChange={(value) => {
+            titleBarOnChange(value);
+            restartModal(true);
+          }}
+          note={intl.format(t.REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR_DESC, {})}>
+          {intl.string(t.REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR)}
+        </SwitchItem>
+      )}
 
       <Category
-        title={i18n.intl.string(t.REPLUGGED_SETTINGS_ADVANCED)}
-        note={i18n.intl.string(t.REPLUGGED_SETTINGS_ADVANCED_DESC)}>
+        title={intl.string(t.REPLUGGED_SETTINGS_ADVANCED)}
+        note={intl.string(t.REPLUGGED_SETTINGS_ADVANCED_DESC)}>
         <FormItem
-          title={i18n.intl.string(t.REPLUGGED_SETTINGS_BACKEND)}
-          note={i18n.intl.string(t.REPLUGGED_SETTINGS_BACKEND_DESC)}
+          title={intl.string(t.REPLUGGED_SETTINGS_BACKEND)}
+          note={intl.string(t.REPLUGGED_SETTINGS_BACKEND_DESC)}
           divider={true}
           style={{ marginBottom: "20px" }}>
           <TextInput
             {...util.useSetting(generalSettings, "apiUrl")}
-            placeholder="https://replugged.dev"
+            placeholder={WEBSITE_URL}
             disabled
           />
         </FormItem>
@@ -155,8 +158,8 @@ export const General = (): React.ReactElement => {
             expOnChange(value);
             restartModal(false);
           }}
-          note={i18n.intl.format(t.REPLUGGED_SETTINGS_DISCORD_EXPERIMENTS_DESC, {})}>
-          {i18n.intl.string(t.REPLUGGED_SETTINGS_DISCORD_EXPERIMENTS)}
+          note={intl.format(t.REPLUGGED_SETTINGS_DISCORD_EXPERIMENTS_DESC, {})}>
+          {intl.string(t.REPLUGGED_SETTINGS_DISCORD_EXPERIMENTS)}
         </SwitchItem>
 
         <SwitchItem
@@ -172,7 +175,7 @@ export const General = (): React.ReactElement => {
                 .catch(() => {
                   rdtOnChange(false); // Disable if failed
                   toast.toast(
-                    i18n.intl.string(t.REPLUGGED_SETTINGS_REACT_DEVTOOLS_FAILED),
+                    intl.string(t.REPLUGGED_SETTINGS_REACT_DEVTOOLS_FAILED),
                     toast.Kind.FAILURE,
                   );
                 });
@@ -181,18 +184,18 @@ export const General = (): React.ReactElement => {
               restartModal(true);
             }
           }}
-          note={i18n.intl.format(t.REPLUGGED_SETTINGS_REACT_DEVTOOLS_DESC, {})}>
-          {i18n.intl.string(t.REPLUGGED_SETTINGS_REACT_DEVTOOLS)}
+          note={intl.format(t.REPLUGGED_SETTINGS_REACT_DEVTOOLS_DESC, {})}>
+          {intl.string(t.REPLUGGED_SETTINGS_REACT_DEVTOOLS)}
         </SwitchItem>
 
         <ButtonItem
-          button={i18n.intl.string(t.REPLUGGED_SETTINGS_DEV_COMPANION_RECONNECT)}
-          note={i18n.intl.string(t.REPLUGGED_SETTINGS_DEV_COMPANION_DESC)}
+          button={intl.string(t.REPLUGGED_SETTINGS_DEV_COMPANION_RECONNECT)}
+          note={intl.string(t.REPLUGGED_SETTINGS_DEV_COMPANION_DESC)}
           onClick={() => {
             socket?.close(1000, "Reconnecting");
             initWs(true);
           }}>
-          {i18n.intl.string(t.REPLUGGED_SETTINGS_DEV_COMPANION)}
+          {intl.string(t.REPLUGGED_SETTINGS_DEV_COMPANION)}
         </ButtonItem>
       </Category>
 

@@ -1,10 +1,10 @@
 // btw, pluginID is the directory name, not the RDNN. We really need a better name for this.
-import { loadStyleSheet } from "../util";
-import type { PlaintextPatch, PluginExports, RepluggedPlugin } from "../../types";
-import { Logger } from "@logger";
-import { patchPlaintext } from "../modules/webpack/plaintext-patch";
-import { init } from "../apis/settings";
 import type { AddonSettings } from "src/types/addon";
+import type { PlaintextPatch, PluginExports, RepluggedPlugin } from "../../types";
+import { init } from "../apis/settings";
+import { Logger } from "../modules/logger";
+import { patchPlaintext } from "../modules/webpack/plaintext-patch";
+import { loadStyleSheet } from "../util";
 
 const logger = Logger.api("Plugins");
 const settings = init<AddonSettings>("plugins");
@@ -16,11 +16,6 @@ interface PluginWrapper extends RepluggedPlugin {
 /**
  * @hidden
  */
-
-export const native = RepluggedNative.plugins.listNative();
-
-export const pluginNatives = new Map<string, Record<string, (...args: unknown[]) => unknown>>();
-
 export const plugins = new Map<string, PluginWrapper>();
 const running = new Set<string>();
 
@@ -53,13 +48,6 @@ function register(plugin: RepluggedPlugin): void {
   });
 }
 
-function registerNative([name, map]: [
-  string,
-  Record<string, (...args: unknown[]) => unknown>,
-]): void {
-  pluginNatives.set(name, map);
-}
-
 /**
  * Load all plugins
  *
@@ -68,7 +56,6 @@ function registerNative([name, map]: [
  */
 export function loadAll(): void {
   window.RepluggedNative.plugins.list().forEach(register);
-  RepluggedNative.plugins.listNative().forEach(registerNative);
 }
 
 /**
@@ -79,7 +66,6 @@ export function loadAll(): void {
  * Plugin must be loaded first with {@link register} or {@link loadAll}
  */
 export async function start(id: string): Promise<void> {
-  const startTime = performance.now();
   const plugin = plugins.get(id);
   try {
     if (!plugin) {
@@ -119,14 +105,9 @@ export async function start(id: string): Promise<void> {
     }
 
     running.add(plugin.manifest.id);
-    logger.log(
-      `Plugin started: ${plugin.manifest.name} in ${(performance.now() - startTime).toFixed(2)}ms`,
-    );
-  } catch (e: unknown) {
-    logger.error(
-      `Error starting plugin ${plugin?.manifest.name} after ${(performance.now() - startTime).toFixed(2)}ms`,
-      e,
-    );
+    logger.log(`Plugin started: ${plugin.manifest.name}`);
+  } catch (e) {
+    logger.error(`Error starting plugin ${plugin?.manifest.name}`, e);
   }
 }
 
@@ -137,12 +118,9 @@ export async function start(id: string): Promise<void> {
  * Plugins must be loaded first with {@link register} or {@link loadAll}
  */
 export async function startAll(): Promise<void> {
-  const startTime = performance.now();
-  logger.log(`Starting plugins...`);
   const disabled: string[] = settings.get("disabled", []);
   const list = [...plugins.keys()].filter((x) => !disabled.includes(x));
   await Promise.allSettled(list.map(start));
-  logger.log(`All plugins started in ${(performance.now() - startTime).toFixed(2)}ms`);
 }
 
 /**
@@ -168,7 +146,7 @@ export async function stop(id: string): Promise<void> {
 
     running.delete(plugin.manifest.id);
     logger.log(`Plugin stopped: ${plugin.manifest.name}`);
-  } catch (e: unknown) {
+  } catch (e) {
     logger.error(`Error stopping plugin ${plugin?.manifest.name}`, e);
   }
 }
@@ -188,46 +166,40 @@ export function runPlaintextPatches(): void {
   const disabled: string[] = settings.get("disabled", []);
   const list = [...plugins.values()].filter((x) => !disabled.includes(x.manifest.id));
 
-  const getPlaintextPatch = (pluginName: string): { default: PlaintextPatch[] } => {
-    const wrapModule = (code: string, pluginName: string): string => `((module) => {
-      ${code}\n//# sourceURL=replugged://plugin/${pluginName}/plaintextPatches.js?t=${Date.now()}\nreturn module.exports
-      })({exports:{}})`;
+  for (const plugin of list) {
+    if (!plugin.manifest.plaintextPatches) continue;
 
-    const code = RepluggedNative.plugins.readPlaintextPatch(pluginName);
-    if (code)
-      try {
-        // eslint-disable-next-line no-eval
-        return (0, eval)(wrapModule(code, pluginName));
-      } catch {
-        const cjsCode = [
-          { match: /export\s+default\s+/g, replace: () => "module.exports = " },
-          {
-            match: /export[\s+]?\{([^}]+)\}[;]?/g,
-            replace: (_: string, exports: string) =>
-              exports
-                .split(",")
-                .map((exp) => exp.split(" as ").map((s) => s.trim()))
-                .map(([original, alias]) => `module.exports.${alias || original} = ${original};`)
-                .join("\n"),
-          },
-        ]
-          .reduce((code, { match, replace }) => code.replace(match, replace), code)
-          .trim();
+    // This is a bit of a hack, plaintext patches are built in ESM, but we need to run it in a CJS context
+    try {
+      const code = RepluggedNative.plugins.getPlaintextPatches(plugin.path);
+      let patches: { default: PlaintextPatch[] } = { default: [] };
+
+      if (code) {
+        const wrap = (src: string): string =>
+          `((module) => {\n${src}return module.exports})({exports:{}})\n//# sourceURL=replugged://plugin/${plugin.manifest.id}/plaintextPatches.js?t=${Date.now()}`;
+
+        let codeCjs = code.replace(/export\s+default\s+/g, "module.exports = ");
+        codeCjs = codeCjs.replace(/export[\s+]?\{([^}]+)\}[;]?/g, (_: string, exports: string) =>
+          exports
+            .split(",")
+            .map((exp) => exp.split(" as ").map((x) => x.trim()))
+            .map(([orig, alias]) => `module.exports.${alias || orig} = ${orig};`)
+            .join("\n"),
+        );
+
         try {
           // eslint-disable-next-line no-eval
-          return (0, eval)(wrapModule(cjsCode, pluginName));
+          patches = (0, eval)(wrap(codeCjs));
         } catch (err) {
-          logger.error(`Error getting PlaintextPatches for ${pluginName}`, err);
+          logger.error(`Error evaluating plaintext patches for ${plugin.manifest.id}`, err);
         }
       }
 
-    return { default: [] };
-  };
-
-  list.forEach((plugin) => {
-    if (plugin.manifest.plaintextPatches)
-      patchPlaintext(getPlaintextPatch(plugin.path).default, plugin.manifest.id);
-  });
+      patchPlaintext(patches.default);
+    } catch (err) {
+      logger.error(`Error applying plaintext patches for ${plugin.manifest.id}`, err);
+    }
+  }
 }
 
 /**

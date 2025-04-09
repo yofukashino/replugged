@@ -32,11 +32,11 @@ export type BeforeCallback<A extends unknown[] = unknown[]> = (
  * @param self The module the injected function is on
  * @returns New result to return
  */
-export type InsteadCallback<A extends unknown[] = unknown[], R = unknown, T = (...args: A) => R> = (
+export type InsteadCallback<A extends unknown[] = unknown[], R = unknown> = (
   args: A,
-  orig: T,
+  orig: (...args: A) => R,
   self: ObjectExports,
-) => T | AnyFunction | void;
+) => R | void;
 
 /**
  * Code to run after the original function

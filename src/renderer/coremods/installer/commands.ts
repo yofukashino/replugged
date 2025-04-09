@@ -1,10 +1,8 @@
-import { i18n } from "@common";
+import { intl } from "@common/i18n";
 import { Injector } from "@replugged";
 import { t } from "src/renderer/modules/i18n";
 import { ApplicationCommandOptionType } from "src/types";
-import { INSTALLER_SOURCES, InstallerSource, installFlow, parseInstallLink } from "./util";
-
-const { intl } = i18n;
+import { INSTALLER_SOURCES, type InstallerSource, installFlow, parseInstallLink } from "./util";
 
 /**
  * A map of display names for installer sources.

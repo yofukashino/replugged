@@ -1,6 +1,6 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 interface DividerProps {
   className?: string;
@@ -9,4 +9,4 @@ interface DividerProps {
 
 export type DividerType = React.FC<DividerProps>;
 
-export default components.then((v) => webpack.getFunctionBySource<DividerType>(v, ".divider")!);
+export default getFunctionBySource<DividerType>(components, ".divider,")!;

@@ -1,30 +1,15 @@
-import { dirname, join } from "path";
 import electron from "electron";
-import Logger from "./logger";
+import { dirname, join } from "path";
 import { CONFIG_PATHS } from "src/util.mjs";
-import { type RepluggedWebContents } from "../types";
-
+import type { PackageJson } from "type-fest";
+import { pathToFileURL } from "url";
+import type { RepluggedWebContents } from "../types";
 import { getSetting } from "./ipc/settings";
-import { statSync } from "fs";
 
 const electronPath = require.resolve("electron");
-require("./flags");
-let discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
-try {
-  // If using older replugged file system
-  statSync(discordPath);
-  const discordPackage = require(join(discordPath, "package.json"));
-  require.main!.filename = join(discordPath, discordPackage.main);
-  electron.app.name = discordPackage.name;
-} catch {
-  // If using newer replugged file system
-  discordPath = join(dirname(require.main!.filename), "app.orig");
-  const discordPackage = require(join(discordPath, "package.json"));
-  require.main!.filename = join(discordPath, "..", discordPackage.main);
-  electron.app.name = discordPackage.name;
-}
-
-let customTitlebar: boolean = getSetting("dev.replugged.Settings", "titlebar", false);
+const discordPath = join(dirname(require.main!.filename), "..", "app.orig.asar");
+const discordPackage: PackageJson = require(join(discordPath, "package.json"));
+require.main!.filename = join(discordPath, discordPackage.main!);
 
 Object.defineProperty(global, "appSettings", {
   set: (v /* : typeof global.appSettings*/) => {
@@ -51,20 +36,38 @@ class BrowserWindow extends electron.BrowserWindow {
       };
     },
   ) {
-    opts.frame = void 0;
+    if (
+      opts.frame &&
+      process.platform.includes("linux") &&
+      getSetting<boolean>("dev.replugged.Settings", "titleBar", false)
+    )
+      opts.frame = void 0;
 
     const originalPreload = opts.webPreferences?.preload;
 
-    opts.webPreferences!.preload = join(__dirname, "./preload.js");
+    if (opts.webContents) {
+      // General purpose pop-outs used by Discord
+    } else if (opts.webPreferences?.nodeIntegration) {
+      // Splash Screen
+      // opts.webPreferences.preload = join(__dirname, './preloadSplash.js');
+    } else if (opts.webPreferences?.offscreen) {
+      // Overlay
+      //      originalPreload = opts.webPreferences.preload;
+      // opts.webPreferences.preload = join(__dirname, './preload.js');
+    } else if (opts.webPreferences?.preload) {
+      // originalPreload = opts.webPreferences.preload;
+      if (opts.webPreferences.nativeWindowOpen) {
+        // Discord Client
+        opts.webPreferences.preload = join(__dirname, "./preload.js");
+        // opts.webPreferences.contextIsolation = false; // shrug
+      } else {
+        // Splash Screen on macOS (Host 0.0.262+) & Windows (Host 0.0.293 / 1.0.17+)
+        opts.webPreferences.preload = join(__dirname, "./preload.js");
+      }
+    }
 
     super(opts);
-
     (this.webContents as RepluggedWebContents).originalPreload = originalPreload;
-
-    this.webContents.on("devtools-opened", () => {
-      electron.nativeTheme.themeSource = "light";
-      setTimeout(() => (electron.nativeTheme.themeSource = "dark"), 25);
-    });
   }
 }
 
@@ -97,6 +100,7 @@ require.cache[electronPath]!.exports = electronExports;
     setAppPath: (path: string) => void;
   }
 ).setAppPath(discordPath);
+// electron.app.name = discordPackage.name;
 
 electron.protocol.registerSchemesAsPrivileged([
   {
@@ -124,28 +128,16 @@ electron.app.once("ready", () => {
       urls: [
         "https://*/api/v*/science",
         "https://*/api/v*/metrics",
-        "https://*/api/v*/science/*",
         "https://*/api/v*/metrics/*",
         "https://sentry.io/*",
         "https://discord.com/assets/sentry.*.js",
         "https://*.discord.com/assets/sentry.*.js",
-        "replugged://quickcss/*",
       ],
     },
-    function ({ url, timestamp }, callback) {
-      if (!url.startsWith("replugged://")) {
-        callback({ cancel: true });
-        return;
-      }
-
-      callback(
-        url.includes("?t=")
-          ? { cancel: false }
-          : { redirectURL: `${url}?t=${timestamp.toFixed(0)}` },
-      );
+    function (_details, callback) {
+      callback({ cancel: true });
     },
   );
-
   // @todo: Whitelist a few domains instead of removing CSP altogether; See #386
   electron.session.defaultSession.webRequest.onHeadersReceived(({ responseHeaders }, done) => {
     if (!responseHeaders) {
@@ -180,41 +172,25 @@ electron.app.once("ready", () => {
     done({ responseHeaders: headersWithoutCSP });
   });
 
-  loadReactDevTools();
-});
-electron.app.on("session-created", () => {
-  electron.protocol.registerFileProtocol("replugged", (request, cb) => {
+  // TODO: Eventually in the future, this should be migrated to IPC for better performance
+  electron.protocol.handle("replugged", (request) => {
     let filePath = "";
     const reqUrl = new URL(request.url);
     switch (reqUrl.hostname) {
-      case "renderer":
-        filePath = join(__dirname, "./renderer.js");
-        break;
       case "renderer.css":
         filePath = join(__dirname, "./renderer.css");
         break;
       case "quickcss":
-        Logger.log(reqUrl.pathname);
         filePath = join(CONFIG_PATHS.quickcss, reqUrl.pathname);
         break;
       case "theme":
-        filePath = join(
-          reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_themes : CONFIG_PATHS.themes,
-          reqUrl.pathname.replace(".asar", ""),
-        );
+        filePath = join(CONFIG_PATHS.themes, reqUrl.pathname);
         break;
       case "plugin":
-        filePath = join(
-          reqUrl.pathname.includes(".asar") ? CONFIG_PATHS.temp_plugins : CONFIG_PATHS.plugins,
-          reqUrl.pathname.replace(".asar", ""),
-        );
-
-        break;
-      case "assets":
-        filePath = join(__dirname, reqUrl.pathname);
+        filePath = join(CONFIG_PATHS.plugins, reqUrl.pathname);
         break;
     }
-    cb({ path: filePath });
+    return electron.net.fetch(pathToFileURL(filePath).toString());
   });
 
   loadReactDevTools();

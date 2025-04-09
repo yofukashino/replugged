@@ -1,5 +1,5 @@
+import { filters, waitForModule } from "@webpack";
 import type React from "react";
-import { filters, waitForModule } from "../webpack";
 
 interface FlexProps extends React.ComponentPropsWithoutRef<"div"> {
   direction?: string;
@@ -29,6 +29,6 @@ export type FlexType = React.FC<React.PropsWithChildren<FlexProps>> & {
   };
 };
 
-export default waitForModule<FlexType>(
+export default await waitForModule<FlexType>(
   filters.bySource(/HORIZONTAL_REVERSE:\w+?\.horizontalReverse./),
 );

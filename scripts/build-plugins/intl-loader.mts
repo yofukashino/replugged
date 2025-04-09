@@ -1,4 +1,5 @@
 import {
+  // @ts-expect-error: ts doesn't like that this is a const enum
   IntlCompiledMessageFormat,
   MessageDefinitionsTransformer,
   findAllMessagesFiles,
@@ -10,7 +11,7 @@ import {
   processDefinitionsFile,
   processTranslationsFile,
 } from "@discord/intl-loader-core";
-import esbuild from "esbuild";
+import type esbuild from "esbuild";
 import { readFileSync } from "node:fs";
 import { dirname, posix, relative, resolve } from "node:path";
 import { production } from "scripts/build.mjs";
@@ -47,6 +48,7 @@ export default {
 
       if (isMessageDefinitionsFile(sourcePath) && !forceTranslation) {
         const result = processDefinitionsFile(sourcePath, source, { locale: "en-US" });
+        if (!result.succeeded) throw new Error(result.errors[0].message);
 
         result.translationsLocaleMap[result.locale] = `${sourcePath}?forceTranslation`;
         for (const locale in result.translationsLocaleMap) {
@@ -56,7 +58,9 @@ export default {
           );
         }
 
-        messageKeys = result.messageKeys;
+        if (Object.keys(messageKeys).length < Object.keys(result.messageKeys).length) {
+          messageKeys = result.messageKeys;
+        }
 
         const transformedOutput = new MessageDefinitionsTransformer({
           messageKeys: Object.fromEntries(
@@ -65,18 +69,34 @@ export default {
           localeMap: result.translationsLocaleMap,
           defaultLocale: result.locale,
           getTranslationImport: (importPath) => `import("${importPath}")`,
-          debug: false,
+          debug: !production,
+          bindMode: "proxy",
+          getPrelude: () => `import {waitForProps} from '@webpack';`,
         }).getOutput();
 
         return {
-          contents: transformedOutput,
+          // This has been made to not block the loading of Replugged
+          // by changing the transformed output to a function that
+          // loads the messages when the IntlManager is loaded.
+          contents: transformedOutput
+            .replace(
+              /const {createLoader} = require\('@discord\/intl'\);/,
+              "let messagesLoader,messages;waitForProps('createLoader','IntlManager').then(({createLoader,makeMessagesProxy})=>{",
+            )
+            .replace(/const {makeMessagesProxy} = require\('@discord\/intl'\);/, "")
+            .replace("const messagesLoader", "messagesLoader")
+            .replace("const binds", "messages")
+            .replace("export {messagesLoader};", "});export {messagesLoader,messages};")
+            .replace("export default binds;", ""),
           loader: "js",
         };
       } else {
         const locale = forceTranslation ? "en-US" : getLocaleFromTranslationsFileName(sourcePath);
         if (isMessageTranslationsFile(sourcePath)) {
-          processTranslationsFile(sourcePath, source, { locale });
+          const result = processTranslationsFile(sourcePath, source, { locale });
+          if (!result.succeeded) throw new Error(result.errors[0].message);
         } else if (forceTranslation) {
+          /* empty */
         } else {
           throw new Error(
             "Expected a translation file or the `forceTranslation` query parameter on this import, but none was found",
@@ -84,14 +104,15 @@ export default {
         }
 
         const compiledResult = precompileFileForLocale(sourcePath, locale, undefined, {
+          // @ts-expect-error: ts doesn't like that this is a const enum
           format: IntlCompiledMessageFormat.KeylessJson,
           bundleSecrets: false,
         });
+        const parsedMessage: Record<string, unknown> = JSON.parse(
+          compiledResult?.toString() ?? "{}",
+        );
         const patchedResult = Object.fromEntries(
-          Object.entries(JSON.parse(compiledResult?.toString() ?? "{}")).map(([hash, string]) => [
-            messageKeys[hash],
-            string,
-          ]),
+          Object.entries(parsedMessage).map(([hash, string]) => [messageKeys[hash], string]),
         );
 
         return {

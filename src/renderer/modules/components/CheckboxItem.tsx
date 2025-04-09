@@ -1,7 +1,7 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import { Text } from ".";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 interface CheckboxProps {
   disabled?: boolean;
@@ -31,24 +31,16 @@ export type CheckboxType = React.ComponentClass<React.PropsWithChildren<Checkbox
 
 export type CheckboxItemType = React.FC<React.PropsWithChildren<CheckboxProps>>;
 
-const getCheckboxItem = async (): Promise<{
-  Checkbox: CheckboxType;
-  CheckboxItem: CheckboxItemType;
-}> => {
-  const Checkbox = webpack.getFunctionBySource<CheckboxType>(await components, 'type:"checkbox"')!;
+export const Checkbox = getFunctionBySource<CheckboxType>(components, ".checkboxWrapper")!;
 
-  const CheckboxItem = (props: React.PropsWithChildren<CheckboxProps>): React.ReactElement => {
-    return (
-      <Checkbox {...props}>
-        {props.children && (
-          <Text variant="text-sm/normal" style={props.style}>
-            {props.children}
-          </Text>
-        )}
-      </Checkbox>
-    );
-  };
-  return { Checkbox, CheckboxItem };
+export const CheckboxItem = (props: React.PropsWithChildren<CheckboxProps>): React.ReactElement => {
+  return (
+    <Checkbox {...props}>
+      {props.children && (
+        <Text variant="text-sm/normal" style={props.style}>
+          {props.children}
+        </Text>
+      )}
+    </Checkbox>
+  );
 };
-
-export default getCheckboxItem();

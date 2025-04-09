@@ -1,7 +1,6 @@
 export * as injector from "./modules/injector";
 export { Injector } from "./modules/injector";
-export * as intl from "@discord/intl";
-export * as IndexedDB from "idb-keyval";
+
 /**
  * The logger module provides a convenient and consistent way to associate things printed to the console
  * with their origin. This makes it easier to associate console messages with their origins, which can
@@ -14,8 +13,8 @@ export * as IndexedDB from "idb-keyval";
  * - The "Type" portion of the prefix indicates the type of the message's origin--e.g. an API, a coremod, or a plugin.
  * - The "Name" portion of the prefix specifies the origin of the message--the name of the API/coremod/plugin.
  */
-export * as logger from "@logger";
-export { Logger } from "@logger";
+export * as logger from "./modules/logger";
+export { Logger } from "./modules/logger";
 
 export * as webpack from "./modules/webpack";
 export * as common from "./modules/common";

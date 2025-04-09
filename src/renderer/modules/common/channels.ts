@@ -1,6 +1,6 @@
-import { waitForProps } from "../webpack";
 import type { Channel } from "discord-types/general";
 import { virtualMerge } from "src/renderer/util";
+import { waitForProps } from "../webpack";
 
 interface LastChannelFollowingDestination {
   channelId: string;
@@ -46,16 +46,13 @@ export interface ChannelStore {
 
 export type Channels = SelectedChannelStore & ChannelStore;
 
-const getChannels = async (): Promise<ReturnType<typeof virtualMerge> & Channels> =>
-  virtualMerge(
-    (await waitForProps<SelectedChannelStore>(
-      "getChannelId",
-      "getLastSelectedChannelId",
-      "getVoiceChannelId",
-    ).then(Object.getPrototypeOf)) as SelectedChannelStore,
-    (await waitForProps<ChannelStore>("getChannel", "hasChannel").then(
-      Object.getPrototypeOf,
-    )) as ChannelStore,
-  );
-
-export default getChannels();
+export default virtualMerge(
+  (await waitForProps<SelectedChannelStore>(
+    "getChannelId",
+    "getLastSelectedChannelId",
+    "getVoiceChannelId",
+  ).then(Object.getPrototypeOf)) as SelectedChannelStore,
+  (await waitForProps<ChannelStore>("getChannel", "hasChannel").then(
+    Object.getPrototypeOf,
+  )) as ChannelStore,
+);

@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const blurple = "#5865F2";
 
 export type LoggerType =
@@ -7,8 +9,7 @@ export type LoggerType =
   | "Ignition"
   | "CommonModules"
   | "Components"
-  | "Manager"
-  | "Preload";
+  | "Manager";
 
 const repluggedPrefix = (type: LoggerType, name: string): string => `%c[Replugged:${type}:${name}]`;
 

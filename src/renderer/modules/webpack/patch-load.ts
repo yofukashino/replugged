@@ -4,9 +4,7 @@ import type {
   WebpackRawModules,
   WebpackRequire,
 } from "../../../types";
-
 import { listeners } from "./lazy";
-
 import { patchModuleSource } from "./plaintext-patch";
 
 /**
@@ -15,8 +13,9 @@ import { patchModuleSource } from "./plaintext-patch";
  * @hidden
  */
 export let wpRequire: WebpackRequire | undefined;
-
 export let webpackChunks: WebpackRawModules | undefined;
+
+const patchedModules = new Set<string>();
 
 /**
  * Original stringified module (without plaintext patches applied) for source searches
@@ -25,13 +24,17 @@ export let webpackChunks: WebpackRawModules | undefined;
  */
 export const sourceStrings: Record<number, string> = {};
 
-function patchChunk(modules: WebpackChunk[1]): void {
+function patchChunk(chunk: WebpackChunk): void {
+  const modules = chunk[1];
   for (const id in modules) {
+    if (patchedModules.has(id)) continue;
+    patchedModules.add(id);
     const originalMod = modules[id];
     sourceStrings[id] = originalMod.toString();
     const mod = patchModuleSource(originalMod, id);
     modules[id] = function (module, exports, require) {
       mod(module, exports, require);
+
       for (const [filter, callback] of listeners) {
         try {
           if (filter(module)) {
@@ -53,7 +56,7 @@ function patchPush(webpackChunk: WebpackChunkGlobal): void {
   let original = webpackChunk.push;
 
   function handlePush(chunk: WebpackChunk): unknown {
-    patchChunk(chunk[1]);
+    patchChunk(chunk);
     return original.call(webpackChunk, chunk);
   }
 
@@ -73,7 +76,6 @@ function patchPush(webpackChunk: WebpackChunkGlobal): void {
  * @internal
  */
 function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
-  patchPush(chunksGlobal);
   chunksGlobal.push([
     [Symbol("replugged")],
     {},
@@ -83,10 +85,14 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
 
       if (r) {
         // The first batch of modules are added inline via r.m rather than being pushed
+        patchChunk([[], r.m]);
 
-        r.d = (module: Record<string, unknown>, exports: Record<string, () => unknown>) => {
+        r.d = (module: unknown, exports: Record<string, () => unknown>) => {
           for (const prop in exports) {
-            if (prop in exports && !(prop in module)) {
+            if (
+              Object.hasOwnProperty.call(exports, prop) &&
+              !Object.hasOwnProperty.call(module, prop)
+            ) {
               Object.defineProperty(module, prop, {
                 enumerable: true,
                 configurable: true,
@@ -96,41 +102,25 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
             }
           }
         };
-
-        patchChunk(wpRequire.m);
       }
     },
   ]);
 
-  // Patch previously loaded chunks
-  if (Array.isArray(chunksGlobal)) {
-    for (const loadedChunk of chunksGlobal) {
-      patchChunk(loadedChunk[1]);
-    }
-  }
+  patchPush(chunksGlobal);
 }
 
-// Intercept the webpack chunk global as soon as Discord creates it
-export function interceptChunksGlobal(): void {
-  if (window.webpackChunkdiscord_app) {
-    loadWebpackModules(window.webpackChunkdiscord_app);
-  } else {
-    let webpackChunk: WebpackChunkGlobal | undefined;
-    Object.defineProperty(window, "webpackChunkdiscord_app", {
-      get: () => webpackChunk,
-      set: (v) => {
-        // Only modify if the global has actually changed
-        // We don't need to check if push is the special webpack push,
-        // because webpack will go over the previously loaded modules
-        // when it sets the custom push method.
-        if (v !== webpackChunk) {
-          // setTimeout(() => {
-          loadWebpackModules(v);
-          // }, 0);
-        }
-        webpackChunk = v;
-      },
-      configurable: true,
-    });
-  }
-}
+let webpackChunk: WebpackChunkGlobal | undefined;
+Object.defineProperty(window, "webpackChunkdiscord_app", {
+  get: () => webpackChunk,
+  set: (v: WebpackChunkGlobal) => {
+    // Only modify if the global has actually changed
+    // We don't need to check if push is the special webpack push,
+    // because webpack will go over the previously loaded modules
+    // when it sets the custom push method.
+    if (v !== webpackChunk) {
+      loadWebpackModules(v);
+    }
+    webpackChunk = v;
+  },
+  configurable: true,
+});

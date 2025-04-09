@@ -1,8 +1,7 @@
+import { getFunctionBySource, waitForProps } from "@webpack";
 import type React from "react";
 import { Divider, Flex, FormText, Tooltip } from ".";
 import components from "../common/components";
-import { waitForProps } from "../webpack";
-import { webpack } from "@replugged";
 
 interface ButtonProps extends React.ComponentPropsWithoutRef<"button"> {
   look?: string;
@@ -61,6 +60,13 @@ export type ButtonType = React.FC<React.PropsWithChildren<ButtonProps>> & {
   Sizes: Record<"NONE" | "TINY" | "SMALL" | "MEDIUM" | "LARGE" | "MIN" | "MAX" | "ICON", string>;
 };
 
+export const Button = getFunctionBySource<ButtonType>(components, "Type.PULSING_ELLIPSIS")!;
+
+const classes =
+  await waitForProps<Record<"dividerDefault" | "labelRow" | "note" | "title", string>>(
+    "dividerDefault",
+  );
+
 interface ButtonItemProps {
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   button?: string;
@@ -74,66 +80,48 @@ interface ButtonItemProps {
 }
 
 export type ButtonItemType = React.FC<React.PropsWithChildren<ButtonItemProps>>;
-const getButtonItems = async (): Promise<{
-  ButtonItem: ButtonItemType;
-  Button: ButtonType;
-}> => {
-  const Button = webpack.getFunctionBySource<ButtonType>(await components, "Type.PULSING_ELLIPSIS")!;
 
-  const classes =
-    await waitForProps<Record<"dividerDefault" | "labelRow" | "note" | "title", string>>(
-      "dividerDefault",
-    );
+export const ButtonItem = (props: React.PropsWithChildren<ButtonItemProps>): React.ReactElement => {
+  const { hideBorder = false } = props;
 
-  const ButtonItem = (props: React.PropsWithChildren<ButtonItemProps>): React.ReactElement => {
-    const { hideBorder = false } = props;
+  const button = (
+    <Button
+      color={props.success ? Button.Colors.GREEN : props.color}
+      disabled={props.disabled}
+      onClick={props.onClick}>
+      {props.button}
+    </Button>
+  );
 
-    const button = (
-      <Button
-        color={props.success ? Button.Colors.GREEN : props.color}
-        disabled={props.disabled}
-        onClick={props.onClick}>
-        {props.button}
-      </Button>
-    );
-
-    return (
-      <div style={{ marginBottom: 20 }}>
-        <Flex justify={Flex.Justify.END} style={{ opacity: props.disabled ? 0.3 : undefined }}>
-          <Flex.Child>
-            <div className={classes.labelRow}>
-              <label
-                className={classes.title}
-                style={{ cursor: props.disabled ? "not-allowed" : "pointer" }}>
-                {props.children}
-              </label>
-              {props.tooltipText ? (
-                <Tooltip
-                  text={props.tooltipText}
-                  position={props.tooltipPosition}
-                  shouldShow={Boolean(props.tooltipText)}
-                  className={Flex.Align.CENTER}
-                  style={{ height: "100%" }}>
-                  {button}
-                </Tooltip>
-              ) : (
-                button
-              )}
-            </div>
-            {props.note && (
-              <FormText.DESCRIPTION className={classes.note}>{props.note}</FormText.DESCRIPTION>
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <Flex justify={Flex.Justify.END} style={{ opacity: props.disabled ? 0.3 : undefined }}>
+        <Flex.Child>
+          <div className={classes.labelRow}>
+            <label
+              className={classes.title}
+              style={{ cursor: props.disabled ? "not-allowed" : "pointer" }}>
+              {props.children}
+            </label>
+            {props.tooltipText ? (
+              <Tooltip
+                text={props.tooltipText}
+                position={props.tooltipPosition}
+                shouldShow={Boolean(props.tooltipText)}
+                className={Flex.Align.CENTER}
+                style={{ height: "100%" }}>
+                {button}
+              </Tooltip>
+            ) : (
+              button
             )}
-          </Flex.Child>
-        </Flex>
-        {!hideBorder && <Divider className={classes.dividerDefault} />}
-      </div>
-    );
-  };
-
-  return {
-    Button,
-    ButtonItem,
-  };
+          </div>
+          {props.note && (
+            <FormText.DESCRIPTION className={classes.note}>{props.note}</FormText.DESCRIPTION>
+          )}
+        </Flex.Child>
+      </Flex>
+      {!hideBorder && <Divider className={classes.dividerDefault} />}
+    </div>
+  );
 };
-
-export default getButtonItems();

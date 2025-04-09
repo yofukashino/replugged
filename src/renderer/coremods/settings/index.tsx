@@ -1,11 +1,9 @@
-import { i18n } from "@common";
+import { t as discordT, intl } from "@common/i18n";
 import { Text } from "@components";
 import { Injector } from "@replugged";
 import { t } from "src/renderer/modules/i18n";
 import { Divider, Header, Section, insertSections, settingsTools } from "./lib";
-import { ConnectedQuickCSS, General, Plugins, Themes, Updater } from "./pages";
-
-const { t: discordT, intl } = i18n;
+import { General, Plugins, QuickCSS, Themes, Updater } from "./pages";
 
 const injector = new Injector();
 
@@ -27,31 +25,26 @@ export function start(): void {
       name: "rp-general",
       label: () => intl.string(discordT.SETTINGS_GENERAL),
       elem: General,
-      predicate: (query) => (query !== "" ? query.toLowerCase().includes("general") : true),
     }),
     Section({
       name: "rp-quickcss",
       label: () => intl.string(t.REPLUGGED_QUICKCSS),
-      elem: ConnectedQuickCSS,
-      predicate: (query) => (query !== "" ? query.toLowerCase().includes("quickcss") : true),
+      elem: QuickCSS,
     }),
     Section({
       name: "rp-plugins",
       label: () => intl.string(t.REPLUGGED_PLUGINS),
       elem: Plugins,
-      predicate: (query) => (query !== "" ? query.toLowerCase().includes("plugins") : true),
     }),
     Section({
       name: "rp-themes",
       label: () => intl.string(t.REPLUGGED_THEMES),
       elem: Themes,
-      predicate: (query) => (query !== "" ? query.toLowerCase().includes("themes") : true),
     }),
     Section({
       name: "rp-updater",
       label: () => intl.string(t.REPLUGGED_UPDATES_UPDATER),
       elem: Updater,
-      predicate: (query) => (query !== "" ? query.toLowerCase().includes("updater") : true),
     }),
   ]);
 }

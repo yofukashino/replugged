@@ -1,8 +1,7 @@
+import { getFunctionBySource, waitForProps } from "@webpack";
 import type React from "react";
 import { FormItem } from ".";
 import components from "../common/components";
-import { waitForProps } from "../webpack";
-import { webpack } from "@replugged";
 
 const MarkerPositions = {
   ABOVE: 0,
@@ -43,6 +42,11 @@ interface SliderCompProps {
 
 export type SliderCompType = React.ComponentClass<SliderCompProps>;
 
+const SliderComp = getFunctionBySource<SliderCompType>(
+  components,
+  /initialValue!==\w+\.initialValueProp/,
+)!;
+
 interface SliderProps extends SliderCompProps {
   value?: number;
   onChange?: (value: number) => void;
@@ -52,6 +56,13 @@ export type SliderType = React.FC<SliderProps> & {
   MarkerPositions: typeof MarkerPositions;
 };
 
+export const Slider = ((props) => {
+  return <SliderComp initialValue={props.value} onValueChange={props.onChange} {...props} />;
+}) as SliderType;
+Slider.MarkerPositions = MarkerPositions;
+
+const classes = await waitForProps<Record<"marginTop20", string>>("marginTop20");
+
 interface SliderItemProps extends SliderProps {
   note?: string;
   style?: React.CSSProperties;
@@ -59,40 +70,22 @@ interface SliderItemProps extends SliderProps {
 
 export type SliderItemType = React.FC<React.PropsWithChildren<SliderItemProps>>;
 
-const getSliderItem = async (): Promise<{ Slider: SliderType; SliderItem: SliderItemType }> => {
-  const SliderComp = webpack.getFunctionBySource(
-    await components,
-    /initialValue!==\w+\.initialValueProp/,
+export const SliderItem = (props: React.PropsWithChildren<SliderItemProps>): React.ReactElement => {
+  const { children, className, ...compProps } = props;
+  return (
+    <FormItem
+      title={children}
+      style={{ marginBottom: 20, ...props.style }}
+      note={props.note}
+      noteStyle={{ marginBottom: props.markers ? 16 : 4 }}
+      disabled={props.disabled}
+      divider>
+      <Slider
+        className={`${props.markers && !props.note ? classes.marginTop20 : ""}${
+          className ? ` ${className}` : ""
+        }`}
+        {...compProps}
+      />
+    </FormItem>
   );
-
-  const Slider = ((props) => {
-    return <SliderComp initialValue={props.value} onValueChange={props.onChange} {...props} />;
-  }) as SliderType;
-
-  Slider.MarkerPositions = MarkerPositions;
-
-  const classes = await waitForProps<Record<"marginTop20", string>>("marginTop20");
-
-  const SliderItem = (props: React.PropsWithChildren<SliderItemProps>): React.ReactElement => {
-    const { children, className, ...compProps } = props;
-    return (
-      <FormItem
-        title={children}
-        style={{ marginBottom: 20, ...props.style }}
-        note={props.note}
-        noteStyle={{ marginBottom: props.markers ? 16 : 4 }}
-        disabled={props.disabled}
-        divider>
-        <Slider
-          className={`${props.markers && !props.note ? classes.marginTop20 : ""}${
-            className ? ` ${className}` : ""
-          }`}
-          {...compProps}
-        />
-      </FormItem>
-    );
-  };
-  return { Slider, SliderItem };
 };
-
-export default getSliderItem();

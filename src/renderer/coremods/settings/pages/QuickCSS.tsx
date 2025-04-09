@@ -1,8 +1,7 @@
 import { css } from "@codemirror/lang-css";
 import { EditorState } from "@codemirror/state";
-
-import { React, flux, i18n, toast } from "@common";
-
+import { React, toast } from "@common";
+import { intl } from "@common/i18n";
 import { Button, Divider, Flex, Text } from "@components";
 import { webpack } from "@replugged";
 import { EditorView, basicSetup } from "codemirror";
@@ -11,9 +10,6 @@ import { githubDark, githubLight } from "./codemirror-github";
 import { generalSettings } from "./General";
 
 import "./QuickCSS.css";
-import { Store } from "@common/flux";
-
-const { intl } = i18n;
 
 interface UseCodeMirrorOptions {
   value?: string;
@@ -21,34 +17,11 @@ interface UseCodeMirrorOptions {
   container?: HTMLDivElement | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type ThemeModule = {
+interface ThemeModule {
   theme: "light" | "dark";
   addChangeListener: (listener: () => unknown) => unknown;
   removeChangeListener: (listener: () => unknown) => unknown;
-};
-
-const PopoutModule = webpack.getBySource('type:"POPOUT_WINDOW_OPEN"');
-const openPopout = webpack.getFunctionBySource<
-  (key: string, render: React.ComponentType, features: Record<string, string>) => void
->(PopoutModule, "POPOUT_WINDOW_OPEN")!;
-const closePopout = webpack.getFunctionBySource<(key: string) => void>(
-  PopoutModule,
-  "POPOUT_WINDOW_CLOSE",
-)!;
-
-const setAlwaysOnTop = webpack.getFunctionBySource<(key: string, alwaysOnTop: boolean) => void>(
-  PopoutModule,
-  "POPOUT_WINDOW_SET_ALWAYS_ON_TOP",
-)!;
-
-const PopoutWindowStore = webpack.getByStoreName<
-  Store & {
-    getWindow: (key: string) => Window;
-    getWindowOpen: (key: string) => boolean;
-    getIsAlwaysOnTop: (key: string) => boolean;
-  }
->("PopoutWindowStore")!;
+}
 
 function useTheme(): "light" | "dark" {
   const [theme, setTheme] = React.useState<"light" | "dark">("dark");
@@ -86,7 +59,7 @@ function useCodeMirror({ value: initialValueParam, onChange, container }: UseCod
   const [value, setValue] = React.useState("");
   const [view, setView] = React.useState<EditorView | undefined>(undefined);
 
-  const [update, forceUpdate] = React.useReducer((x) => x + 1, 0);
+  const [update, forceUpdate] = React.useReducer((x: number) => x + 1, 0);
 
   React.useEffect(() => {
     if (initialValueParam) {
@@ -137,12 +110,11 @@ function useCodeMirror({ value: initialValueParam, onChange, container }: UseCod
   return { value, setValue: customSetValue };
 }
 
-const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.ReactElement => {
+export const QuickCSS = (): React.ReactElement => {
   const ref = React.useRef<HTMLDivElement>(null);
   const { value, setValue } = useCodeMirror({
     container: ref.current,
   });
-  const idk = React.useRef();
   const [ready, setReady] = React.useState(false);
 
   const autoApply = generalSettings.get("autoApplyQuickCss");
@@ -154,7 +126,7 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
   };
 
   React.useEffect(() => {
-    void window.RepluggedNative.quickCSS.get().then((val) => {
+    void window.RepluggedNative.quickCSS.get().then((val: string) => {
       setValue(val);
       setReady(true);
     });
@@ -198,19 +170,6 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
     if (autoApply) setReloadTimer(setTimeout(reload, 500));
   }, [value]);
 
-  if (props.popout) {
-    React.useEffect(() => {
-      const window = PopoutWindowStore.getWindow("DISCORD_REPLUGGED_QUICKCSS");
-
-      let el = window.document.createElement("link");
-      el.rel = "stylesheet";
-      el.href = `replugged://renderer.css?t=${Date.now()}`;
-      window.document.head.appendChild(el);
-    }, []);
-  }
-
-  const [alwaysOnTop, setAlwaysOnTop_] = React.useState(props.popoutOnTop);
-
   return (
     <>
       <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.START}>
@@ -234,14 +193,3 @@ const QuickCSS = (props: { popout: boolean } & Record<string, boolean>): React.R
     </>
   );
 };
-
-export const ConnectedQuickCSS = flux.connectStores<
-  { popout: boolean },
-  { popout: boolean; isPopoutOpen: boolean }
->([PopoutWindowStore], (props) => {
-  return {
-    isPopoutOpen: PopoutWindowStore.getWindowOpen("DISCORD_REPLUGGED_QUICKCSS"),
-    popoutOnTop: PopoutWindowStore.getIsAlwaysOnTop("DISCORD_REPLUGGED_QUICKCSS"),
-    ...props,
-  };
-})(QuickCSS);

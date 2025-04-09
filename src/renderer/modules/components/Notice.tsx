@@ -1,14 +1,15 @@
-import components from "@common/components";
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
+import components from "../common/components";
 import type { Variant } from "./Text";
-import { webpack } from "@replugged";
 
-const HelpMessageTypes = {
-  WARNING: 0,
-  INFO: 1,
-  ERROR: 2,
-  POSITIVE: 3,
-} as const;
+enum HelpMessageTypes {
+  WARNING = "warn",
+  INFO = "info",
+  ERROR = "danger",
+  POSITIVE = "positive",
+  PREVIEW = "preview",
+}
 
 interface HelpMessageProps {
   children: React.ReactNode;
@@ -22,11 +23,9 @@ export type NoticeType = React.FC<HelpMessageProps> & {
   Types: typeof HelpMessageTypes; // for backwards compat
   HelpMessageTypes: typeof HelpMessageTypes;
 };
-const getNotice = async (): Promise<NoticeType> => {
-  const HelpMessage = webpack.getFunctionBySource(await components, "messageType:")!;
-  HelpMessage.HelpMessageTypes = HelpMessageTypes;
-  HelpMessage.Types = HelpMessage.HelpMessageTypes;
-  return HelpMessage;
-};
 
-export default getNotice();
+const HelpMessage = getFunctionBySource<NoticeType>(components, "messageType:")!;
+HelpMessage.HelpMessageTypes = HelpMessageTypes;
+HelpMessage.Types = HelpMessage.HelpMessageTypes;
+
+export default HelpMessage;

@@ -1,6 +1,6 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 interface TextInputProps
   extends Omit<
@@ -26,4 +26,4 @@ export type TextInputType = React.ComponentClass<TextInputProps> & {
   Sizes: Record<"DEFAULT" | "MINI", string>;
 };
 
-export default components.then((v) => webpack.getFunctionBySource(v, ".inputPrefix"));
+export default getFunctionBySource<TextInputType>(components, ".inputPrefix")!;

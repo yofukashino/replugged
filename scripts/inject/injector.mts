@@ -1,27 +1,24 @@
+import { execSync } from "child_process";
+import { existsSync } from "fs";
 import { chown, copyFile, mkdir, rename, rm, stat, writeFile } from "fs/promises";
 import path, { join, sep } from "path";
 import { fileURLToPath } from "url";
-import asar, { uncache } from "@electron/asar";
+import { CONFIG_PATH } from "../../src/util.mjs";
 import { entryPoint as argEntryPoint, exitCode } from "./index.mjs";
-
+import type { DiscordPlatform, PlatformModule, ProcessInfo } from "./types.mjs";
 import {
   AnsiEscapes,
-  GetUserData,
   PlatformNames,
   getCommand,
   getProcessInfoByName,
+  getUserData,
   killProcessByPID,
   openProcess,
 } from "./util.mjs";
 
-import { execSync } from "child_process";
-import { DiscordPlatform, PlatformModule, ProcessInfo } from "./types.mjs";
-import { CONFIG_PATH } from "../../src/util.mjs";
-import { existsSync } from "fs";
-
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-let processInfo: ProcessInfo;
-console.log(join(dirname, "..", ".."));
+let processInfo: ProcessInfo | ProcessInfo[] | null;
+
 export const isDiscordInstalled = async (appDir: string, silent?: boolean): Promise<boolean> => {
   try {
     await stat(appDir);
@@ -41,30 +38,26 @@ export const isDiscordInstalled = async (appDir: string, silent?: boolean): Prom
 export const correctMissingMainAsar = async (appDir: string): Promise<boolean> => {
   try {
     await stat(join(appDir, "..", "app.orig.asar"));
-    console.warn(
-      `${AnsiEscapes.YELLOW}Your Discord installation was not properly unplugged, attempting to fix...${AnsiEscapes.RESET}`,
-    );
     try {
       await stat(join(appDir, "..", "app.asar"));
-      await rm(join(appDir, "..", "app.asar"), { recursive: true, force: true });
-    } catch {}
-    try {
-      await stat(join(appDir, "..", "temp"));
-      await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
-    } catch {}
-    try {
-      await rename(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "app.asar"));
-      console.log(
-        `${AnsiEscapes.GREEN}Fixed your Discord installation successfully! Continuing with Replugged installation...${AnsiEscapes.RESET}`,
-        "\n",
-      );
     } catch {
-      console.error(
-        `${AnsiEscapes.RED}Failed to fix your Discord installation, please try unplugging and plugging again.${AnsiEscapes.RESET}`,
-        "\n",
+      console.warn(
+        `${AnsiEscapes.YELLOW}Your Discord installation was not properly unplugged, attempting to fix...${AnsiEscapes.RESET}`,
       );
-      console.error("If the error persists, please reinstall Discord and try again.");
-      return false;
+      try {
+        await rename(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "app.asar"));
+        console.log(
+          `${AnsiEscapes.GREEN}Fixed your Discord installation successfully! Continuing with Replugged installation...${AnsiEscapes.RESET}`,
+          "\n",
+        );
+      } catch {
+        console.error(
+          `${AnsiEscapes.RED}Failed to fix your Discord installation, please try unplugging and plugging again.${AnsiEscapes.RESET}`,
+          "\n",
+        );
+        console.error("If the error persists, please reinstall Discord and try again.");
+        return false;
+      }
     }
   } catch {}
 
@@ -73,8 +66,7 @@ export const correctMissingMainAsar = async (appDir: string): Promise<boolean> =
 
 export const isPlugged = async (appDir: string): Promise<boolean> => {
   try {
-    uncache(appDir);
-    await asar.statFile(appDir, "app.orig");
+    await stat(join(appDir, "..", "app.orig.asar"));
     return true;
   } catch {
     return false;
@@ -142,27 +134,6 @@ export const inject = async (
       `${AnsiEscapes.YELLOW}Flatpak detected, allowing Discord access to Replugged files (${entryPointDir})${AnsiEscapes.RESET}`,
     );
     execSync(overrideCommand);
-    if (!prod) {
-      console.log(
-        `${
-          appDir.startsWith("/var") ? "sudo flatpak override" : "flatpak override --user"
-        } com.discordapp.${discordName} --filesystem=${join(dirname, "..", "..")}`,
-      );
-      execSync(
-        `${
-          appDir.startsWith("/var") ? "sudo flatpak override" : "flatpak override --user"
-        } com.discordapp.${discordName} --filesystem=${join(dirname, "..", "..")}`,
-      );
-      console.log(
-        `${
-          AnsiEscapes.YELLOW
-        }Flatpak Development detected, allowing Discord access to Replugged files (${join(
-          dirname,
-          "..",
-          "..",
-        )})${AnsiEscapes.RESET}`,
-      );
-    }
     console.log("Done!");
   }
 
@@ -194,26 +165,21 @@ export const inject = async (
     }
   }
 
-  await mkdir(join(appDir, "..", "temp"));
+  await mkdir(appDir);
   await Promise.all([
     writeFile(
-      join(appDir, "..", "temp", "index.js"),
+      join(appDir, "index.js"),
       `require("${entryPoint.replace(RegExp(sep.repeat(2), "g"), "/")}")`,
     ),
     writeFile(
-      join(appDir, "..", "temp", "package.json"),
+      join(appDir, "package.json"),
       JSON.stringify({
         main: "index.js",
         name: "discord",
-        modded: "true",
       }),
     ),
-    asar.extractAll(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "temp", "app.orig")),
   ]);
 
-  await asar.createPackage(join(appDir, "..", "temp"), appDir);
-  await rm(join(appDir, "..", "app.orig.asar"), { recursive: true, force: true });
-  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
   return true;
 };
 
@@ -234,17 +200,24 @@ export const uninject = async (
     );
     return false;
   }
-  await asar.extractAll(appDir, join(appDir, "..", "temp"));
-  await rm(appDir, { recursive: true, force: true });
-  await asar.createPackage(join(appDir, "..", "temp", "app.orig"), appDir);
-  await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
-  // For discord_arch_electron
-  if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
-    await rename(
-      join(appDir, "..", "app.orig.asar.unpacked"),
-      join(appDir, "..", "app.asar.unpacked"),
+
+  try {
+    await rm(appDir, { recursive: true, force: true });
+    await rename(join(appDir, "..", "app.orig.asar"), appDir);
+    // For discord_arch_electron
+    if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
+      await rename(
+        join(appDir, "..", "app.orig.asar.unpacked"),
+        join(appDir, "..", "app.asar.unpacked"),
+      );
+    }
+  } catch {
+    console.error(
+      `${AnsiEscapes.RED}Failed to rename app.asar while unplugging. If Discord is open, make sure it is closed.${AnsiEscapes.RESET}`,
     );
+    process.exit(exitCode);
   }
+
   return true;
 };
 
@@ -256,24 +229,25 @@ export const smartInject = async (
   production: boolean,
   noRelaunch: boolean,
 ): Promise<boolean> => {
-  let result;
-  if (noRelaunch) {
-    result =
-      cmd === "uninject"
-        ? await uninject(platformModule, platform)
-        : inject(platformModule, platform, production);
-  } else {
-    const processName = PlatformNames[platform].replace(" ", "");
+  const processName =
+    process.platform === "darwin"
+      ? PlatformNames[platform]
+      : PlatformNames[platform].replace(" ", "");
+  if (!noRelaunch) {
     try {
       if ((replug && cmd === "uninject") || !replug) {
         processInfo = getProcessInfoByName(processName)!;
-        await killProcessByPID(processInfo?.pid);
+        await Promise.all(processInfo.map((info) => killProcessByPID(info.pid)));
       }
     } catch {}
-    result =
-      cmd === "uninject"
-        ? await uninject(platformModule, platform)
-        : inject(platformModule, platform, production);
+  }
+
+  const result =
+    cmd === "uninject"
+      ? await uninject(platformModule, platform)
+      : await inject(platformModule, platform, production);
+
+  if (!noRelaunch) {
     if (((replug && cmd !== "uninject") || !replug) && processInfo) {
       const appDir = await platformModule.getAppDir(platform);
       switch (process.platform) {
@@ -286,16 +260,17 @@ export const smartInject = async (
           break;
         case "linux":
           openProcess(join(appDir, "..", "..", processName), [], {
-            ...GetUserData(),
+            ...getUserData(),
             detached: true,
             stdio: "ignore",
           });
           break;
         case "darwin":
-          openProcess(`open -a ${PlatformNames[platform]}.app`);
+          openProcess(`open -a "${processName}.app"`);
           break;
       }
     }
   }
+
   return result;
 };

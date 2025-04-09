@@ -1,7 +1,7 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import { FormItem } from ".";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 const Looks = {
   FILLED: 0,
@@ -44,6 +44,8 @@ interface SelectCompProps {
 
 export type SelectCompType = React.FC<SelectCompProps>;
 
+const SelectComp = getFunctionBySource<SelectCompType>(components, /maxVisibleItems:\w+=7/)!;
+
 interface SelectProps extends SelectCompProps {
   onChange?: (value: string) => void;
   onSelect?: (value: string) => void;
@@ -56,6 +58,21 @@ export type SelectType = React.FC<React.PropsWithChildren<SelectProps>> & {
   Looks: typeof Looks;
 };
 
+export const Select = ((props) => {
+  if (!props.isSelected && props.value != null) props.isSelected = (value) => value === props.value;
+  if (!props.serialize) props.serialize = (value) => value;
+
+  return (
+    <SelectComp
+      isDisabled={props.disabled}
+      select={props.onChange || props.onSelect}
+      clear={props.onClear}
+      {...props}
+    />
+  );
+}) as SelectType;
+Select.Looks = Looks;
+
 interface SelectItemProps extends SelectProps {
   note?: string;
   style?: React.CSSProperties;
@@ -63,44 +80,16 @@ interface SelectItemProps extends SelectProps {
 
 export type SelectItemType = React.FC<React.PropsWithChildren<SelectItemProps>>;
 
-const getSelectItem = async (): Promise<{
-  SelectItem: SelectItemType;
-  Select: SelectType;
-}> => {
-  const SelectComp = webpack.getFunctionBySource(await components, /maxVisibleItems:\w+=7/);
-
-  const Select = ((props) => {
-    if (!props.isSelected && props.value != null)
-      props.isSelected = (value) => value === props.value;
-    if (!props.serialize) props.serialize = (value) => value;
-
-    return (
-      <SelectComp
-        isDisabled={props.disabled}
-        select={props.onChange || props.onSelect}
-        clear={props.onClear}
-        {...props}
-      />
-    );
-  }) as SelectType;
-
-  Select.Looks = Looks;
-
-  const SelectItem = (props: React.PropsWithChildren<SelectItemProps>): React.ReactElement => {
-    return (
-      <FormItem
-        title={props.children}
-        style={{ marginBottom: 20, ...props.style }}
-        note={props.note}
-        notePosition="after"
-        disabled={props.disabled}
-        divider>
-        <Select {...props} />
-      </FormItem>
-    );
-  };
-
-  return { Select, SelectItem };
+export const SelectItem = (props: React.PropsWithChildren<SelectItemProps>): React.ReactElement => {
+  return (
+    <FormItem
+      title={props.children}
+      style={{ marginBottom: 20, ...props.style }}
+      note={props.note}
+      notePosition="after"
+      disabled={props.disabled}
+      divider>
+      <Select {...props} />
+    </FormItem>
+  );
 };
-
-export default getSelectItem();

@@ -1,4 +1,4 @@
-import { i18n } from "@common";
+import { intl } from "@common/i18n";
 import toast from "@common/toast";
 import { Logger, plugins, themes } from "@replugged";
 import { t } from "src/renderer/modules/i18n";
@@ -8,25 +8,16 @@ const logger = Logger.coremod("Watcher");
 
 const uninjectors: Array<() => void> = [];
 
-const { intl } = i18n;
-
 export function start(): void {
-  let uninjectRpc = registerRPCCommand("REPLUGGED_ADDON_WATCHER", {
+  const uninjectRpc = registerRPCCommand("REPLUGGED_ADDON_WATCHER", {
     scope: "REPLUGGED_LOCAL",
-    handler: (data) => {
+    handler: async (data) => {
       const { id } = data.args;
 
       if (typeof id !== "string") throw new Error("Invalid or missing addon ID.");
       const plugin = plugins.plugins.get(id);
       const theme = themes.themes.get(id);
       if (!plugin && !theme) {
-        plugins.loadAll();
-        themes.loadAll();
-        if (plugins.plugins.get(id) || themes.themes.get(id))
-          return {
-            success: true,
-            error: "ADDON_LOADED",
-          };
         return {
           success: false,
           error: "ADDON_NOT_FOUND",
@@ -44,7 +35,7 @@ export function start(): void {
 
       try {
         if (plugin) {
-          void plugins.reload(id);
+          await plugins.reload(id);
         } else {
           themes.reload(id);
         }

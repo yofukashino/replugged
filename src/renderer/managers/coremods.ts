@@ -1,19 +1,17 @@
 import type { Promisable } from "type-fest";
+import { Logger } from "../modules/logger";
 import { patchPlaintext } from "../modules/webpack/plaintext-patch";
 
-import experimentsPlaintext from "../coremods/experiments/plaintextPatches";
-import notrackPlaintext from "../coremods/notrack/plaintextPatches";
-import noDevtoolsWarningPlaintext from "../coremods/noDevtoolsWarning/plaintextPatches";
-import messagePopover from "../coremods/messagePopover/plaintextPatches";
-import notices from "../coremods/notices/plaintextPatches";
-import contextMenu from "../coremods/contextMenu/plaintextPatches";
-import languagePlaintext from "../coremods/language/plaintextPatches";
-import settingsPlaintext from "../coremods/settings/plaintextPatches";
 import badgesPlaintext from "../coremods/badges/plaintextPatches";
-import titlebarPlaintext from "../coremods/titlebar/plaintextPatches";
-import popoutThemingPlaintext from "../coremods/popoutTheming/plaintextPatches";
-import UTCPlaintext from "../coremods/UTC/plaintextPatches";
-import { Logger } from "@logger";
+import contextMenuPlaintext from "../coremods/contextMenu/plaintextPatches";
+import experimentsPlaintext from "../coremods/experiments/plaintextPatches";
+import languagePlaintext from "../coremods/language/plaintextPatches";
+import messagePopoverPlaintext from "../coremods/messagePopover/plaintextPatches";
+import noDevtoolsWarningPlaintext from "../coremods/noDevtoolsWarning/plaintextPatches";
+import noticesPlaintext from "../coremods/notices/plaintextPatches";
+import notrackPlaintext from "../coremods/notrack/plaintextPatches";
+import titleBarPlaintext from "../coremods/titleBar/plaintextPatches";
+import settingsPlaintext from "../coremods/settings/plaintextPatches";
 
 const logger = Logger.api("Coremods");
 
@@ -24,21 +22,20 @@ interface Coremod {
 }
 
 export namespace coremods {
-  export let noDevtoolsWarning: Coremod;
-  export let settings: Coremod;
   export let badges: Coremod;
-  export let installer: Coremod;
-  export let messagePopover: Coremod;
-  export let notices: Coremod;
-  export let contextMenu: Coremod;
-  export let language: Coremod;
-  export let noTrack: Coremod;
-  export let rpc: Coremod;
-  export let reactDevtoolsSourceInspector: Coremod;
-  export let watcher: Coremod;
   export let commands: Coremod;
+  export let contextMenu: Coremod;
+  export let installer: Coremod;
+  export let language: Coremod;
+  export let messagePopover: Coremod;
+  export let noDevtoolsWarning: Coremod;
+  export let notices: Coremod;
+  export let notrack: Coremod;
+  export let rdtComponentSourceFix: Coremod;
+  export let rpc: Coremod;
+  export let settings: Coremod;
+  export let watcher: Coremod;
   export let welcome: Coremod;
-  export let UTC: Coremod;
 }
 
 export async function start(name: keyof typeof coremods): Promise<void> {
@@ -52,39 +49,30 @@ export async function stop(name: keyof typeof coremods): Promise<void> {
 }
 
 export async function startAll(): Promise<void> {
-  const startTime = performance.now();
-  logger.log(`Starting coremods...`);
-  coremods.noDevtoolsWarning = await import("../coremods/noDevtoolsWarning");
-  coremods.settings = await import("../coremods/settings");
   coremods.badges = await import("../coremods/badges");
-  coremods.installer = await import("../coremods/installer");
-  coremods.messagePopover = await import("../coremods/messagePopover");
-  coremods.notices = await import("../coremods/notices");
-  coremods.contextMenu = await import("../coremods/contextMenu");
-  coremods.language = await import("../coremods/language");
-  coremods.noTrack = await import("../coremods/notrack");
-  coremods.rpc = await import("../coremods/rpc");
-  coremods.reactDevtoolsSourceInspector = await import("../coremods/rdtComponentSourceFix");
-  coremods.watcher = await import("../coremods/watcher");
   coremods.commands = await import("../coremods/commands");
+  coremods.contextMenu = await import("../coremods/contextMenu");
+  coremods.installer = await import("../coremods/installer");
+  coremods.language = await import("../coremods/language");
+  coremods.messagePopover = await import("../coremods/messagePopover");
+  coremods.noDevtoolsWarning = await import("../coremods/noDevtoolsWarning");
+  coremods.notices = await import("../coremods/notices");
+  coremods.notrack = await import("../coremods/notrack");
+  coremods.rdtComponentSourceFix = await import("../coremods/rdtComponentSourceFix");
+  coremods.rpc = await import("../coremods/rpc");
+  coremods.settings = await import("../coremods/settings");
+  coremods.watcher = await import("../coremods/watcher");
   coremods.welcome = await import("../coremods/welcome");
-  coremods.UTC = await import("../coremods/UTC");
 
   await Promise.all(
     Object.entries(coremods).map(async ([name, mod]) => {
-      const startTime = performance.now();
       try {
         await mod.start?.();
-        logger.log(`Coremod started: ${name} in ${(performance.now() - startTime).toFixed(2)}ms`);
       } catch (e) {
-        logger.error(
-          `Failed to start coremod ${name}  after ${(performance.now() - startTime).toFixed(2)}ms`,
-          e,
-        );
+        logger.error(`Failed to start coremod ${name}`, e);
       }
     }),
   );
-  logger.log(`All coremods started in ${(performance.now() - startTime).toFixed(2)}ms`);
 }
 
 export async function stopAll(): Promise<void> {
@@ -93,17 +81,16 @@ export async function stopAll(): Promise<void> {
 
 export function runPlaintextPatches(): void {
   [
-    { patch: experimentsPlaintext, name: "replugged.coremod.experiments" },
-    { patch: notrackPlaintext, name: "replugged.coremod.noTrack" },
-    { patch: noDevtoolsWarningPlaintext, name: "replugged.coremod.noDevtoolsWarning" },
-    { patch: messagePopover, name: "replugged.coremod.messagePopover" },
-    { patch: notices, name: "replugged.coremod.notices" },
-    { patch: contextMenu, name: "replugged.coremod.contextMenu" },
-    { patch: languagePlaintext, name: "replugged.coremod.language" },
-    { patch: settingsPlaintext, name: "replugged.coremod.settings" },
-    { patch: badgesPlaintext, name: "replugged.coremod.badges" },
-    { patch: titlebarPlaintext, name: "replugged.coremod.titlebar" },
-    { patch: popoutThemingPlaintext, name: "replugged.coremod.popoutThemingPlaintext" },
-    { patch: UTCPlaintext, name: "replugged.coremod.UTC" },
-  ].forEach(({ patch, name }) => patchPlaintext(patch, name));
+    badgesPlaintext,
+    contextMenuPlaintext,
+    experimentsPlaintext,
+    languagePlaintext,
+    messagePopoverPlaintext,
+    noDevtoolsWarningPlaintext,
+    noticesPlaintext,
+    notrackPlaintext,
+    settingsPlaintext,
+    badgesPlaintext,
+    titleBarPlaintext,
+  ].forEach(patchPlaintext);
 }

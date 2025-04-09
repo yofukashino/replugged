@@ -1,6 +1,6 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 interface ImageData {
   height: number;
@@ -25,4 +25,4 @@ export type FormNoticeType = React.FC<FormNoticeProps> & {
   Types: Record<"PRIMARY" | "DANGER" | "WARNING" | "SUCCESS" | "BRAND" | "CUSTOM", string>;
 };
 
-export default components.then((v) => webpack.getFunctionBySource(v, ".Types.DANGER"));
+export default getFunctionBySource<FormNoticeType>(components, ".Types.DANGER")!;

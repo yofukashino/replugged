@@ -1,19 +1,18 @@
-import { resolve, sep } from "path";
 import { ipcMain, shell } from "electron";
+import { readFileSync, writeFileSync } from "fs";
+import { resolve, sep } from "path";
+import { CONFIG_PATHS } from "src/util.mjs";
 import { RepluggedIpcChannels } from "../../types";
 import type {
   SettingsMap,
   SettingsTransactionHandler,
   TransactionHandler,
 } from "../../types/settings";
-import { CONFIG_PATHS } from "src/util.mjs";
-import { readFileSync, writeFileSync } from "fs";
 
 const SETTINGS_DIR = CONFIG_PATHS.settings;
 
 export function getSettingsPath(namespace: string): string {
   const resolved = resolve(SETTINGS_DIR, `${namespace}.json`);
-
   if (!resolved.startsWith(`${SETTINGS_DIR}${sep}`)) {
     // Ensure file changes are restricted to the base path
     throw new Error("Invalid namespace");
@@ -25,8 +24,8 @@ function readSettings(namespace: string): Map<string, unknown> {
   const path = getSettingsPath(namespace);
   try {
     const data = readFileSync(path, "utf8");
-
-    return new Map(Object.entries(JSON.parse(data)));
+    const parsedData: Record<string, unknown> = JSON.parse(data);
+    return new Map(Object.entries(parsedData));
   } catch {
     return new Map();
   }
@@ -40,18 +39,19 @@ function writeSettings(namespace: string, settings: SettingsMap): void {
   );
 }
 
-const locks: Record<string, (() => unknown) | undefined> = {};
+const locks: Record<string, boolean> = {};
 
 function transaction<T>(namespace: string, handler: TransactionHandler<T>): T {
-  const lock = locks[namespace];
+  if (locks[namespace]) {
+    throw new Error(`Transaction already in progress for namespace: ${namespace}`);
+  }
 
-  if (lock) lock();
-
-  const result = handler();
-
-  locks[namespace] = () => result;
-
-  return result;
+  locks[namespace] = true;
+  try {
+    return handler();
+  } finally {
+    locks[namespace] = false;
+  }
 }
 
 export function readTransaction<T>(namespace: string, handler: SettingsTransactionHandler<T>): T {
@@ -63,10 +63,9 @@ export function readTransaction<T>(namespace: string, handler: SettingsTransacti
 
 export function writeTransaction<T>(namespace: string, handler: SettingsTransactionHandler<T>): T {
   return transaction(namespace, () => {
-    const postHandlerTransform: Array<(settings: SettingsMap) => void | void> = [];
+    const postHandlerTransform: Array<(settings: SettingsMap) => void> = [];
 
     const settings = readSettings(namespace);
-
     if (namespace.toLowerCase() === "dev.replugged.settings") {
       // Prevent the "apiUrl" setting from changing
       const originalValue = settings.get("apiUrl");
@@ -86,7 +85,6 @@ export function writeTransaction<T>(namespace: string, handler: SettingsTransact
     }
 
     writeSettings(namespace, settings);
-
     return res;
   });
 }
@@ -98,35 +96,29 @@ export function getSetting<T>(namespace: string, key: string, fallback?: T): T |
   return setting ?? fallback;
 }
 
-ipcMain.on(
-  RepluggedIpcChannels.GET_SETTING,
-  (event, namespace: string, key: string) => (event.returnValue = getSetting(namespace, key)),
-);
+ipcMain.on(RepluggedIpcChannels.GET_SETTING, (event, namespace: string, key: string) => {
+  event.returnValue = getSetting(namespace, key);
+});
 
-ipcMain.on(
-  RepluggedIpcChannels.HAS_SETTING,
-  (event, namespace: string, key: string) =>
-    (event.returnValue = readTransaction(namespace, (settings) => settings.has(key))),
-);
+ipcMain.on(RepluggedIpcChannels.HAS_SETTING, (event, namespace: string, key: string) => {
+  event.returnValue = readTransaction(namespace, (settings) => settings.has(key));
+});
 
 ipcMain.on(
   RepluggedIpcChannels.SET_SETTING,
-  (event, namespace: string, key: string, value: unknown) =>
-    (event.returnValue = writeTransaction(namespace, (settings) => settings.set(key, value))),
+  (event, namespace: string, key: string, value: unknown) => {
+    event.returnValue = writeTransaction(namespace, (settings) => settings.set(key, value));
+  },
 );
 
-ipcMain.on(
-  RepluggedIpcChannels.DELETE_SETTING,
-  (event, namespace: string, key: string) =>
-    (event.returnValue = writeTransaction(namespace, (settings) => settings.delete(key))),
-);
+ipcMain.on(RepluggedIpcChannels.DELETE_SETTING, (event, namespace: string, key: string) => {
+  event.returnValue = writeTransaction(namespace, (settings) => settings.delete(key));
+});
 
-ipcMain.on(
-  RepluggedIpcChannels.GET_ALL_SETTINGS,
-  (event, namespace: string) =>
-    (event.returnValue = readTransaction(namespace, (settings) =>
-      Object.fromEntries(settings.entries()),
-    )),
-);
+ipcMain.on(RepluggedIpcChannels.GET_ALL_SETTINGS, (event, namespace: string) => {
+  event.returnValue = readTransaction(namespace, (settings) =>
+    Object.fromEntries(settings.entries()),
+  );
+});
 
 ipcMain.on(RepluggedIpcChannels.OPEN_SETTINGS_FOLDER, () => shell.openPath(SETTINGS_DIR));

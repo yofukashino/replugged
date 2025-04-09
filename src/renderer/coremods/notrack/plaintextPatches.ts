@@ -6,11 +6,10 @@ export default [
     replacements: [
       {
         match: /(\(\)|\w+)=>\w+\.AnalyticsActionHandlers\.handle\w+\([^)]*\)/g,
-        replace: (_) => `arg=>{arg?.resolve?.()}`,
+        replace: "arg=>{arg?.resolve?.()}",
       },
     ],
   },
-
   {
     find: "window.DiscordSentry",
     replacements: [
@@ -30,16 +29,6 @@ export default [
       {
         match: /this\._metrics\.push\(.\),/,
         replace: "",
-      },
-    ],
-  },
-  {
-    find: "https://datadog.discord.tools/apm/",
-    replacements: [
-      {
-        match:
-          /\w+\.\w+\.toURLSafe\("traces\?"\.concat\(\w+\.toString\(\)\),"https:\/\/datadog\.discord\.tools\/apm\/"\)/,
-        replace: '""',
       },
     ],
   },

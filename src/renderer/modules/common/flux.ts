@@ -107,9 +107,7 @@ interface ClearOptions {
   type: "all" | "user-data-only";
 }
 
-interface State {
-  [key: string]: any;
-}
+type State = Record<string, any>;
 
 type States = Record<string, State>;
 type Migration = () => void;
@@ -169,6 +167,8 @@ export interface FluxMod {
   get initialized(): Promise<boolean | undefined>;
 }
 
+const FluxMod = await waitForProps<FluxMod>("Store", "connectStores");
+
 interface Snapshot<Data> {
   data: Data;
   version: number;
@@ -187,19 +187,13 @@ export declare class SnapshotStore<Data = Record<string, unknown>> extends Store
   public save: () => void;
 }
 
+const SnapshotStoreClass = await waitForModule<typeof SnapshotStore>(
+  filters.bySource("SnapshotStores"),
+);
+
 // In the future, fluxHooks will be removed from flux's exported object, as will SnapshotStore.
 // Meanwhile, it is available as a new common modules, fluxHooks. Developers should prefer using that over the hooks from here.
 // Merging distinct modules like this is a horrible idea, but *compatibility*. Yuck.
 export type Flux = FluxMod & { SnapshotStore: typeof SnapshotStore } & FluxHooks;
 
-const getFlux = async (): Promise<Flux> => {
-  const FluxMod = await waitForProps<FluxMod>("Store", "connectStores");
-
-  const SnapshotStoreClass = await waitForModule<typeof SnapshotStore>(
-    filters.bySource("SnapshotStores"),
-  );
-
-  return { ...FluxMod, SnapshotStore: SnapshotStoreClass, ...(await fluxHooks) };
-};
-
-export default getFlux();
+export default { ...FluxMod, SnapshotStore: SnapshotStoreClass, ...fluxHooks } as Flux;

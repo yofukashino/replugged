@@ -1,13 +1,20 @@
+import type { AnyFunction } from "src/types";
+
+function getOriginal(fn?: AnyFunction): AnyFunction | undefined {
+  return typeof fn === "function" &&
+    Function.toString.apply(fn).includes("objInjections.injections.get(funcName)")
+    ? (fn.prototype?.constructor ?? fn)
+    : fn;
+}
+
 export function start(): void {
-  let $$type = window.$type;
+  let $$type = getOriginal(window.$type);
   Object.defineProperty(window, "$type", {
     get: () => {
       return $$type;
     },
-    set: (v) => {
-      $$type = Function.toString.apply(v).includes("objInjections.injections.get(funcName)")
-        ? (v?.prototype?.constructor ?? v)
-        : v;
+    set: (v: AnyFunction) => {
+      $$type = getOriginal(v);
     },
     configurable: true,
     enumerable: true,

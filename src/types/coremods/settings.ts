@@ -12,7 +12,6 @@ export interface Section {
   fromEnd?: boolean;
   // eslint-disable-next-line @typescript-eslint/naming-convention
   __$$label?: LabelCallback;
-  tabPredicate?: () => boolean;
 }
 
 export interface SettingsTools {

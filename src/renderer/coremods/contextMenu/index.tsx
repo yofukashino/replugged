@@ -6,7 +6,7 @@ import type {
   GetContextItem,
   RawContextItem,
 } from "../../../types/coremods/contextMenu";
-import { Logger } from "@logger";
+import { Logger } from "../../modules/logger";
 
 const logger = Logger.api("ContextMenu");
 
@@ -60,7 +60,7 @@ export function addContextMenuItem(
 ): () => void {
   menuItems[navId] ||= [];
 
-  menuItems[navId]?.push({ getItem, sectionId, indexInSection });
+  menuItems[navId].push({ getItem, sectionId, indexInSection });
   return () => removeContextMenuItem(navId, getItem);
 }
 

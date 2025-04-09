@@ -13,7 +13,7 @@ const replacements = [
   },
 ];
 
-export default (navigator.userAgent.includes("Linux") && generalSettings.get("titlebar")
+export default (navigator.userAgent.includes("Linux") && generalSettings.get("titleBar")
   ? [
       {
         find: ".appAsidePanelWrapper,",

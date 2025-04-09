@@ -1,6 +1,6 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 const Aligns = {
   BOTTOM: "bottom",
@@ -66,35 +66,32 @@ export type OriginalTooltipType = React.ComponentClass<TooltipFunctionChildren> 
 
 export type TooltipType = React.FC<TooltipCustom> & TooltipEnums;
 
-const getTooltip = async (): Promise<TooltipType> => {
-  const TooltipMod = webpack.getFunctionBySource(await components, "shouldShowTooltip")!;
+const TooltipMod = getFunctionBySource<OriginalTooltipType>(components, "shouldShowTooltip")!;
 
-  const Tooltip: TooltipType = (props) => (
-    <TooltipMod {...props}>
-      {(tooltipProps) => {
-        if (props.className) {
-          if (tooltipProps.className) {
-            tooltipProps.className += ` ${props.className}`;
-          } else {
-            tooltipProps.className = props.className;
-          }
+const Tooltip: TooltipType = (props) => (
+  <TooltipMod {...props}>
+    {(tooltipProps) => {
+      if (props.className) {
+        if (tooltipProps.className) {
+          tooltipProps.className += ` ${props.className}`;
+        } else {
+          tooltipProps.className = props.className;
         }
-        if (props.style) {
-          if (tooltipProps.style) {
-            tooltipProps.style = { ...tooltipProps.style, ...props.style };
-          } else {
-            tooltipProps.style = props.style;
-          }
+      }
+      if (props.style) {
+        if (tooltipProps.style) {
+          tooltipProps.style = { ...tooltipProps.style, ...props.style };
+        } else {
+          tooltipProps.style = props.style;
         }
+      }
 
-        return <span {...tooltipProps}>{props.children}</span>;
-      }}
-    </TooltipMod>
-  );
-  Tooltip.Aligns = Aligns;
-  Tooltip.Colors = TooltipMod.Colors;
-  Tooltip.Positions = Positions;
-  return Tooltip;
-};
+      return <span {...tooltipProps}>{props.children}</span>;
+    }}
+  </TooltipMod>
+);
+Tooltip.Aligns = Aligns;
+Tooltip.Colors = TooltipMod.Colors;
+Tooltip.Positions = Positions;
 
-export default getTooltip();
+export default Tooltip;

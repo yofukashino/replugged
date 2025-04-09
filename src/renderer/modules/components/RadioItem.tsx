@@ -1,7 +1,7 @@
+import { getFunctionBySource } from "@webpack";
 import type React from "react";
 import { FormItem } from ".";
 import components from "../common/components";
-import { webpack } from "@replugged";
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 type RadioOptionType = {
@@ -39,6 +39,8 @@ export type RadioType = React.FC<RadioProps> & {
   Sizes: Record<"NOT_SET" | "NONE" | "SMALL" | "MEDIUM", string>;
 };
 
+export const Radio = getFunctionBySource<RadioType>(components, "itemInfoClassName:")!;
+
 interface RadioItemProps extends RadioProps {
   note?: string;
   style?: React.CSSProperties;
@@ -46,25 +48,15 @@ interface RadioItemProps extends RadioProps {
 
 export type RadioItemType = React.FC<React.PropsWithChildren<RadioItemProps>>;
 
-const getRadioItem = async (): Promise<{
-  RadioItem: RadioItemType;
-  Radio: RadioType;
-}> => {
-  const Radio = webpack.getFunctionBySource(await components, "itemInfoClassName:");
-
-  const RadioItem = (props: React.PropsWithChildren<RadioItemProps>): React.ReactElement => {
-    return (
-      <FormItem
-        title={props.children}
-        style={{ marginBottom: 20, ...props.style }}
-        note={props.note}
-        disabled={props.disabled}
-        divider>
-        <Radio {...props} />
-      </FormItem>
-    );
-  };
-  return { Radio, RadioItem };
+export const RadioItem = (props: React.PropsWithChildren<RadioItemProps>): React.ReactElement => {
+  return (
+    <FormItem
+      title={props.children}
+      style={{ marginBottom: 20, ...props.style }}
+      note={props.note}
+      disabled={props.disabled}
+      divider>
+      <Radio {...props} />
+    </FormItem>
+  );
 };
-
-export default getRadioItem();

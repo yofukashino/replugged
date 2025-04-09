@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 import readline from "readline";
-import { DiscordPlatform } from "../types.mjs";
+import type { DiscordPlatform } from "../types.mjs";
 import { AnsiEscapes, PlatformNames } from "../util.mjs";
 import { exitCode } from "../index.mjs";
 
@@ -20,15 +20,11 @@ const ProcessRegex = {
 
 const findAppAsarInDir = (dir: string): string | null => {
   const name = basename(dir);
-  if (name === "app.asar" || name === "app.orig.asar") return dir;
+  if (name === "app.asar") return dir;
   const topLevelAsar = join(dir, "app.asar");
   if (existsSync(topLevelAsar)) return topLevelAsar;
-  const topLevelOrigAsar = join(dir, "app.orig.asar");
-  if (existsSync(topLevelOrigAsar)) return topLevelAsar;
   const resourcesAsar = join(dir, "resources", "app.asar");
   if (existsSync(resourcesAsar)) return resourcesAsar;
-  const resourcesOrigAsar = join(dir, "resources", "app.orig.asar");
-  if (existsSync(resourcesOrigAsar)) return resourcesAsar;
 
   return null;
 };
@@ -37,7 +33,7 @@ const findPathFromPaths = async (
   platform: DiscordPlatform,
   paths: string[],
 ): Promise<string | null> => {
-  let discordPaths = paths.filter((path) => existsSync(path));
+  const discordPaths = paths.filter((path) => existsSync(path));
   if (discordPaths.length === 0) {
     const readlineInterface = readline.createInterface({
       input: process.stdin,
@@ -51,7 +47,7 @@ const findPathFromPaths = async (
       "\n",
     );
     console.log(`Please provide the path of your ${PlatformNames[platform]} installation folder`);
-    let discordPath = await askPath();
+    const discordPath = await askPath();
     readlineInterface.close();
 
     if (!existsSync(discordPath)) {
@@ -65,7 +61,7 @@ const findPathFromPaths = async (
   }
 
   let path: string | null = null;
-  for (let discordPath of discordPaths) {
+  for (const discordPath of discordPaths) {
     path = findAppAsarInDir(discordPath);
     if (path !== null) return path;
     else

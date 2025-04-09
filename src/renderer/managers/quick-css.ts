@@ -12,5 +12,6 @@ export function unload(): void {
 }
 
 export function reload(): void {
-  if (el) el.href = `replugged://quickcss/main.css?t=${Date.now()}`;
+  unload();
+  load();
 }

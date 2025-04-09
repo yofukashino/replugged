@@ -1,5 +1,5 @@
 import type { PlaintextPatch, RawPlaintextPatch, WebpackModule } from "../../../types";
-import { Logger } from "@logger";
+import { Logger } from "../logger";
 
 const logger = Logger.api("plaintext-patch");
 /**
@@ -14,7 +14,7 @@ export const plaintextPatches: RawPlaintextPatch[] = [];
  */
 export function patchModuleSource(mod: WebpackModule, id: string): WebpackModule {
   const originalSource = mod.toString();
-  const patchedBy: string[] = [];
+
   const patchedSource = plaintextPatches.reduce((source, patch) => {
     if (
       patch.find &&
@@ -32,7 +32,7 @@ export function patchModuleSource(mod: WebpackModule, id: string): WebpackModule
     if (result === source) {
       return source;
     }
-    patchedBy.push(patch.id);
+
     return result;
   }, originalSource);
 
@@ -44,7 +44,7 @@ export function patchModuleSource(mod: WebpackModule, id: string): WebpackModule
     return (0, eval)(
       `${
         patchedSource.startsWith("function(") ? `0,${patchedSource}` : patchedSource
-      }\n//Patched By: ${patchedBy.filter(Boolean).join(", ")}\n//# sourceURL=/PatchedWebpacks/PatchedWebpack-${id}`,
+      }\n//# sourceURL=PatchedWebpack-${id}`,
     );
   } catch (err) {
     logger.error(`PatchedWebpack-${id}`, err);
@@ -59,11 +59,10 @@ export function patchModuleSource(mod: WebpackModule, id: string): WebpackModule
  * @internal
  * @hidden
  */
-export function patchPlaintext(patches: PlaintextPatch[], id: string): void {
+export function patchPlaintext(patches: PlaintextPatch[]): void {
   plaintextPatches.push(
     ...patches.map((patch) => ({
       ...patch,
-      id,
       replacements: patch.replacements.map((replacement) =>
         typeof replacement === "function"
           ? replacement

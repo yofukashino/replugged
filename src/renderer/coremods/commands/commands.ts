@@ -1,11 +1,9 @@
-import { i18n } from "@common";
+import { intl } from "@common/i18n";
 import { Injector, plugins, themes } from "@replugged";
 import { t } from "src/renderer/modules/i18n";
 import { ApplicationCommandOptionType } from "../../../types";
 
 const injector = new Injector();
-
-const { intl } = i18n;
 
 export function loadCommands(): void {
   injector.utils.registerSlashCommand({

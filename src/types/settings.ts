@@ -1,4 +1,5 @@
 import { WEBSITE_URL } from "src/constants";
+
 export type SettingsMap = Map<string, unknown>;
 export type TransactionHandler<T> = () => T;
 export type SettingsTransactionHandler<T> = (settings: SettingsMap) => T;
@@ -12,20 +13,16 @@ export type GeneralSettings = {
   showWelcomeNoticeOnOpen?: boolean;
   addonEmbeds?: boolean;
   reactDevTools?: boolean;
-
-  titlebar?: boolean;
-
-  transparentWindow?: boolean;
+  titleBar?: boolean;
 };
 
 export const defaultSettings = {
-  apiUrl: "https://replugged.dev",
+  apiUrl: WEBSITE_URL,
   experiments: false,
   badges: true,
   autoApplyQuickCss: false,
   showWelcomeNoticeOnOpen: true,
-  transparentWindow: false,
   reactDevTools: false,
   addonEmbeds: true,
-  titlebar: false,
+  titleBar: false,
 } satisfies Partial<GeneralSettings>;
