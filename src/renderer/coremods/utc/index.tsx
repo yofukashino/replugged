@@ -6,7 +6,7 @@ const classMap: Record<string, string> = {};
  */
 export function _getUnifiedClassName(str: string): string {
   const cleanStr =
-    !classMap[str] && str.includes("unified_") ? str.replace(/unified_\S+\s*/g, "").trim() : str;
+    !classMap[str] && str.includes("UTC_") ? str.replace(/UTC_\S+\s*/g, "").trim() : str;
   return (classMap[str] ||=
-    `${cleanStr} unified${[...cleanStr.matchAll(/(\w+?)[-_]/g)].map(([, c]) => `_${c}`).join("")}`);
+    `${cleanStr} UTC${[...cleanStr.matchAll(/(\w+?)[-_]/g)].map(([, c]) => `_${c}`).join("")}`);
 }
