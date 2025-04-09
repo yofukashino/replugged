@@ -10,7 +10,10 @@ import { ipcMain, shell } from "electron";
 import { type Dirent, type Stats, readFileSync, readdirSync, readlinkSync, statSync } from "fs";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "../../types";
 import { plugin } from "../../types/addon";
+
 import { CONFIG_PATHS, extractAddon } from "src/util.mjs";
+
+import logger from "../logger";
 
 const PLUGINS_DIR = CONFIG_PATHS.plugins;
 const TMP_DIR = CONFIG_PATHS.temp_addons;
@@ -92,8 +95,8 @@ ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
     try {
       plugins.push(getPlugin(pluginDir.name));
     } catch (e) {
-      console.error(`Invalid plugin: ${pluginDir.name}`);
-      console.error(e);
+      logger.error(`Invalid plugin: ${pluginDir.name}`);
+      logger.error(e);
     }
   }
 

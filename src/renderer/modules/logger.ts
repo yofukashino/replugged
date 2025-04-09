@@ -9,7 +9,8 @@ export type LoggerType =
   | "Ignition"
   | "CommonModules"
   | "Components"
-  | "Manager";
+  | "Manager"
+  | "Preload";
 
 const repluggedPrefix = (type: LoggerType, name: string): string => `%c[Replugged:${type}:${name}]`;
 
