@@ -3,6 +3,7 @@ import { React, api, fluxDispatcher, modal, toast, users } from "@common";
 import { t as discordT, intl } from "@common/i18n";
 import {
   Button,
+  ContextMenu,
   Divider,
   ErrorBoundary,
   Flex,
@@ -21,6 +22,7 @@ import Icons from "../icons";
 import { generalSettings } from "./General";
 
 import "./Addons.css";
+import contextMenuApi from "@common/contextMenu";
 
 interface Breadcrumb {
   id: string;
@@ -229,27 +231,42 @@ function Authors({ addon }: { addon: RepluggedPlugin | RepluggedTheme }): React.
         gap: "5px",
         display: "inline-flex",
       }}>
-      <b>{author.name}</b>
-      {author.discordID ? (
-        <Tooltip
-          text={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
-            type: intl.string(discordT.NOTIFICATION_TITLE_DISCORD),
-          })}
-          className="replugged-addon-icon replugged-addon-icon-author">
-          <a onClick={() => openUserProfile(author.discordID!)}>
-            <Icons.Discord />
-          </a>
-        </Tooltip>
-      ) : null}
-      {author.github ? (
-        <Tooltip
-          text={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, { type: "GitHub" })}
-          className="replugged-addon-icon replugged-addon-icon-author">
-          <a href={`https://github.com/${author.github}`} target="_blank" rel="noopener noreferrer">
-            <Icons.GitHub />
-          </a>
-        </Tooltip>
-      ) : null}
+      <a
+        onClick={() => author.discordID && openUserProfile(author.discordID)}
+        onContextMenu={(event) => {
+          if (!author.github && !author.discordID) return;
+          contextMenuApi.open(event, (props) => (
+            <ContextMenu.ContextMenu
+              {...props}
+              onClose={contextMenuApi.close}
+              navId="rp-addon-authors">
+              <ContextMenu.MenuGroup label="Links">
+                {author.discordID && (
+                  <ContextMenu.MenuItem
+                    label={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
+                      type: intl.string(discordT.NOTIFICATION_TITLE_DISCORD),
+                    })}
+                    id="replugged-addon-author-discord"
+                    icon={() => <Icons.Discord />}
+                    action={() => openUserProfile(author.discordID!)}
+                  />
+                )}
+                {author.github && (
+                  <ContextMenu.MenuItem
+                    label={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
+                      type: "GitHub",
+                    })}
+                    id="replugged-addon-author-github"
+                    icon={() => <Icons.GitHub />}
+                    action={() => open(`https://github.com/${author.github}`)}
+                  />
+                )}
+              </ContextMenu.MenuGroup>
+            </ContextMenu.ContextMenu>
+          ));
+        }}>
+        <b>{author.name}</b>
+      </a>
     </Flex>
   ));
 
@@ -312,10 +329,29 @@ function Card({
             <span>
               {" "}
               <b>v{addon.manifest.version}</b>
-            </span>{" "}
-            <Authors addon={addon} />
+            </span>
           </Text>
         </span>
+        <Flex align={Flex.Align.CENTER} justify={Flex.Justify.END} style={{ gap: "10px" }}>
+          <Switch checked={!disabled} onChange={toggleDisabled} />
+        </Flex>
+      </Flex>
+      <Text.Normal style={{ margin: "5px 0" }} markdown={true} allowMarkdownLinks={true}>
+        {addon.manifest.description}
+      </Text.Normal>
+      {addon.manifest.updater?.type !== "store" ? (
+        <div style={{ marginTop: "8px" }}>
+          <Notice messageType={Notice.Types.ERROR}>
+            {intl.format(t.REPLUGGED_ADDON_NOT_REVIEWED_DESC, {
+              type: label(type),
+            })}
+          </Notice>
+        </div>
+      ) : null}
+      <Flex align={Flex.Align.BASELINE} style={{ marginTop: "8px" }}>
+        <Text variant="heading-sm/normal" tag="h2" color="header-secondary">
+          <Authors addon={addon} />
+        </Text>
         <Flex align={Flex.Align.CENTER} justify={Flex.Justify.END} style={{ gap: "10px" }}>
           {sourceLink ? (
             <Tooltip
@@ -359,21 +395,8 @@ function Card({
               </a>
             </Tooltip>
           )}
-          <Switch checked={!disabled} onChange={toggleDisabled} />
         </Flex>
       </Flex>
-      <Text.Normal style={{ margin: "5px 0" }} markdown={true} allowMarkdownLinks={true}>
-        {addon.manifest.description}
-      </Text.Normal>
-      {addon.manifest.updater?.type !== "store" ? (
-        <div style={{ marginTop: "8px" }}>
-          <Notice messageType={Notice.Types.ERROR}>
-            {intl.format(t.REPLUGGED_ADDON_NOT_REVIEWED_DESC, {
-              type: label(type),
-            })}
-          </Notice>
-        </div>
-      ) : null}
     </div>
   );
 }

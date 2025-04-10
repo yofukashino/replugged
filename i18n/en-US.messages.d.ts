@@ -62,7 +62,7 @@ export declare const messages: {
    * 
    * ### Definition
    * ```text
-   * by {author1}, {author2}, {author3}, and {count, plural, =1 {# other} other {# others}}
+   * Authors: {author1}, {author2}, {author3}, and {count, plural, =1 {# other} other {# others}}
    * ```
    * 
    * ### Problems
@@ -75,7 +75,7 @@ export declare const messages: {
    * 
    * ### Definition
    * ```text
-   * by {author1}
+   * Author: {author1}
    * ```
    * 
    * ### Problems
@@ -88,7 +88,7 @@ export declare const messages: {
    * 
    * ### Definition
    * ```text
-   * by {author1}, {author2}, and {author3}
+   * Authors: {author1}, {author2}, and {author3}
    * ```
    * 
    * ### Problems
@@ -101,7 +101,7 @@ export declare const messages: {
    * 
    * ### Definition
    * ```text
-   * by {author1} and {author2}
+   * Authors: {author1} and {author2}
    * ```
    * 
    * ### Problems
