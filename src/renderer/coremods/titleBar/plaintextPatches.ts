@@ -8,7 +8,7 @@ const generalSettings = init<GeneralSettings, keyof typeof defaultSettings>(
 
 const replacements = [
   {
-    match: /\(0,.\.getPlatform\)\(\)/,
+    match: /\(0,.{1,3}\.getPlatform\)\(\)/g,
     replace: `"WINDOWS"`,
   },
 ];
@@ -30,6 +30,15 @@ export default (navigator.userAgent.includes("Linux") && generalSettings.get("ti
           {
             match: "menubar:",
             replace: "frame:!1,menubar:",
+          },
+        ],
+      },
+      {
+        find: "platform-linux",
+        replacements: [
+          {
+            match: "platform-linux",
+            replace: "platform-linux platform-win",
           },
         ],
       },
