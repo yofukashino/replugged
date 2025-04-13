@@ -224,50 +224,43 @@ function replaceVariable(
 
 function Authors({ addon }: { addon: RepluggedPlugin | RepluggedTheme }): React.ReactElement {
   const els = getAuthors(addon).map((author) => (
-    <Flex
+    <a
       key={JSON.stringify(author)}
-      align={Flex.Align.CENTER}
-      style={{
-        gap: "5px",
-        display: "inline-flex",
+      onClick={() => author.discordID && openUserProfile(author.discordID)}
+      onContextMenu={(event) => {
+        if (!author.github && !author.discordID) return;
+        contextMenuApi.open(event, (props) => (
+          <ContextMenu.ContextMenu
+            {...props}
+            onClose={contextMenuApi.close}
+            navId="rp-addon-authors">
+            <ContextMenu.MenuGroup label="Links">
+              {author.discordID && (
+                <ContextMenu.MenuItem
+                  label={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
+                    type: intl.string(discordT.NOTIFICATION_TITLE_DISCORD),
+                  })}
+                  id="replugged-addon-author-discord"
+                  icon={() => <Icons.Discord />}
+                  action={() => openUserProfile(author.discordID!)}
+                />
+              )}
+              {author.github && (
+                <ContextMenu.MenuItem
+                  label={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
+                    type: "GitHub",
+                  })}
+                  id="replugged-addon-author-github"
+                  icon={() => <Icons.GitHub />}
+                  action={() => open(`https://github.com/${author.github}`)}
+                />
+              )}
+            </ContextMenu.MenuGroup>
+          </ContextMenu.ContextMenu>
+        ));
       }}>
-      <a
-        onClick={() => author.discordID && openUserProfile(author.discordID)}
-        onContextMenu={(event) => {
-          if (!author.github && !author.discordID) return;
-          contextMenuApi.open(event, (props) => (
-            <ContextMenu.ContextMenu
-              {...props}
-              onClose={contextMenuApi.close}
-              navId="rp-addon-authors">
-              <ContextMenu.MenuGroup label="Links">
-                {author.discordID && (
-                  <ContextMenu.MenuItem
-                    label={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
-                      type: intl.string(discordT.NOTIFICATION_TITLE_DISCORD),
-                    })}
-                    id="replugged-addon-author-discord"
-                    icon={() => <Icons.Discord />}
-                    action={() => openUserProfile(author.discordID!)}
-                  />
-                )}
-                {author.github && (
-                  <ContextMenu.MenuItem
-                    label={intl.formatToPlainString(t.REPLUGGED_ADDON_PROFILE_OPEN, {
-                      type: "GitHub",
-                    })}
-                    id="replugged-addon-author-github"
-                    icon={() => <Icons.GitHub />}
-                    action={() => open(`https://github.com/${author.github}`)}
-                  />
-                )}
-              </ContextMenu.MenuGroup>
-            </ContextMenu.ContextMenu>
-          ));
-        }}>
-        <b>{author.name}</b>
-      </a>
-    </Flex>
+      <b>{author.name}</b>
+    </a>
   ));
 
   let message = "";
@@ -332,9 +325,7 @@ function Card({
             </span>
           </Text>
         </span>
-        <Flex align={Flex.Align.CENTER} justify={Flex.Justify.END} style={{ gap: "10px" }}>
-          <Switch checked={!disabled} onChange={toggleDisabled} />
-        </Flex>
+        <Switch checked={!disabled} onChange={toggleDisabled} />
       </Flex>
       <Text.Normal style={{ margin: "5px 0" }} markdown={true} allowMarkdownLinks={true}>
         {addon.manifest.description}
