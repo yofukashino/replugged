@@ -59,7 +59,8 @@ function patchPush(webpackChunk: WebpackChunkGlobal): void {
     return original.call(webpackChunk, chunk);
   }
 
-  // From YofukashiNo: https://discord.com/channels/1000926524452647132/1000955965304221728/12  58946431348375644
+  // From yofukashino: https://discord.com/channels/1000926524452647132/1000955965304221728/1258946431348375644
+
   handlePush.bind = original.bind.bind(original);
 
   Object.defineProperty(webpackChunk, "push", {
