@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer, webFrame } from "electron";
 import { RepluggedIpcChannels } from "./types";
 // eslint-disable-next-line no-duplicate-imports -- these are only used for types, the other import is for the actual code
 import type {
+  AnyFunction,
   CheckResultFailure,
   CheckResultSuccess,
   InstallResultFailure,
@@ -41,6 +42,21 @@ const RepluggedNative = {
     getPlaintextPatches: (pluginName: string): string =>
       ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN_PLAINTEXT_PATCHES, pluginName),
     list: (): RepluggedPlugin[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
+    getNative: (pluginPath: string): Record<string, AnyFunction> => {
+      const mapping: Record<string, string> = ipcRenderer.sendSync(
+        RepluggedIpcChannels.REGISTER_PLUGIN_NATIVE,
+        pluginPath,
+      );
+
+      const natives = Object.entries(mapping).reduce<Record<string, AnyFunction>>(
+        (acc, [name, key]) => {
+          acc[name] = (...args: unknown[]) => ipcRenderer.invoke(key, ...args);
+          return acc;
+        },
+        {},
+      );
+      return natives;
+    },
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
@@ -117,9 +133,11 @@ const renderer = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERE
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
 void webFrame.executeJavaScript(`(() => {${renderer}})();//# sourceURL=replugged://renderer.js`);
 
-window.addEventListener("beforeunload", () => {
-  ipcRenderer.send(RepluggedIpcChannels.CLEAR_TEMP);
-});
+if (["discord.com", "discordapp.com"].some((host) => window.location.hostname.endsWith(host))) {
+  window.addEventListener("beforeunload", () => {
+    ipcRenderer.send(RepluggedIpcChannels.CLEAR_TEMP);
+  });
+}
 
 try {
   // Get and execute Discord preload

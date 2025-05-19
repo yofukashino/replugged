@@ -53,19 +53,25 @@ function patchChunk(chunk: WebpackChunk): void {
  * @internal
  */
 function patchPush(webpackChunk: WebpackChunkGlobal): void {
-  let original = webpackChunk.push;
-
+  const original = webpackChunk.push;
   function handlePush(chunk: WebpackChunk): unknown {
     patchChunk(chunk);
     return original.call(webpackChunk, chunk);
   }
 
-  // From YofukashiNo: https://discord.com/channels/1000926524452647132/1000955965304221728/1258946431348375644
+  // From YofukashiNo: https://discord.com/channels/1000926524452647132/1000955965304221728/12  58946431348375644
   handlePush.bind = original.bind.bind(original);
 
   Object.defineProperty(webpackChunk, "push", {
     get: () => handlePush,
-    set: (v) => (original = v),
+    set: (v) => {
+      Object.defineProperty(webpackChunk, "push", {
+        value: v,
+        configurable: true,
+        writable: true,
+      });
+      patchPush(webpackChunk);
+    },
     configurable: true,
   });
 }
@@ -81,7 +87,7 @@ function loadWebpackModules(chunksGlobal: WebpackChunkGlobal): void {
     {},
     (r: WebpackRequire | undefined) => {
       wpRequire = r!;
-      if (wpRequire.c && !webpackChunks) webpackChunks = wpRequire.c;
+      if (wpRequire.c && webpackChunks !== wpRequire.c) webpackChunks = wpRequire.c;
 
       if (r) {
         // The first batch of modules are added inline via r.m rather than being pushed

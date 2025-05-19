@@ -53,6 +53,9 @@ importers:
       update-notifier:
         specifier: ^7.3.1
         version: 7.3.1
+      venbind:
+        specifier: ^0.1.6
+        version: 0.1.6
       ws:
         specifier: ^8.18.1
         version: 8.18.1
@@ -167,8 +170,8 @@ packages:
     resolution: {integrity: sha512-Ed61U6XJc3CVRfkERJWDz4dJwKe7iLmmJsbOGu9wSloNSFttHV0I8g6UAgb7qnK5ly5bGLPd4oXZlxCdANBOWQ==}
     engines: {node: '>=6.9.0'}
 
-  '@bufbuild/protobuf@2.2.5':
-    resolution: {integrity: sha512-/g5EzJifw5GF8aren8wZ/G5oMuPoGeS6MQD3ca8ddcvdXR5UELUfdTZITCGNhNXynY/AYl3Z4plmxdj/tRl/hQ==}
+  '@bufbuild/protobuf@2.4.0':
+    resolution: {integrity: sha512-RN9M76x7N11QRihKovEglEjjVCQEA9PRBVnDgk9xw8JHLrcUrp4FpAVSPSH91cNbcTft3u2vpLN4GMbiKY9PJw==}
 
   '@codemirror/autocomplete@6.18.6':
     resolution: {integrity: sha512-PHHBXFomUs5DF+9tCOM/UoW6XQ4R44lLNNhRaW9PKPTU0D7lIjRg3ElxaJnTwsl/oHiR93WSXDBrekhoUGCPtg==}
@@ -2016,6 +2019,9 @@ packages:
   immutable@5.1.1:
     resolution: {integrity: sha512-3jatXi9ObIsPGr3N5hGw/vWWcTkq6hUYhpQz4k0wLC+owqWi/LiugIw9x0EdNZ2yGedKN/HzePiBvaJRXa0Ujg==}
 
+  immutable@5.1.2:
+    resolution: {integrity: sha512-qHKXW1q6liAk1Oys6umoaZbDRqjcjgSrbnrifHsfsttza7zcvRAsL7mMV6xWcyhwQy7Xj5v4hhbr6b+iDYwlmQ==}
+
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -3306,6 +3312,11 @@ packages:
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
 
+  venbind@0.1.6:
+    resolution: {integrity: sha512-6l7q6e7teEpZgFvL2ztUnb6q37GO2Iv6VPaUNpOGK6GsP5FpqaxgRGB9x/4PZnZAcjXdCOVwdHPuTPITVb+O1w==}
+    cpu: [x64, arm64]
+    os: [linux, win32]
+
   vscode-languageserver-textdocument@1.0.12:
     resolution: {integrity: sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==}
 
@@ -3432,7 +3443,7 @@ snapshots:
 
   '@babel/helper-validator-identifier@7.25.9': {}
 
-  '@bufbuild/protobuf@2.2.5': {}
+  '@bufbuild/protobuf@2.4.0': {}
 
   '@codemirror/autocomplete@6.18.6':
     dependencies:
@@ -5450,6 +5461,8 @@ snapshots:
 
   immutable@5.1.1: {}
 
+  immutable@5.1.2: {}
+
   import-fresh@3.3.1:
     dependencies:
       parent-module: 1.0.1
@@ -6385,10 +6398,10 @@ snapshots:
 
   sass-embedded@1.86.3:
     dependencies:
-      '@bufbuild/protobuf': 2.2.5
+      '@bufbuild/protobuf': 2.4.0
       buffer-builder: 0.2.0
       colorjs.io: 0.5.2
-      immutable: 5.1.1
+      immutable: 5.1.2
       rxjs: 7.8.2
       supports-color: 8.1.1
       sync-child-process: 1.0.2
@@ -6798,6 +6811,8 @@ snapshots:
   validate-npm-package-name@5.0.1: {}
 
   varint@6.0.0: {}
+
+  venbind@0.1.6: {}
 
   vscode-languageserver-textdocument@1.0.12: {}
 
