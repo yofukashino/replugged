@@ -93,6 +93,8 @@ const RepluggedNative = {
 
   getVersion: (): string => version,
 
+  clearTemp: (): void => ipcRenderer.send(RepluggedIpcChannels.CLEAR_TEMP),
+
   // @todo We probably want to move these somewhere else, but I'm putting them here for now because I'm too lazy to set anything else up
 };
 
@@ -104,11 +106,6 @@ const renderer: string = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED
 
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
 void webFrame.executeJavaScript(renderer);
-
-if (["discord.com", "discordapp.com"].some((host) => window.location.hostname.endsWith(host)))
-  window.addEventListener("beforeunload", () => {
-    ipcRenderer.send(RepluggedIpcChannels.CLEAR_TEMP);
-  });
 
 try {
   // Get and execute Discord preload
