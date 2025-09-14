@@ -25,10 +25,6 @@
   height: 1.75ch;
 }
 
-.replugged-addon-icon-author svg {
-  height: 1.5ch;
-}
-
 .replugged-addon-icon:hover svg {
   color: var(--interactive-hover);
 }
@@ -45,4 +41,8 @@
 }
 .replugged-addon-breadcrumbsInactive:hover {
   color: var(--header-primary);
+}
+
+.replugged-addon-header-buttons {
+  gap: 5px;
 }
