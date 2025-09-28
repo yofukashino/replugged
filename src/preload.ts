@@ -84,6 +84,8 @@ const RepluggedNative = {
     all: (namespace: string) =>
       ipcRenderer.sendSync(RepluggedIpcChannels.GET_ALL_SETTINGS, namespace),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_SETTINGS_FOLDER),
+    setWithAuth: (namespace: string, key: string, value: unknown) =>
+      ipcRenderer.invoke(RepluggedIpcChannels.SET_SETTING_WITH_PERMISSION, namespace, key, value),
   },
 
   reactDevTools: {

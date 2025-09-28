@@ -1621,6 +1621,32 @@ export declare const messages: {
    */
   'REPLUGGED_SETTINGS_NO_CLYDE_DESC': TypedIntlMessageGetter<{$link?: LinkFunction, clydeUrl: any}>,
   /**
+   * Key: `RwqbMD`
+   * 
+   * ### Definition
+   * ```text
+   * Plugin IPC
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `TibxCg`
+   * 
+   * ### Definition
+   * ```text
+   * **DANGER WARNING**: Enabling this option grants plugins access to native modules, allowing them to make changes to your **entire PC** and not just Discord. With this disabled, plugins are limited to Discord only, but turning it on removes that safeguard. **Proceed only if you fully understand the risks.** Replugged is **not responsible** for any damage, data loss, or security issues caused to your system, and the Replugged Team does not recommend enabling this option. If you are unsure, leave this disabled. **Requires restart**.
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC_DESC': TypedIntlMessageGetter<{$b?: HookFunction}>,
+  /**
    * Key: `eXvP6O`
    * 
    * ### Definition

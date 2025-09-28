@@ -14,6 +14,7 @@ export type GeneralSettings = {
   titleBar?: boolean;
   quickCSS?: boolean;
   keepToken?: boolean;
+  pluginIpc?: boolean;
 };
 
 const defaultSettings = {
@@ -28,6 +29,7 @@ const defaultSettings = {
   titleBar: false,
   quickCSS: true,
   keepToken: false,
+  pluginIpc: false,
 } satisfies Partial<GeneralSettings>;
 
 export const generalSettings = init<GeneralSettings, keyof typeof defaultSettings>(

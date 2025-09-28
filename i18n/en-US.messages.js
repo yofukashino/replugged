@@ -241,5 +241,7 @@ export default defineMessages({
   "REPLUGGED_SETTINGS_QUICKCSS_ENABLE_DESC": "Apply custom styles to Discord instantly. Change colors, layout, and appearance in real time without installing themes.",
   "REPLUGGED_ADDON_SETTINGS_THEME_PRESET": "Choose Theme Preset",
   "REPLUGGED_TOAST_THEME_PRESET_CHANGED": "Switched to preset: {name}",
-  "REPLUGGED_TOAST_THEME_PRESET_FAILED": "Failed to change preset for {name}"
+  "REPLUGGED_TOAST_THEME_PRESET_FAILED": "Failed to change preset for {name}",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC": "Plugin IPC",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_DESC": "**DANGER WARNING**: Enabling this option grants plugins access to native modules, allowing them to make changes to your **entire PC** and not just Discord. With this disabled, plugins are limited to Discord only, but turning it on removes that safeguard. **Proceed only if you fully understand the risks.** Replugged is **not responsible** for any damage, data loss, or security issues caused to your system, and the Replugged Team does not recommend enabling this option. If you are unsure, leave this disabled. **Requires restart**."
 });

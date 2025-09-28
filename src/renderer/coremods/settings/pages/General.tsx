@@ -6,6 +6,7 @@ import {
   Divider,
   FormItem,
   Notice,
+  RadioItem,
   SwitchItem,
   TabBar,
   Text,
@@ -122,6 +123,8 @@ function AdvancedTab(): React.ReactElement {
   const [rdtValue, rdtOnChange] = util.useSettingArray(generalSettings, "reactDevTools");
   const [keepTokenValue, keepTokenOnChange] = util.useSettingArray(generalSettings, "keepToken");
 
+  const pluginIpc = generalSettings.useValue("pluginIpc");
+
   return (
     <>
       <Notice messageType={Notice.Types.WARNING} className={marginStyles.marginBottom20}>
@@ -137,6 +140,39 @@ function AdvancedTab(): React.ReactElement {
         />
       </div>
       <Divider className={marginStyles.marginBottom20} />
+      <SwitchItem
+        value={pluginIpc}
+        onChange={(value) => {
+          void RepluggedNative.settings.setWithAuth("dev.replugged.Settings", "pluginIpc", value);
+          if (!value) generalSettings.set("pluginIpc", value);
+        }}
+        note={
+          <Notice
+            className={"replugged-general-pluginIpc-notice"}
+            messageType={Notice.HelpMessageTypes.WARNING}>
+            {intl.format(t.REPLUGGED_SETTINGS_PLUGIN_IPC_DESC, {})}
+          </Notice>
+        }>
+        {intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC)}
+      </SwitchItem>
+      {pluginIpc && (
+        <>
+          <RadioItem
+            label="Native Access Control"
+            description="Choose how plugins with native module access are handled. You can whitelist specific plugins, blacklist certain ones, or allow all."
+            options={[
+              { value: "whitelist", name: "Whitelist" },
+              { value: "blacklist", name: "Blacklist" },
+              { value: "allowed", name: "Allow All" },
+            ]}
+            value={"whitelist"}
+            onChange={(e) => {
+              console.log(e);
+            }}
+          />
+          <Button>Edit Whitelist</Button>
+        </>
+      )}
       <SwitchItem
         value={expValue}
         onChange={(value) => {

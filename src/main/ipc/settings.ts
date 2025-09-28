@@ -1,4 +1,4 @@
-import { ipcMain, shell } from "electron";
+import { app, dialog, ipcMain, shell } from "electron";
 import { readFileSync, writeFileSync } from "fs";
 import { resolve, sep } from "path";
 import { CONFIG_PATHS } from "src/util.mjs";
@@ -10,6 +10,14 @@ import type {
 } from "../../types/settings";
 
 const SETTINGS_DIR = CONFIG_PATHS.settings;
+
+export const LockedSettings = {
+  pluginIpc: {
+    title: "Enabling Plugin IPC, Are you sure?",
+    message:
+      "Enabling this gives plugins full access to your PC, not just Discord. This is dangerous and not recommended. Continue only if you understand the risks.",
+  },
+};
 
 export function getSettingsPath(namespace: string): string {
   const resolved = resolve(SETTINGS_DIR, `${namespace}.json`);
@@ -107,7 +115,9 @@ ipcMain.on(RepluggedIpcChannels.HAS_SETTING, (event, namespace: string, key: str
 ipcMain.on(
   RepluggedIpcChannels.SET_SETTING,
   (event, namespace: string, key: string, value: unknown) => {
-    event.returnValue = writeTransaction(namespace, (settings) => settings.set(key, value));
+    event.returnValue = writeTransaction(namespace, (settings) =>
+      key in LockedSettings ? settings : settings.set(key, value),
+    );
   },
 );
 
@@ -122,3 +132,22 @@ ipcMain.on(RepluggedIpcChannels.GET_ALL_SETTINGS, (event, namespace: string) => 
 });
 
 ipcMain.on(RepluggedIpcChannels.OPEN_SETTINGS_FOLDER, () => shell.openPath(SETTINGS_DIR));
+
+ipcMain.handle(
+  RepluggedIpcChannels.SET_SETTING_WITH_PERMISSION,
+  async (_, namespace: string, key: keyof typeof LockedSettings, value: unknown) => {
+    if (!(key in LockedSettings)) return false;
+    if (!value) return writeTransaction(namespace, (settings) => settings.set(key, value));
+    const { title, message } = LockedSettings[key];
+    const res = await dialog.showMessageBox({
+      type: "question",
+      title,
+      message,
+      buttons: ["Cancel", "Change and restart!"],
+    });
+    if (res.response !== 1) return false;
+    writeTransaction(namespace, (settings) => settings.set(key, value));
+    app.relaunch();
+    app.quit();
+  },
+);

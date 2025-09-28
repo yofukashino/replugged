@@ -6,3 +6,13 @@
   display: inherit;
   text-align: center;
 }
+
+.replugged-general-pluginIpc-notice {
+  background: var(--background-feedback-critical);
+  border: 1px solid var(--info-danger-foreground);
+}
+
+.replugged-general-pluginIpc-notice,
+.replugged-general-pluginIpc-notice svg {
+  color: var(--text-feedback-critical) !important;
+}
