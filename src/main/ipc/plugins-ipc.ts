@@ -87,8 +87,8 @@ async function queryUser(
 ): Promise<unknown> {
   const messageProps = PluginIpcSettings[key];
   const res = await dialog.showMessageBox({
-    ...(extraProps ?? {}),
     ...messageProps,
+    ...(extraProps ?? {}),
     type: "question",
     buttons: ["Cancel", "Confirm and restart"],
     noLink: true,
@@ -100,8 +100,17 @@ async function queryUser(
 }
 
 ipcMain.handle(RepluggedIpcChannels.SET_PLUGIN_IPC, async (_, value: boolean) => {
-  if (!value) return writeIpcSetting("enabled", false);
-  await queryUser("enabled", true);
+  await queryUser(
+    "enabled",
+    value,
+    value
+      ? undefined
+      : {
+          title: "Disabling Plugin IPC, Are you sure?",
+          message:
+            "Enabling this gives plugins full access to your PC, not just Discord. This is dangerous and not recommended. Continue only if you understand the risks.",
+        },
+  );
 });
 
 ipcMain.handle(
@@ -125,37 +134,46 @@ ipcMain.handle(
           "dev.replugged.Settings",
           "pluginIpc",
         )?.[type] ?? [];
-      const removed = currentSettings.filter((c) => !value.includes(c));
-      const added = value.filter((c) => !currentSettings.includes(c));
+
+      const removed = currentSettings
+        .filter((c) => !value.includes(c))
+        .map((p) => getPlugin(p).manifest.name)
+        .filter(Boolean);
+
+      const added = value
+        .filter((c) => !currentSettings.includes(c))
+        .map((p) => getPlugin(p).manifest.name)
+        .filter(Boolean);
       return { added, removed };
     };
 
     const mapDetails = (added: string[], removed: string[]): string =>
-      `Added Plugins: ${added
-        .map((p) => getPlugin(p).manifest.name)
-        .filter(Boolean)
-        .join(", ")}\n\nRemoved Plugins: ${removed
-        .map((p) => getPlugin(p).manifest.name)
-        .filter(Boolean)
-        .join(", ")}`;
+      `${added.length ? `Added Plugins: ${added.join(", ")}` : ""}${removed.length ? `\n\nRemoved Plugins: ${removed.join(", ")}` : ""}`;
 
     switch (type) {
       case "blacklist": {
         const { added, removed } = getChanges("blacklist", value);
-        await queryUser(
-          "blacklist",
-          value.filter((c) => getPlugin(c) as RepluggedPlugin | undefined),
-          {
-            detail: mapDetails(added, removed),
-          },
-        );
+        if (added.length || removed.length)
+          await queryUser(
+            "blacklist",
+            value.filter((c) => getPlugin(c) as RepluggedPlugin | undefined),
+            {
+              detail: mapDetails(added, removed),
+            },
+          );
         break;
       }
       case "whitelist": {
         const { added, removed } = getChanges("whitelist", value);
-        await queryUser("whitelist", value, {
-          detail: mapDetails(added, removed),
-        });
+
+        if (added.length || removed.length)
+          await queryUser(
+            "whitelist",
+            value.filter((c) => getPlugin(c) as RepluggedPlugin | undefined),
+            {
+              detail: mapDetails(added, removed),
+            },
+          );
       }
     }
   },

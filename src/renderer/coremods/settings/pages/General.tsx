@@ -75,73 +75,85 @@ function EditNativeControlList({
   blacklist?: string[];
   whitelist?: string[];
 }): React.ReactElement {
-  const [currentList, setCurrentList] = React.useState(
-    (type === "blacklist" ? blacklist : whitelist) ?? [],
-  );
-  const pluginList = [...plugins.plugins.values()]
-    .filter((x) => {
-      return x.manifest.preload || x.manifest.main;
-    })
-    .sort((a, b) => a.manifest.name.toLowerCase().localeCompare(b.manifest.name.toLowerCase()));
+  const EditModel = ({ transitionState, onClose }: RenderModalProps): React.ReactElement => {
+    const [currentList, setCurrentList] = React.useState(
+      (type === "blacklist" ? blacklist : whitelist) ?? [],
+    );
+    const pluginList = [...plugins.plugins.values()]
+      .filter((x) => {
+        return x.manifest.preload || x.manifest.main;
+      })
+      .sort((a, b) => a.manifest.name.toLowerCase().localeCompare(b.manifest.name.toLowerCase()));
 
-  const EditModel = ({ transitionState, onClose }: RenderModalProps): React.ReactElement => (
-    <Modal.ModalRoot size="medium" transitionState={transitionState!}>
-      <Modal.ModalHeader>
-        <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
-          <Text.H1 style={{ overflow: "hidden", textOverflow: "ellipsis" }}>Edit Whitelist</Text.H1>
-          <Modal.ModalCloseButton onClick={onClose} />
-        </Flex>
-      </Modal.ModalHeader>
-      <Modal.ModalContent style={{ margin: "18px 0" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "3fr 3fr", gap: "10px" }}>
-          {pluginList.length ? (
-            pluginList.map((plugin) => {
-              const [value, setValue] = React.useState(currentList.includes(plugin.manifest.id));
-              return (
-                <CheckboxItem
-                  key={plugin.path}
-                  type={Checkbox.Types.INVERTED}
-                  value={value}
-                  onChange={(e) => {
-                    setCurrentList(
-                      e.target.checked
-                        ? (list) => [...list, plugin.manifest.id]
-                        : (list) => list.filter((id) => id !== plugin.manifest.id),
-                    );
-                    setValue(e.target.checked);
-                  }}>
-                  {plugin.manifest.name}
-                </CheckboxItem>
-              );
-            })
-          ) : (
-            <Text variant="heading-lg/bold" style={{ textAlign: "center" }}>
-              No Supported Plugin Found!
-            </Text>
-          )}
-        </div>
-      </Modal.ModalContent>
-      <Modal.ModalFooter>
-        <Flex justify={Flex.Justify.BETWEEN}>
-          <Button color={Button.Colors.RED} look={Button.Looks.OUTLINED} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            color={Button.Colors.BRAND}
-            look={Button.Looks.OUTLINED}
-            onClick={() => {
-              if (type === "blacklist") {
-                void RepluggedNative.pluginIpc.setBlacklisted(currentList);
-                return;
-              }
-              void RepluggedNative.pluginIpc.setWhitelisted(currentList);
+    return (
+      <Modal.ModalRoot size="medium" transitionState={transitionState!}>
+        <Modal.ModalHeader>
+          <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
+            <Text.H1 style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+              Edit Whitelist
+            </Text.H1>
+            <Modal.ModalCloseButton onClick={onClose} />
+          </Flex>
+        </Modal.ModalHeader>
+        <Modal.ModalContent style={{ margin: "18px 0" }}>
+          <div
+            style={{
+              justifyItems: "center",
+              gap: "20%",
+              display: "flex",
+              flexFlow: "wrap",
+              height: "100%",
+              justifySelf: "center",
             }}>
-            Save Changes
-          </Button>
-        </Flex>
-      </Modal.ModalFooter>
-    </Modal.ModalRoot>
-  );
+            {pluginList.length ? (
+              pluginList.map((plugin) => {
+                const [value, setValue] = React.useState(currentList.includes(plugin.manifest.id));
+                return (
+                  <CheckboxItem
+                    key={plugin.path}
+                    type={Checkbox.Types.INVERTED}
+                    value={value}
+                    onChange={(e) => {
+                      setCurrentList(
+                        e.target.checked
+                          ? (list) => [...list, plugin.manifest.id]
+                          : (list) => list.filter((id) => id !== plugin.manifest.id),
+                      );
+                      setValue(e.target.checked);
+                    }}>
+                    {plugin.manifest.name}
+                  </CheckboxItem>
+                );
+              })
+            ) : (
+              <Text variant="heading-lg/bold" style={{ textAlign: "center" }}>
+                No Supported Plugin Found!
+              </Text>
+            )}
+          </div>
+        </Modal.ModalContent>
+        <Modal.ModalFooter>
+          <Flex justify={Flex.Justify.BETWEEN}>
+            <Button color={Button.Colors.RED} look={Button.Looks.OUTLINED} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              color={Button.Colors.BRAND}
+              look={Button.Looks.OUTLINED}
+              onClick={() => {
+                if (type === "blacklist") {
+                  void RepluggedNative.pluginIpc.setBlacklisted(currentList);
+                  return;
+                }
+                void RepluggedNative.pluginIpc.setWhitelisted(currentList);
+              }}>
+              Save Changes
+            </Button>
+          </Flex>
+        </Modal.ModalFooter>
+      </Modal.ModalRoot>
+    );
+  };
 
   return (
     <Button
