@@ -4,6 +4,7 @@ import { join } from "path";
 import { RepluggedIpcChannels, type RepluggedWebContents } from "../../types";
 
 import "./installer";
+import "./plugins-ipc";
 import "./plugins";
 import "./quick-css";
 import "./react-devtools";

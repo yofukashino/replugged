@@ -84,8 +84,6 @@ const RepluggedNative = {
     all: (namespace: string) =>
       ipcRenderer.sendSync(RepluggedIpcChannels.GET_ALL_SETTINGS, namespace),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_SETTINGS_FOLDER),
-    setWithAuth: (namespace: string, key: string, value: unknown) =>
-      ipcRenderer.invoke(RepluggedIpcChannels.SET_SETTING_WITH_PERMISSION, namespace, key, value),
   },
 
   reactDevTools: {
@@ -93,6 +91,17 @@ const RepluggedNative = {
       ipcRenderer.invoke(RepluggedIpcChannels.DOWNLOAD_REACT_DEVTOOLS),
     removeExtension: (): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.REMOVE_REACT_DEVTOOLS),
+  },
+
+  pluginIpc: {
+    setEnabled: (value: boolean): Promise<void> =>
+      ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC, value),
+    setMode: (mode: "blacklist" | "whitelist" | "allowed"): Promise<void> =>
+      ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_MODE, mode),
+    setBlaclisted: (value: string[]): Promise<void> =>
+      ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "blacklist", value),
+    setWhitelisted: (value: string[]): Promise<void> =>
+      ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "whitelist", value),
   },
 
   getVersion: (): string => version,

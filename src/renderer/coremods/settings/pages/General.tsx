@@ -141,10 +141,9 @@ function AdvancedTab(): React.ReactElement {
       </div>
       <Divider className={marginStyles.marginBottom20} />
       <SwitchItem
-        value={pluginIpc}
+        value={pluginIpc.enabled}
         onChange={(value) => {
-          void RepluggedNative.settings.setWithAuth("dev.replugged.Settings", "pluginIpc", value);
-          if (!value) generalSettings.set("pluginIpc", value);
+          void RepluggedNative.pluginIpc.setEnabled(value);
         }}
         note={
           <Notice
@@ -155,7 +154,7 @@ function AdvancedTab(): React.ReactElement {
         }>
         {intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC)}
       </SwitchItem>
-      {pluginIpc && (
+      {pluginIpc.enabled && (
         <>
           <RadioItem
             label="Native Access Control"
@@ -165,12 +164,15 @@ function AdvancedTab(): React.ReactElement {
               { value: "blacklist", name: "Blacklist" },
               { value: "allowed", name: "Allow All" },
             ]}
-            value={"whitelist"}
+            value={pluginIpc.mode}
             onChange={(e) => {
-              console.log(e);
-            }}
-          />
-          <Button>Edit Whitelist</Button>
+              void RepluggedNative.pluginIpc.setMode(
+                e.value as "whitelist" | "blacklist" | "allowed",
+              );
+            }}>
+            {" "}
+            <Button>Edit Whitelist</Button>{" "}
+          </RadioItem>
         </>
       )}
       <SwitchItem

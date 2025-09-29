@@ -14,7 +14,12 @@ export type GeneralSettings = {
   titleBar?: boolean;
   quickCSS?: boolean;
   keepToken?: boolean;
-  pluginIpc?: boolean;
+  pluginIpc?: {
+    enabled: boolean;
+    mode: "whitelist" | "blacklist" | "allowed";
+    blacklist: string[];
+    whitelist: string[];
+  };
 };
 
 const defaultSettings = {
@@ -29,7 +34,7 @@ const defaultSettings = {
   titleBar: false,
   quickCSS: true,
   keepToken: false,
-  pluginIpc: false,
+  pluginIpc: { enabled: false, mode: "whitelist", blacklist: [], whitelist: [] },
 } satisfies Partial<GeneralSettings>;
 
 export const generalSettings = init<GeneralSettings, keyof typeof defaultSettings>(
