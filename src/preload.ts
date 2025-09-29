@@ -50,7 +50,6 @@ const RepluggedNative = {
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
-    getIPC: () => pluginIpc,
   },
 
   updater: {
@@ -117,10 +116,11 @@ const RepluggedNative = {
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC, value),
     setMode: (mode: "blacklist" | "whitelist" | "allowed"): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_MODE, mode),
-    setBlaclisted: (value: string[]): Promise<void> =>
+    setBlacklisted: (value: string[]): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "blacklist", value),
     setWhitelisted: (value: string[]): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "whitelist", value),
+    getIPC: () => pluginIpc,
   },
 
   getVersion: (): string => version,

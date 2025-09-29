@@ -131,7 +131,7 @@ function EditNativeControlList({
             look={Button.Looks.OUTLINED}
             onClick={() => {
               if (type === "blacklist") {
-                void RepluggedNative.pluginIpc.setBlaclisted(currentList);
+                void RepluggedNative.pluginIpc.setBlacklisted(currentList);
                 return;
               }
               void RepluggedNative.pluginIpc.setWhitelisted(currentList);
