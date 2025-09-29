@@ -335,6 +335,19 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
           };
         }
 
+        if (
+          (manifest.main && args.importer.startsWith(path.resolve(manifest.main))) ||
+          (manifest.preload && args.importer.startsWith(path.resolve(manifest.preload)))
+        ) {
+          return {
+            errors: [
+              {
+                text: `Unsupported import: ${args.path}\nImport for this module ("replugged") or its top-level subpath (e.g. "replugged/common") are supported only in renderer.`,
+              },
+            ],
+          };
+        }
+
         return {
           path: args.path,
           namespace: "replugged",
