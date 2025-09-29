@@ -432,6 +432,36 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
     manifest.plaintextPatches = "plaintextPatches.js";
   }
 
+  if ("preload" in manifest) {
+    targets.push(
+      esbuild.context(
+        overwrites({
+          ...common,
+          format: "cjs",
+          entryPoints: [path.join(folderPath, manifest.preload!)],
+          outfile: `${distPath}/preload.js`,
+        }),
+      ),
+    );
+
+    manifest.preload = "preload.js";
+  }
+
+  if ("main" in manifest) {
+    targets.push(
+      esbuild.context(
+        overwrites({
+          ...common,
+          format: "cjs",
+          entryPoints: [path.join(folderPath, manifest.main!)],
+          outfile: `${distPath}/main.js`,
+        }),
+      ),
+    );
+
+    manifest.main = "main.js";
+  }
+
   if (!existsSync(distPath)) mkdirSync(distPath, { recursive: true });
 
   writeFileSync(`${distPath}/manifest.json`, JSON.stringify(manifest));
