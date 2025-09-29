@@ -243,5 +243,10 @@ export default defineMessages({
   "REPLUGGED_TOAST_THEME_PRESET_CHANGED": "Switched to preset: {name}",
   "REPLUGGED_TOAST_THEME_PRESET_FAILED": "Failed to change preset for {name}",
   "REPLUGGED_SETTINGS_PLUGIN_IPC": "Plugin IPC",
-  "REPLUGGED_SETTINGS_PLUGIN_IPC_DESC": "**DANGER WARNING**: Enabling this option grants plugins access to native modules, allowing them to make changes to your **entire PC** and not just Discord. With this disabled, plugins are limited to Discord only, but turning it on removes that safeguard. **Proceed only if you fully understand the risks.** Replugged is **not responsible** for any damage, data loss, or security issues caused to your system, and the Replugged Team does not recommend enabling this option. If you are unsure, leave this disabled. **Requires restart**."
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_DESC": "**DANGER WARNING**: Enabling this option grants plugins access to native modules, allowing them to make changes to your **entire PC** and not just Discord. With this disabled, plugins are limited to Discord only, but turning it on removes that safeguard. **Proceed only if you fully understand the risks.** Replugged is **not responsible** for any damage, data loss, or security issues caused to your system, and the Replugged Team does not recommend enabling this option. If you are unsure, leave this disabled. **Requires restart**.",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE": "Native Access Control",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_DESC": "Choose how plugins with native module access are handled. You can whitelist specific plugins, blacklist certain ones, or allow all.",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_BLACKLIST": "Blacklist",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_WHITELIST": "Whitelist",
+  "REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_ALLOWED": "Allow All",
 });

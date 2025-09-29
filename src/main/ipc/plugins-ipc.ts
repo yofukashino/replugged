@@ -29,7 +29,14 @@ const PluginIpcSettings = {
 function writeIpcSetting(key: string, value: unknown): unknown {
   const pluginIpc = getSetting<Record<string, unknown>>("dev.replugged.Settings", "pluginIpc");
   return writeTransaction("dev.replugged.Settings", (settings) =>
-    settings.set("pluginIpc", { ...pluginIpc, [key]: value }),
+    settings.set("pluginIpc", {
+      enabled: false,
+      mode: "whitelist",
+      blacklist: [],
+      whitelist: [],
+      ...pluginIpc,
+      [key]: value,
+    }),
   );
 }
 
@@ -61,7 +68,7 @@ ipcMain.handle(
   RepluggedIpcChannels.SET_PLUGIN_IPC_MODE,
   async (_, value: "blacklist" | "whitelist" | "allowed") => {
     await queryUser("mode", value, {
-      detail: `Current Value: "${value}", Default Value: "whitelist"`,
+      detail: `Current Value: ${value}, Default Value: whitelist`,
     });
   },
 );

@@ -1634,6 +1634,71 @@ export declare const messages: {
    */
   'REPLUGGED_SETTINGS_PLUGIN_IPC': TypedIntlMessageGetter<{}>,
   /**
+   * Key: `V0gjAQ`
+   * 
+   * ### Definition
+   * ```text
+   * Native Access Control
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `QkIF//`
+   * 
+   * ### Definition
+   * ```text
+   * Allow All
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_ALLOWED': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `9u6cPD`
+   * 
+   * ### Definition
+   * ```text
+   * Blacklist
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_BLACKLIST': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `mzzlgo`
+   * 
+   * ### Definition
+   * ```text
+   * Choose how plugins with native module access are handled. You can whitelist specific plugins, blacklist certain ones, or allow all.
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_DESC': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `CRL+YW`
+   * 
+   * ### Definition
+   * ```text
+   * Whitelist
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_WHITELIST': TypedIntlMessageGetter<{}>,
+  /**
    * Key: `TibxCg`
    * 
    * ### Definition

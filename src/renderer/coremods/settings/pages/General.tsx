@@ -1,12 +1,17 @@
+import { plugins } from "@replugged";
 import { React, classNames, marginStyles, modal, toast } from "@common";
 import { t as discordT, intl } from "@common/i18n";
 import {
   Button,
   ButtonItem,
+  Checkbox,
+  CheckboxItem,
   Divider,
+  Flex,
   FormItem,
+  Modal,
   Notice,
-  RadioItem,
+  Radio,
   SwitchItem,
   TabBar,
   Text,
@@ -19,6 +24,7 @@ import * as util from "src/renderer/util";
 import { initWs, socket } from "../../devCompanion";
 
 import "./General.css";
+import type { RenderModalProps } from "discord-client-types/discord_app/design/web";
 
 const konamiCode = [
   "ArrowUp",
@@ -59,6 +65,94 @@ function restartModal(doRelaunch = false, onConfirm?: () => void, onCancel?: () 
 }
 
 const GeneralSettingsTabs = { GENERAL: "general", ADVANCED: "advanced" } as const;
+
+function EditNativeControlList({
+  type,
+  blacklist,
+  whitelist,
+}: {
+  type: "blacklist" | "whitelist";
+  blacklist?: string[];
+  whitelist?: string[];
+}): React.ReactElement {
+  const [currentList, setCurrentList] = React.useState(
+    (type === "blacklist" ? blacklist : whitelist) ?? [],
+  );
+  const pluginList = [...plugins.plugins.values()]
+    .filter((x) => {
+      return x.manifest.preload || x.manifest.main;
+    })
+    .sort((a, b) => a.manifest.name.toLowerCase().localeCompare(b.manifest.name.toLowerCase()));
+
+  const EditModel = ({ transitionState, onClose }: RenderModalProps): React.ReactElement => (
+    <Modal.ModalRoot size="medium" transitionState={transitionState!}>
+      <Modal.ModalHeader>
+        <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
+          <Text.H1 style={{ overflow: "hidden", textOverflow: "ellipsis" }}>Edit Whitelist</Text.H1>
+          <Modal.ModalCloseButton onClick={onClose} />
+        </Flex>
+      </Modal.ModalHeader>
+      <Modal.ModalContent style={{ margin: "18px 0" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "3fr 3fr", gap: "10px" }}>
+          {pluginList.length ? (
+            pluginList.map((plugin) => {
+              const [value, setValue] = React.useState(currentList.includes(plugin.manifest.id));
+              return (
+                <CheckboxItem
+                  key={plugin.path}
+                  type={Checkbox.Types.INVERTED}
+                  value={value}
+                  onChange={(e) => {
+                    setCurrentList(
+                      e.target.checked
+                        ? (list) => [...list, plugin.manifest.id]
+                        : (list) => list.filter((id) => id !== plugin.manifest.id),
+                    );
+                    setValue(e.target.checked);
+                  }}>
+                  {plugin.manifest.name}
+                </CheckboxItem>
+              );
+            })
+          ) : (
+            <Text variant="heading-lg/bold" style={{ textAlign: "center" }}>
+              No Supported Plugin Found!
+            </Text>
+          )}
+        </div>
+      </Modal.ModalContent>
+      <Modal.ModalFooter>
+        <Flex justify={Flex.Justify.BETWEEN}>
+          <Button color={Button.Colors.RED} look={Button.Looks.OUTLINED} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            color={Button.Colors.BRAND}
+            look={Button.Looks.OUTLINED}
+            onClick={() => {
+              if (type === "blacklist") {
+                void RepluggedNative.pluginIpc.setBlaclisted(currentList);
+                return;
+              }
+              void RepluggedNative.pluginIpc.setWhitelisted(currentList);
+            }}>
+            Save Changes
+          </Button>
+        </Flex>
+      </Modal.ModalFooter>
+    </Modal.ModalRoot>
+  );
+
+  return (
+    <Button
+      className={marginStyles.marginBottom20}
+      onClick={() => {
+        modal.openModal((props) => <EditModel {...props} />);
+      }}>
+      Edit Whitelist
+    </Button>
+  );
+}
 
 function GeneralTab(): React.ReactElement {
   const [quickCSSValue, quickCSSOnChange] = util.useSettingArray(generalSettings, "quickCSS");
@@ -156,23 +250,40 @@ function AdvancedTab(): React.ReactElement {
       </SwitchItem>
       {pluginIpc.enabled && (
         <>
-          <RadioItem
-            label="Native Access Control"
-            description="Choose how plugins with native module access are handled. You can whitelist specific plugins, blacklist certain ones, or allow all."
+          <Radio
+            className={marginStyles.marginBottom20}
+            label={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE)}
+            description={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_DESC)}
             options={[
-              { value: "whitelist", name: "Whitelist" },
-              { value: "blacklist", name: "Blacklist" },
-              { value: "allowed", name: "Allow All" },
+              {
+                value: "whitelist",
+                name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_WHITELIST),
+              },
+              {
+                value: "blacklist",
+                name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_BLACKLIST),
+              },
+              {
+                value: "allowed",
+                name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_ALLOWED),
+              },
             ]}
             value={pluginIpc.mode}
             onChange={(e) => {
-              void RepluggedNative.pluginIpc.setMode(
-                e.value as "whitelist" | "blacklist" | "allowed",
-              );
-            }}>
-            {" "}
-            <Button>Edit Whitelist</Button>{" "}
-          </RadioItem>
+              if (e.value !== pluginIpc.mode)
+                void RepluggedNative.pluginIpc.setMode(
+                  e.value as "whitelist" | "blacklist" | "allowed",
+                );
+            }}
+          />
+          {pluginIpc.mode !== "allowed" && (
+            <EditNativeControlList
+              type={pluginIpc.mode}
+              blacklist={pluginIpc.blacklist}
+              whitelist={pluginIpc.whitelist}
+            />
+          )}
+          <Divider className={marginStyles.marginBottom20} />
         </>
       )}
       <SwitchItem
