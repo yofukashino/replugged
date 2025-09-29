@@ -301,6 +301,7 @@ const CONFIG_PATH = (() => {
       return path.join(process.env.HOME || "", ".config", REPLUGGED_FOLDER_NAME);
   }
 })();
+const NODE_VERSION = "20";
 const CHROME_VERSION = "134";
 
 function buildAddons(buildFn: (args: Args) => Promise<void>, args: Args, type: AddonType): void {
@@ -451,6 +452,9 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
         overwrites({
           ...common,
           format: "cjs",
+          platform: "node",
+          target: [`node${NODE_VERSION}`, `chrome${CHROME_VERSION}`],
+          external: ["electron"],
           entryPoints: [path.join(folderPath, manifest.preload!)],
           outfile: `${distPath}/preload.js`,
         }),
@@ -466,6 +470,9 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
         overwrites({
           ...common,
           format: "cjs",
+          platform: "node",
+          target: `node${NODE_VERSION}`,
+          external: ["electron", "original-fs"],
           entryPoints: [path.join(folderPath, manifest.main!)],
           outfile: `${distPath}/main.js`,
         }),

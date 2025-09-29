@@ -11,6 +11,8 @@ import type {
   RepluggedPlugin,
   RepluggedTheme,
 } from "./types";
+import { join, sep } from "path";
+import { CONFIG_PATHS } from "./util.mjs";
 
 const pluginIpc: Record<string, unknown> = {};
 
@@ -22,9 +24,15 @@ const isFiltered = (id: string): boolean =>
 const pluginIpcEnabled = ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN_IPC_ENABLED);
 
 const loadPluginIpc = (): void => {
+  const PLUGINS_DIR = CONFIG_PATHS.plugins;
   for (const plugin of pluginList) {
     if (!plugin.manifest.preload || isFiltered(plugin.manifest.id)) continue;
-    pluginIpc[plugin.manifest.id] = require(plugin.manifest.preload);
+    const preloadPath = join(PLUGINS_DIR, plugin.path, plugin.manifest.preload);
+    if (!preloadPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+      // Ensure file changes are restricted to the base path
+      throw new Error("Invalid plugin name");
+    }
+    pluginIpc[plugin.manifest.id] = require(preloadPath);
   }
 };
 

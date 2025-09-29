@@ -2,13 +2,17 @@ import { type MessageBoxOptions, app, dialog, ipcMain } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "src/types";
 import { getSetting, writeTransaction } from "./settings";
 import { getPlugin, listPlugin } from "./plugins";
+import { join, sep } from "path";
+import { CONFIG_PATHS } from "src/util.mjs";
 
 interface IpcSettings {
-  enabled: boolean;
-  mode: "whitelist" | "blacklist" | "allowed";
-  blacklist: string[];
-  whitelist: string[];
+  enabled?: boolean;
+  mode?: "whitelist" | "blacklist" | "allowed";
+  blacklist?: string[];
+  whitelist?: string[];
 }
+
+const PLUGINS_DIR = CONFIG_PATHS.plugins;
 
 const PluginIpcSettings = {
   enabled: {
@@ -41,11 +45,11 @@ function isFiltered(id: string): boolean {
       return false;
     }
     case "blacklist": {
-      return currentSettings.blacklist.includes(id);
+      return Boolean(currentSettings.blacklist?.includes(id));
     }
     case "whitelist":
     default: {
-      return !currentSettings?.whitelist.includes(id);
+      return !currentSettings?.whitelist?.includes(id);
     }
   }
 }
@@ -53,7 +57,12 @@ function isFiltered(id: string): boolean {
 function loadPluginIpc(): void {
   for (const plugin of listPlugin()) {
     if (!plugin.manifest.main || isFiltered(plugin.manifest.id)) continue;
-    require(plugin.manifest.main);
+    const mainPath = join(PLUGINS_DIR, plugin.path, plugin.manifest.main);
+    if (!mainPath.startsWith(`${PLUGINS_DIR}${sep}`)) {
+      // Ensure file changes are restricted to the base path
+      throw new Error("Invalid plugin name");
+    }
+    require(mainPath);
   }
 }
 
