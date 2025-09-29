@@ -12,6 +12,24 @@ import type {
   RepluggedTheme,
 } from "./types";
 
+const pluginIpc: Record<string, unknown> = {};
+
+const pluginList: RepluggedPlugin[] = ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS);
+
+const isFiltered = (id: string): boolean =>
+  ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN_IPC_FILTERED, id);
+
+const pluginIpcEnabled = ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN_IPC_ENABLED);
+
+const loadPluginIpc = (): void => {
+  for (const plugin of pluginList) {
+    if (!plugin.manifest.preload || isFiltered(plugin.manifest.id)) continue;
+    pluginIpc[plugin.manifest.id] = require(plugin.manifest.preload);
+  }
+};
+
+if (pluginIpcEnabled) loadPluginIpc();
+
 const version = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_VERSION);
 
 const RepluggedNative = {
@@ -32,6 +50,7 @@ const RepluggedNative = {
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
+    getIPC: () => pluginIpc,
   },
 
   updater: {

@@ -1,7 +1,14 @@
 import { type MessageBoxOptions, app, dialog, ipcMain } from "electron";
 import { RepluggedIpcChannels, type RepluggedPlugin } from "src/types";
 import { getSetting, writeTransaction } from "./settings";
-import { getPlugin } from "./plugins";
+import { getPlugin, listPlugin } from "./plugins";
+
+interface IpcSettings {
+  enabled: boolean;
+  mode: "whitelist" | "blacklist" | "allowed";
+  blacklist: string[];
+  whitelist: string[];
+}
 
 const PluginIpcSettings = {
   enabled: {
@@ -26,8 +33,32 @@ const PluginIpcSettings = {
   },
 };
 
+const currentSettings = getSetting<IpcSettings>("dev.replugged.Settings", "pluginIpc");
+
+function isFiltered(id: string): boolean {
+  switch (currentSettings?.mode) {
+    case "allowed": {
+      return false;
+    }
+    case "blacklist": {
+      return currentSettings.blacklist.includes(id);
+    }
+    case "whitelist":
+    default: {
+      return !currentSettings?.whitelist.includes(id);
+    }
+  }
+}
+
+function loadPluginIpc(): void {
+  for (const plugin of listPlugin()) {
+    if (!plugin.manifest.main || isFiltered(plugin.manifest.id)) continue;
+    require(plugin.manifest.main);
+  }
+}
+
 function writeIpcSetting(key: string, value: unknown): unknown {
-  const pluginIpc = getSetting<Record<string, unknown>>("dev.replugged.Settings", "pluginIpc");
+  const pluginIpc = getSetting<IpcSettings>("dev.replugged.Settings", "pluginIpc");
   return writeTransaction("dev.replugged.Settings", (settings) =>
     settings.set("pluginIpc", {
       enabled: false,
@@ -120,3 +151,13 @@ ipcMain.handle(
     }
   },
 );
+
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN_IPC_FILTERED, (event, id: string) => {
+  event.returnValue = isFiltered(id);
+});
+
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN_IPC_ENABLED, (event) => {
+  event.returnValue = currentSettings?.enabled;
+});
+
+if (currentSettings?.enabled) loadPluginIpc();

@@ -54,13 +54,7 @@ export function getPlugin(pluginName: string): RepluggedPlugin {
   return data;
 }
 
-ipcMain.on(RepluggedIpcChannels.GET_PLUGIN, (event, pluginName: string) => {
-  try {
-    event.returnValue = getPlugin(pluginName);
-  } catch {}
-});
-
-ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
+export function listPlugin(): RepluggedPlugin[] {
   const plugins = [];
 
   const pluginDirs = readdirSync(PLUGINS_DIR, {
@@ -89,8 +83,17 @@ ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
       console.error(e);
     }
   }
+  return plugins;
+}
 
-  event.returnValue = plugins;
+ipcMain.on(RepluggedIpcChannels.GET_PLUGIN, (event, pluginName: string) => {
+  try {
+    event.returnValue = getPlugin(pluginName);
+  } catch {}
+});
+
+ipcMain.on(RepluggedIpcChannels.LIST_PLUGINS, (event) => {
+  event.returnValue = listPlugin();
 });
 
 ipcMain.handle(RepluggedIpcChannels.UNINSTALL_PLUGIN, async (_, pluginName: string) => {
