@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { existsSync } from "fs";
-import { chown, copyFile, mkdir, rename, rm, stat, writeFile } from "fs/promises";
+import { chown, copyFile, rename, rm, stat, writeFile } from "fs/promises";
 import path, { join, sep } from "path";
 import { fileURLToPath } from "url";
 import { CONFIG_PATH } from "../../src/util.mjs";
@@ -15,6 +15,7 @@ import {
   killProcessByPID,
   openProcess,
 } from "./util.mjs";
+import { createPackage, extractAll, statFile, uncache } from "@electron/asar";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 let processInfo: ProcessInfo | ProcessInfo[] | null;
@@ -35,6 +36,7 @@ export const isDiscordInstalled = async (appDir: string, silent?: boolean): Prom
 
 // If app.orig.asar but no app.asar, move app.orig.asar to app.asar
 // Fixes a case where app.asar was deleted (unplugged) but app.orig.asar couldn't be moved back
+// Fixes in case using old version of replugged
 export const correctMissingMainAsar = async (appDir: string): Promise<boolean> => {
   try {
     await stat(join(appDir, "..", "app.orig.asar"));
@@ -64,9 +66,10 @@ export const correctMissingMainAsar = async (appDir: string): Promise<boolean> =
   return true;
 };
 
-export const isPlugged = async (appDir: string): Promise<boolean> => {
+export const isPlugged = (appDir: string): boolean => {
   try {
-    await stat(join(appDir, "..", "app.orig.asar"));
+    uncache(appDir);
+    statFile(appDir, join("app_bootstrap", "index.orig.js"));
     return true;
   } catch {
     return false;
@@ -82,7 +85,7 @@ export const inject = async (
   if (!(await correctMissingMainAsar(appDir))) return false;
   if (!(await isDiscordInstalled(appDir))) return false;
 
-  if (await isPlugged(appDir)) {
+  if (isPlugged(appDir)) {
     /*
      * @todo: verify if there is nothing in discord_desktop_core as well
      * @todo: prompt to automatically uninject and continue
@@ -122,16 +125,15 @@ export const inject = async (
     argEntryPoint ??
     (prod ? join(CONFIG_PATH, "replugged.asar") : join(dirname, "..", "..", "dist/main.js"));
 
-  const entryPointDir = path.dirname(entryPoint);
-
   if (appDir.includes("flatpak")) {
+    const repluggedConfigDir = "xdg-config/replugged:ro";
     const discordName = platform === "canary" ? "DiscordCanary" : "Discord";
     const overrideCommand = `${
       appDir.startsWith("/var") ? "sudo flatpak override" : "flatpak override --user"
-    } com.discordapp.${discordName} --filesystem=${entryPointDir}`;
+    } com.discordapp.${discordName} --filesystem=${prod ? repluggedConfigDir : join(dirname, "..", "..")}`;
 
     console.log(
-      `${AnsiEscapes.YELLOW}Flatpak detected, allowing Discord access to Replugged files (${entryPointDir})${AnsiEscapes.RESET}`,
+      `${AnsiEscapes.YELLOW}Flatpak detected, allowing Discord access to Replugged files (${prod ? repluggedConfigDir : join(dirname, "..", "..")})${AnsiEscapes.RESET}`,
     );
     execSync(overrideCommand);
     console.log("Done!");
@@ -165,20 +167,19 @@ export const inject = async (
     }
   }
 
-  await mkdir(appDir);
-  await Promise.all([
-    writeFile(
-      join(appDir, "index.js"),
-      `require("${entryPoint.replace(RegExp(sep.repeat(2), "g"), "/")}")`,
-    ),
-    writeFile(
-      join(appDir, "package.json"),
-      JSON.stringify({
-        main: "index.js",
-        name: "discord",
-      }),
-    ),
-  ]);
+  const tempDir = join(appDir, "..", "temp");
+  extractAll(join(appDir, "..", "app.orig.asar"), tempDir);
+  await rename(
+    join(tempDir, "app_bootstrap", "index.js"),
+    join(tempDir, "app_bootstrap", "index.orig.js"),
+  );
+  await writeFile(
+    join(tempDir, "app_bootstrap", "index.js"),
+    `require("${entryPoint.replace(RegExp(sep.repeat(2), "g"), "/")}")`,
+  );
+  await createPackage(tempDir, appDir);
+  await rm(join(appDir, "..", "app.orig.asar"), { recursive: true, force: true });
+  await rm(tempDir, { recursive: true, force: true });
 
   return true;
 };
@@ -194,26 +195,29 @@ export const uninject = async (
   )
     return false;
 
-  if (!(await isPlugged(appDir))) {
+  if (!isPlugged(appDir)) {
     console.error(
       `${AnsiEscapes.BOLD}${AnsiEscapes.RED}There is nothing to unplug. You are already running Discord without mods.${AnsiEscapes.RESET}`,
     );
     return false;
   }
 
-  try {
-    await rm(appDir, { recursive: true, force: true });
-    await rename(join(appDir, "..", "app.orig.asar"), appDir);
-    // For discord_arch_electron
-    if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
-      await rename(
-        join(appDir, "..", "app.orig.asar.unpacked"),
-        join(appDir, "..", "app.asar.unpacked"),
-      );
-    }
-  } catch {
-    console.error(
-      `${AnsiEscapes.RED}Failed to rename app.asar while unplugging. If Discord is open, make sure it is closed.${AnsiEscapes.RESET}`,
+  const tempDir = join(appDir, "..", "temp");
+  extractAll(appDir, tempDir);
+  await rm(appDir, { recursive: true, force: true });
+  await rm(join(tempDir, "app_bootstrap", "index.js"));
+  await rename(
+    join(tempDir, "app_bootstrap", "index.orig.js"),
+    join(tempDir, "app_bootstrap", "index.js"),
+  );
+
+  await createPackage(tempDir, appDir);
+  await rm(tempDir, { recursive: true, force: true });
+  // For discord_arch_electron
+  if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
+    await rename(
+      join(appDir, "..", "app.orig.asar.unpacked"),
+      join(appDir, "..", "app.asar.unpacked"),
     );
     process.exit(exitCode);
   }
