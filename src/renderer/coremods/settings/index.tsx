@@ -16,7 +16,7 @@ export function VersionInfo(): React.ReactElement {
   );
 }
 
-export function getVersionInfoText(): string {
+export function _getVersionString(): string {
   return intl.formatToPlainString(t.REPLUGGED_VERSION, {
     version: window.RepluggedNative.getVersion(),
   });
