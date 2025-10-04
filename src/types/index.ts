@@ -1,6 +1,5 @@
 import type { WebContents } from "electron";
 import type { PluginManifest, ThemeManifest } from "./addon";
-import type { ConnectedAccount } from "./discord";
 
 export type RepluggedWebContents = WebContents & {
   originalPreload?: string;
@@ -20,7 +19,6 @@ export enum RepluggedIpcChannels {
   GET_THEME = "REPLUGGED_GET_THEME",
   UNINSTALL_THEME = "REPLUGGED_UNINSTALL_THEME",
   LIST_PLUGINS = "REPLUGGED_LIST_PLUGINS",
-  REGISTER_PLUGIN_NATIVE = "REPLUGGED_REGISTER_PLUGIN_NATIVE",
   GET_PLUGIN = "REPLUGGED_GET_PLUGIN",
   GET_PLUGIN_PLAINTEXT_PATCHES = "REPLUGGED_GET_PLUGIN_PLAINTEXT_PATCHES",
   UNINSTALL_PLUGIN = "REPLUGGED_UNINSTALL_PLUGIN",
@@ -28,14 +26,11 @@ export enum RepluggedIpcChannels {
   INSTALL_ADDON = "REPLUGGED_INSTALL_ADDON",
   OPEN_PLUGINS_FOLDER = "REPLUGGED_OPEN_PLUGINS_FOLDER",
   OPEN_THEMES_FOLDER = "REPLUGGED_OPEN_THEMES_FOLDER",
-  CLEAR_TEMP = "REPLUGGED_CLEAR_TEMP",
   OPEN_SETTINGS_FOLDER = "REPLUGGED_OPEN_SETTINGS_FOLDER",
   OPEN_QUICKCSS_FOLDER = "REPLUGGED_OPEN_QUICKCSS_FOLDER",
   GET_REPLUGGED_VERSION = "REPLUGGED_GET_REPLUGGED_VERSION",
   DOWNLOAD_REACT_DEVTOOLS = "REPLUGGED_DOWNLOAD_REACT_DEVTOOLS",
-  CONSOLE_LOG = "REPLUGGED_CONSOLE_LOG",
-  CONSOLE_WARN = "REPLUGGED_CONSOLE_WARN",
-  CONSOLE_ERROR = "REPLUGGED_CONSOLE_ERROR",
+  REMOVE_REACT_DEVTOOLS = "REPLUGGED_REMOVE_REACT_DEVTOOLS",
 }
 
 export interface RepluggedAnnouncement {
@@ -50,22 +45,6 @@ export interface RepluggedAnnouncement {
   };
 }
 
-export interface RepluggedConnection {
-  type: string;
-  name: string;
-  color: string;
-  enabled: boolean;
-  icon: {
-    darkSVG: string;
-    lightSVG: string;
-  };
-  fetchAccount: (id: string) => Promise<ConnectedAccount>;
-  getPlatformUserUrl?: (account: ConnectedAccount) => string;
-  onDisconnect: () => void;
-  onConnect: () => void;
-  setVisibility: (visible: boolean) => boolean | void;
-}
-
 export interface RepluggedTheme {
   path: string;
   manifest: ThemeManifest;
@@ -77,13 +56,7 @@ export interface RepluggedPlugin {
   hasCSS: boolean;
 }
 
-export type {
-  AnyAddonManifest,
-  PluginExports,
-  PluginNativeMap,
-  PluginManifest,
-  ThemeManifest,
-} from "./addon";
+export type { AnyAddonManifest, PluginExports, PluginManifest, ThemeManifest } from "./addon";
 export * from "./coremods/commands";
 export * from "./coremods/contextMenu";
 export * from "./coremods/message";

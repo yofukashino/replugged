@@ -9,7 +9,7 @@ import logBuildPlugin from "./build-plugins/log-build.mjs";
 import preBundlePlugin from "./build-plugins/pre-bundle.mjs";
 
 const NODE_VERSION = "20";
-const CHROME_VERSION = "130";
+const CHROME_VERSION = "134";
 
 const ctx = createContext(process.argv);
 const watch = ctx.hasOptionalArg(/--watch/);
@@ -40,6 +40,9 @@ const common: esbuild.BuildOptions = {
   logLevel: "info",
   plugins,
   metafile: true,
+  jsx: "transform",
+  jsxFactory: "window.replugged.common.React.createElement",
+  jsxFragment: "window.replugged.common.React.Fragment",
 };
 
 const contexts = await Promise.all([
@@ -70,8 +73,15 @@ const contexts = await Promise.all([
     target: `chrome${CHROME_VERSION}`,
     outfile: `${distDir}/renderer.js`,
     format: "esm",
+    assetNames: "assets/[hash]",
+    publicPath: "replugged://",
+    banner: { js: "(() => {" },
+    footer: {
+      js: "})();\n//# sourceURL=replugged://renderer/index.js",
+      css: "\n/*# sourceURL=replugged://renderer/index.css */",
+    },
     loader: {
-      ".png": "dataurl",
+      ".png": "file",
     },
   }),
 ]);

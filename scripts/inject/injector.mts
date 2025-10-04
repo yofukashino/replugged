@@ -3,8 +3,7 @@ import { existsSync } from "fs";
 import { chown, copyFile, mkdir, rename, rm, stat, writeFile } from "fs/promises";
 import path, { join, sep } from "path";
 import { fileURLToPath } from "url";
-import { createPackage, extractAll, statFile, uncache } from "@electron/asar";
-import { CONFIG_PATH } from "src/util.mjs";
+import { CONFIG_PATH } from "../../src/util.mjs";
 import { entryPoint as argEntryPoint, exitCode } from "./index.mjs";
 import type { DiscordPlatform, PlatformModule, ProcessInfo } from "./types.mjs";
 import {
@@ -36,34 +35,29 @@ export const isDiscordInstalled = async (appDir: string, silent?: boolean): Prom
 
 // If app.orig.asar but no app.asar, move app.orig.asar to app.asar
 // Fixes a case where app.asar was deleted (unplugged) but app.orig.asar couldn't be moved back
-// Fixes incase using old version of replugged
 export const correctMissingMainAsar = async (appDir: string): Promise<boolean> => {
   try {
     await stat(join(appDir, "..", "app.orig.asar"));
-    console.warn(
-      `${AnsiEscapes.YELLOW}Your Discord installation was not properly unplugged, attempting to fix...${AnsiEscapes.RESET}`,
-    );
     try {
       await stat(join(appDir, "..", "app.asar"));
-      await rm(join(appDir, "..", "app.asar"), { recursive: true, force: true });
-    } catch {}
-    try {
-      await stat(join(appDir, "..", "temp"));
-      await rm(join(appDir, "..", "temp"), { recursive: true, force: true });
-    } catch {}
-    try {
-      await rename(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "app.asar"));
-      console.log(
-        `${AnsiEscapes.GREEN}Fixed your Discord installation successfully! Continuing with Replugged installation...${AnsiEscapes.RESET}`,
-        "\n",
-      );
     } catch {
-      console.error(
-        `${AnsiEscapes.RED}Failed to fix your Discord installation, please try unplugging and plugging again.${AnsiEscapes.RESET}`,
-        "\n",
+      console.warn(
+        `${AnsiEscapes.YELLOW}Your Discord installation was not properly unplugged, attempting to fix...${AnsiEscapes.RESET}`,
       );
-      console.error("If the error persists, please reinstall Discord and try again.");
-      return false;
+      try {
+        await rename(join(appDir, "..", "app.orig.asar"), join(appDir, "..", "app.asar"));
+        console.log(
+          `${AnsiEscapes.GREEN}Fixed your Discord installation successfully! Continuing with Replugged installation...${AnsiEscapes.RESET}`,
+          "\n",
+        );
+      } catch {
+        console.error(
+          `${AnsiEscapes.RED}Failed to fix your Discord installation, please try unplugging and plugging again.${AnsiEscapes.RESET}`,
+          "\n",
+        );
+        console.error("If the error persists, please reinstall Discord and try again.");
+        return false;
+      }
     }
   } catch {}
 
@@ -72,8 +66,7 @@ export const correctMissingMainAsar = async (appDir: string): Promise<boolean> =
 
 export const isPlugged = async (appDir: string): Promise<boolean> => {
   try {
-    uncache(appDir);
-    await statFile(appDir, "app.orig");
+    await stat(join(appDir, "..", "app.orig.asar"));
     return true;
   } catch {
     return false;
@@ -135,12 +128,13 @@ export const inject = async (
     const discordName = platform === "canary" ? "DiscordCanary" : "Discord";
     const overrideCommand = `${
       appDir.startsWith("/var") ? "sudo flatpak override" : "flatpak override --user"
-    } com.discordapp.${discordName} --filesystem=${prod ? entryPointDir : join(dirname, "..", "..")}`;
+    } com.discordapp.${discordName} --filesystem=${entryPointDir}`;
 
     console.log(
-      `${AnsiEscapes.YELLOW}Flatpak detected, allowing Discord access to Replugged files (${prod ? entryPointDir : join(dirname, "..", "..")})${AnsiEscapes.RESET}`,
+      `${AnsiEscapes.YELLOW}Flatpak detected, allowing Discord access to Replugged files (${entryPointDir})${AnsiEscapes.RESET}`,
     );
     execSync(overrideCommand);
+    console.log("Done!");
   }
 
   try {
@@ -170,26 +164,22 @@ export const inject = async (
       } catch {}
     }
   }
-  const tempDir = join(appDir, "..", "temp");
-  await mkdir(tempDir);
+
+  await mkdir(appDir);
   await Promise.all([
     writeFile(
-      join(tempDir, "index.js"),
+      join(appDir, "index.js"),
       `require("${entryPoint.replace(RegExp(sep.repeat(2), "g"), "/")}")`,
     ),
     writeFile(
-      join(appDir, "..", "temp", "package.json"),
+      join(appDir, "package.json"),
       JSON.stringify({
         main: "index.js",
         name: "discord",
       }),
     ),
-    extractAll(join(appDir, "..", "app.orig.asar"), join(tempDir, "app.orig")),
   ]);
 
-  await createPackage(tempDir, appDir);
-  await rm(join(appDir, "..", "app.orig.asar"), { recursive: true, force: true });
-  await rm(tempDir, { recursive: true, force: true });
   return true;
 };
 
@@ -210,16 +200,20 @@ export const uninject = async (
     );
     return false;
   }
-  const tempDir = join(appDir, "..", "temp");
-  await extractAll(appDir, tempDir);
-  await rm(appDir, { recursive: true, force: true });
-  await createPackage(join(tempDir, "app.orig"), appDir);
-  await rm(tempDir, { recursive: true, force: true });
-  // For discord_arch_electron
-  if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
-    await rename(
-      join(appDir, "..", "app.orig.asar.unpacked"),
-      join(appDir, "..", "app.asar.unpacked"),
+
+  try {
+    await rm(appDir, { recursive: true, force: true });
+    await rename(join(appDir, "..", "app.orig.asar"), appDir);
+    // For discord_arch_electron
+    if (existsSync(join(appDir, "..", "app.orig.asar.unpacked"))) {
+      await rename(
+        join(appDir, "..", "app.orig.asar.unpacked"),
+        join(appDir, "..", "app.asar.unpacked"),
+      );
+    }
+  } catch {
+    console.error(
+      `${AnsiEscapes.RED}Failed to rename app.asar while unplugging. If Discord is open, make sure it is closed.${AnsiEscapes.RESET}`,
     );
     process.exit(exitCode);
   }

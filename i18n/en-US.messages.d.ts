@@ -60,6 +60,19 @@ export declare const messages: {
    */
   'REPLUGGED_ADDONS_TITLE_COUNT': TypedIntlMessageGetter<{count: number | string, type: any}>,
   /**
+   * Key: `ov+bm5`
+   * 
+   * ### Definition
+   * ```text
+   * {count, plural, =1 {Author: {author1}} =2 {Authors: {author1} and {author2}} =3 {Authors: {author1}, {author2}, and {author3}} other {Authors: {author1}, {author2}, {author3}, and {others, plural, =1 {# other} other {# others}}}}
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_ADDON_AUTHORS': TypedIntlMessageGetter<{author1: any, author2: any, author3: any, count: any | number, others: any | number | string}>,
+  /**
    * Key: `XuYvz8`
    * 
    * ### Definition
@@ -215,6 +228,19 @@ export declare const messages: {
    * Missing translations: `bg`, `da`, `el`, `es-419`, `hi`, `hr`, `lt`, `ro`, `th`
    */
   'REPLUGGED_ADDON_SETTINGS': TypedIntlMessageGetter<{type: any}>,
+  /**
+   * Key: `Re3C6u`
+   * 
+   * ### Definition
+   * ```text
+   * Choose Theme Preset
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_ADDON_SETTINGS_THEME_PRESET': TypedIntlMessageGetter<{}>,
   /**
    * Key: `WqqBfH`
    * 
@@ -381,7 +407,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_ADDONS_OPTION_ADDON_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -407,7 +433,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_DISABLE_MESSAGE_ENABLED': TypedIntlMessageGetter<{name: any, type: any}>,
   /**
@@ -420,7 +446,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_DISABLE_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -433,7 +459,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_DISABLE_OPTION_ADDON_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -446,7 +472,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_DISABLE_OPTION_ADDON_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -472,7 +498,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_ENABLE_MESSAGE_ENABLED': TypedIntlMessageGetter<{name: any, type: any}>,
   /**
@@ -485,7 +511,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_ENABLE_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -498,7 +524,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_ENABLE_OPTION_ADDON_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -511,7 +537,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_ERROR_GENERIC': TypedIntlMessageGetter<{}>,
   /**
@@ -628,7 +654,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -654,7 +680,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_HEADER_DISABLED': TypedIntlMessageGetter<{type: any}>,
   /**
@@ -667,7 +693,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_HEADER_ENABLED': TypedIntlMessageGetter<{type: any}>,
   /**
@@ -680,7 +706,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -693,7 +719,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_SEND_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -706,7 +732,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_SEND_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -719,7 +745,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_STATUS_CHOICE_BOTH': TypedIntlMessageGetter<{}>,
   /**
@@ -732,7 +758,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_STATUS_CHOICE_DISABLED': TypedIntlMessageGetter<{}>,
   /**
@@ -745,7 +771,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_STATUS_CHOICE_ENABLED': TypedIntlMessageGetter<{}>,
   /**
@@ -758,7 +784,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_STATUS_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -771,7 +797,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_STATUS_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -784,7 +810,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `sv-SE`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `sv-SE`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_TYPE_CHOICE_PLUGIN': TypedIntlMessageGetter<{}>,
   /**
@@ -797,7 +823,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `sv-SE`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `sv-SE`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_TYPE_CHOICE_THEME': TypedIntlMessageGetter<{}>,
   /**
@@ -810,7 +836,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `es-ES`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_TYPE_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -823,7 +849,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_TYPE_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -836,7 +862,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_VERSION_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -849,7 +875,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `sv-SE`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `sv-SE`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_LIST_OPTION_VERSION_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -875,7 +901,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_RELOAD_MESSAGE_ENABLED': TypedIntlMessageGetter<{name: any, type: any}>,
   /**
@@ -888,7 +914,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_RELOAD_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -901,7 +927,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_RELOAD_OPTION_ADDON_DESC': TypedIntlMessageGetter<{}>,
   /**
@@ -914,7 +940,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_RELOAD_OPTION_ADDON_NAME': TypedIntlMessageGetter<{}>,
   /**
@@ -927,7 +953,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `th`, `vi`, `zh-CN`
+   * Missing translations: `bg`, `da`, `es-419`, `fr`, `hi`, `hr`, `hu`, `ko`, `lt`, `no`, `ro`, `th`, `vi`, `zh-CN`
    */
   'REPLUGGED_COMMAND_SUCCESS_GENERIC': TypedIntlMessageGetter<{}>,
   /**
@@ -995,19 +1021,6 @@ export declare const messages: {
    * Missing translations: `bg`, `da`, `es-419`, `hi`, `hr`, `lt`, `th`
    */
   'REPLUGGED_ERROR_CHECK_CONSOLE': TypedIntlMessageGetter<{}>,
-  /**
-   * Key: `5m4FiY`
-   * 
-   * ### Definition
-   * ```text
-   * General Settings
-   * ```
-   * 
-   * ### Problems
-   * 
-   * Missing translations: `es-419`, `hi`, `th`
-   */
-  'REPLUGGED_GENERAL_SETTINGS': TypedIntlMessageGetter<{}>,
   /**
    * Key: `BS/AJC`
    * 
@@ -1396,7 +1409,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   * Missing translations: `bg`, `cs`, `da`, `el`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `ja`, `ko`, `lt`, `nl`, `no`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
    */
   'REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR': TypedIntlMessageGetter<{}>,
   /**
@@ -1409,7 +1422,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `ja`, `ko`, `lt`, `nl`, `no`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
    */
   'REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR_DESC': TypedIntlMessageGetter<{$b?: HookFunction}>,
   /**
@@ -1438,6 +1451,32 @@ export declare const messages: {
    * Missing translations: `bg`, `da`, `el`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `sv-SE`, `th`
    */
   'REPLUGGED_SETTINGS_DEV_COMPANION_DESC': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `ET71DA`
+   * 
+   * ### Definition
+   * ```text
+   * Enable Discord Internal DevTools
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_DISCORD_DEVTOOLS': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `DMs+IS`
+   * 
+   * ### Definition
+   * ```text
+   * Replaces the help button in the title bar with Discord's internal developer tools (different from Chrome DevTools). This setting requires Discord experiments to be enabled first. **Requires restart**.
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_DISCORD_DEVTOOLS_DESC': TypedIntlMessageGetter<{$b?: HookFunction}>,
   /**
    * Key: `ObxHdn`
    * 
@@ -1534,7 +1573,7 @@ export declare const messages: {
    * 
    * ### Definition
    * ```text
-   * Keep token stored
+   * Keep Token Stored
    * ```
    * 
    * ### Problems
@@ -1607,6 +1646,32 @@ export declare const messages: {
    * Missing translations: `bg`, `da`, `el`, `es-419`, `hi`, `hr`, `hu`, `ko`, `lt`, `nl`, `no`, `ro`, `sv-SE`, `th`
    */
   'REPLUGGED_SETTINGS_QUICKCSS_AUTO_APPLY_DESC': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `iAl99/`
+   * 
+   * ### Definition
+   * ```text
+   * Enable Quick CSS
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_QUICKCSS_ENABLE': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `pKkVIi`
+   * 
+   * ### Definition
+   * ```text
+   * Apply custom styles to Discord instantly. Change colors, layout, and appearance in real time without installing themes.
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_SETTINGS_QUICKCSS_ENABLE_DESC': TypedIntlMessageGetter<{}>,
   /**
    * Key: `ojp79/`
    * 
@@ -1851,7 +1916,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   * Missing translations: `bg`, `cs`, `da`, `el`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `ja`, `ko`, `lt`, `nl`, `no`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
    */
   'REPLUGGED_TOAST_ADDON_DISABLE_FAILED': TypedIntlMessageGetter<{name: any}>,
   /**
@@ -1877,7 +1942,7 @@ export declare const messages: {
    * 
    * ### Problems
    * 
-   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `nl`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   * Missing translations: `bg`, `cs`, `da`, `el`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `ja`, `ko`, `lt`, `nl`, `no`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
    */
   'REPLUGGED_TOAST_ADDON_ENABLE_FAILED': TypedIntlMessageGetter<{name: any}>,
   /**
@@ -2024,19 +2089,6 @@ export declare const messages: {
    */
   'REPLUGGED_TOAST_INSTALLER_ADDON_LOAD_FAILED': TypedIntlMessageGetter<{name: any}>,
   /**
-   * Key: `HZhNXl`
-   * 
-   * ### Definition
-   * ```text
-   * Failed to fetch user profile
-   * ```
-   * 
-   * ### Problems
-   * 
-   * Missing translations: `bg`, `da`, `el`, `es-419`, `hi`, `hr`, `lt`, `no`, `ro`, `th`
-   */
-  'REPLUGGED_TOAST_PROFILE_FETCH_FAILED': TypedIntlMessageGetter<{}>,
-  /**
    * Key: `avF+9f`
    * 
    * ### Definition
@@ -2075,6 +2127,32 @@ export declare const messages: {
    * Missing translations: `bg`, `da`, `el`, `es-419`, `hi`, `hr`, `lt`, `no`, `ro`, `th`
    */
   'REPLUGGED_TOAST_QUICKCSS_RELOAD': TypedIntlMessageGetter<{}>,
+  /**
+   * Key: `TGExoq`
+   * 
+   * ### Definition
+   * ```text
+   * Switched to preset: {name}
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_TOAST_THEME_PRESET_CHANGED': TypedIntlMessageGetter<{name: any}>,
+  /**
+   * Key: `oSw5Aw`
+   * 
+   * ### Definition
+   * ```text
+   * Failed to change preset for {name}
+   * ```
+   * 
+   * ### Problems
+   * 
+   * Missing translations: `bg`, `cs`, `da`, `de`, `el`, `en-GB`, `es-419`, `es-ES`, `fi`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `lt`, `no`, `pl`, `pt-BR`, `ro`, `ru`, `sv-SE`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`
+   */
+  'REPLUGGED_TOAST_THEME_PRESET_FAILED': TypedIntlMessageGetter<{name: any}>,
   /**
    * Key: `VowTIi`
    * 

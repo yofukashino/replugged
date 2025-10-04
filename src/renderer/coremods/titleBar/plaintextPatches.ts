@@ -1,29 +1,19 @@
-import { init } from "src/renderer/apis/settings";
-import { type GeneralSettings, type PlaintextPatch, defaultSettings } from "src/types";
-
-const generalSettings = init<GeneralSettings, keyof typeof defaultSettings>(
-  "dev.replugged.Settings",
-  defaultSettings,
-);
-
-const replacements = [
-  {
-    match: /\(0,.{1,3}\.getPlatform\)\(\)/g,
-    replace: `"WINDOWS"`,
-  },
-];
+import { generalSettings } from "src/renderer/managers/settings";
+import type { PlaintextPatch } from "src/types";
 
 export default (navigator.userAgent.includes("Linux") && generalSettings.get("titleBar")
   ? [
+      // Patch the title bar to show the buttons
       {
-        find: ".appAsidePanelWrapper,",
-        replacements,
+        find: ".winButtons,",
+        replacements: [
+          {
+            match: /\(0,.{1,3}\.getPlatform\)\(\)/g,
+            replace: `"WINDOWS"`,
+          },
+        ],
       },
-      {
-        find: ".winButtons",
-        replacements,
-      },
-      { find: "this.registerPopoutGlobalKeybinds", replacements },
+      // Disable the 'frame' option for popout windows
       {
         find: "menubar:!1,toolbar:!1",
         replacements: [
@@ -33,6 +23,7 @@ export default (navigator.userAgent.includes("Linux") && generalSettings.get("ti
           },
         ],
       },
+      // Add the 'platform-win' class name to get styles for the custom title bar
       {
         find: "platform-linux",
         replacements: [

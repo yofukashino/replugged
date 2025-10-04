@@ -7,7 +7,6 @@
   "REPLUGGED_BADGES_STAFF": "Zespół Replugged",
   "REPLUGGED_BADGES_TRANSLATOR": "Tłumacz Replugged",
   "REPLUGGED_BADGES_BOOSTER": "Booster Serwera Replugged",
-  "REPLUGGED_GENERAL_SETTINGS": "Ustawienia ogólne",
   "REPLUGGED_I18N_CONTRIBUTE": "Chcesz pomóc w tłumaczeniu Replugged? Wejdź na nasz [Weblate]({weblateUrl})!",
   "REPLUGGED_I18N_TRANSLATED_PERCENTAGE": "Replugged: przetłumaczono {translated,number}%",
   "REPLUGGED_LINK_NOW": "Połącz konto",
@@ -138,7 +137,6 @@
   "REPLUGGED_TOAST_ADDON_UNINSTALL_SUCCESS": "Odinstalowano {name}",
   "REPLUGGED_TOAST_ADDONS_LOAD_MISSING_FAILED": "Nie udało się załadować brakującego dodatku {type}",
   "REPLUGGED_TOAST_ADDONS_LOAD_MISSING_SUCCESS": "Wczytano brakujący dodatek {type}",
-  "REPLUGGED_TOAST_PROFILE_FETCH_FAILED": "Nie udało się pobrać profilu użytkownika",
   "REPLUGGED_TOAST_QUICKCSS_CODE_FORMAT_FAILED": "Nie udało się sformatować kodu",
   "REPLUGGED_TOAST_QUICKCSS_CODE_FORMAT_SUCCESS": "Kod sformatowany",
   "REPLUGGED_TOAST_QUICKCSS_RELOAD": "Przeładowano Szybki CSS",
@@ -226,5 +224,9 @@
   "REPLUGGED_COMMAND_INSTALL_OPTION_SOURCE_DESC": "Źródło, z którego ma zostać zainstalowany dodatek",
   "REPLUGGED_COMMAND_INSTALL_OPTION_ID_NAME": "identyfikator",
   "REPLUGGED_COMMAND_INSTALL_OPTION_ID_DESC": "Jeśli źródło zawiera wiele dodatków, określ, który z nich ma zostać zainstalowany",
-  "REPLUGGED_STORE": "Sklep"
+  "REPLUGGED_STORE": "Sklep",
+  "REPLUGGED_TOAST_ADDON_DISABLE_FAILED": "Nie udało się wyłączyć {name}",
+  "REPLUGGED_TOAST_ADDON_ENABLE_FAILED": "Nie udało się włączyć {name}",
+  "REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR": "Niestandardowy pasek tytułu",
+  "REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR_DESC": "Użyj niestandardowego paska tytułu Discorda zamiast systemowego paska tytułu. **Wymaga ponownego uruchomienia**."
 }

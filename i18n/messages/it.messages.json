@@ -7,7 +7,6 @@
   "REPLUGGED_BADGES_STAFF": "Staff di Replugged",
   "REPLUGGED_BADGES_TRANSLATOR": "Traduttore di Replugged",
   "REPLUGGED_BADGES_BOOSTER": "Server booster di Replugged",
-  "REPLUGGED_GENERAL_SETTINGS": "Impostazioni generali",
   "REPLUGGED_I18N_CONTRIBUTE": "Vuoi aiutare a tradurre Replugged? Vai su [Weblate]({weblateUrl})!",
   "REPLUGGED_I18N_TRANSLATED_PERCENTAGE": "Replugged: tradotto al {translated,number}%",
   "REPLUGGED_LINK_NOW": "Collegalo ora",
@@ -121,7 +120,6 @@
   "REPLUGGED_ADDONS_FOLDER_OPEN": "Apri cartella {type}",
   "REPLUGGED_NO_ADDONS_INSTALLED": "Nessun {type} installato.",
   "REPLUGGED_QUICKCSS_CHANGES_APPLY": "Applica modifiche",
-  "REPLUGGED_TOAST_PROFILE_FETCH_FAILED": "Impossibile recuperare il profilo utente",
   "REPLUGGED_TOAST_QUICKCSS_CODE_FORMAT_FAILED": "Impossibile formattare il codice",
   "REPLUGGED_ADDONS_LOAD_MISSING": "Carica {type} mancanti",
   "REPLUGGED_ADDONS_TITLE_COUNT": "{type} ({count, number})",
@@ -226,5 +224,11 @@
   "REPLUGGED_COMMAND_INSTALL_OPTION_SOURCE_DESC": "Sorgente da cui installare l'addon",
   "REPLUGGED_COMMAND_INSTALL_OPTION_ID_NAME": "id",
   "REPLUGGED_COMMAND_INSTALL_OPTION_ID_DESC": "Se la sorgente ha più addon, specifica quale installare",
-  "REPLUGGED_STORE": "Store"
+  "REPLUGGED_STORE": "Store",
+  "REPLUGGED_TOAST_ADDON_ENABLE_FAILED": "Impossibile abilitare {name}",
+  "REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR": "Barra del titolo personalizzata",
+  "REPLUGGED_TOAST_ADDON_DISABLE_FAILED": "Impossibile disabilitare {name}",
+  "REPLUGGED_SETTINGS_CUSTOM_TITLE_BAR_DESC": "Utilizza la barra del titolo personalizzata di Discord invece della barra del titolo di sistema. **Necessita di un riavvio**.",
+  "REPLUGGED_SETTINGS_DISCORD_DEVTOOLS": "Attiva i DevTools interni di Discord",
+  "REPLUGGED_SETTINGS_DISCORD_DEVTOOLS_DESC": "Sostituisce il pulsante di aiuto nella barra del titolo con gli strumenti di sviluppo interni di Discord (diversi da Chrome DevTools). Questa impostazione richiede che gli esperimenti su Discord siano prima attivati. **Necessita di un riavvio**."
 }

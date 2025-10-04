@@ -17,7 +17,7 @@ export const author = z.object({
 
 export type Author = z.infer<typeof author>;
 
-const urlType = z.string().url();
+const urlType = z.url();
 
 export const common = z.object({
   // Should be in RDNN format
@@ -54,6 +54,14 @@ export const theme = common.extend({
   type: z.literal("replugged-theme"),
   main: z.string().optional(),
   splash: z.string().optional(),
+  presets: z
+    .object({
+      label: z.string(),
+      path: z.string(),
+      default: z.boolean().optional(),
+    })
+    .array()
+    .optional(),
 });
 
 export type ThemeManifest = z.infer<typeof theme>;
@@ -62,7 +70,6 @@ export const plugin = common.extend({
   type: z.literal("replugged-plugin"),
   renderer: z.string().optional(),
   plaintextPatches: z.string().optional(),
-  native: z.string().optional(),
   reloadRequired: z.boolean().optional(),
 });
 
@@ -83,9 +90,9 @@ export interface PluginExports {
   [x: string]: unknown;
 }
 
-export type PluginNativeMap = Record<string, (...args: unknown[]) => Promise<unknown>>;
-
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type AddonSettings = {
   disabled?: string[];
 };
+
+export type ThemeSettings = AddonSettings & Record<string, { chosenPreset?: string }>;

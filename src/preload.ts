@@ -3,7 +3,6 @@ import { contextBridge, ipcRenderer, webFrame } from "electron";
 import { RepluggedIpcChannels } from "./types";
 // eslint-disable-next-line no-duplicate-imports -- these are only used for types, the other import is for the actual code
 import type {
-  AnyFunction,
   CheckResultFailure,
   CheckResultSuccess,
   InstallResultFailure,
@@ -12,18 +11,6 @@ import type {
   RepluggedPlugin,
   RepluggedTheme,
 } from "./types";
-import { Logger } from "./renderer/modules/logger";
-const MainLogger = new Logger("Preload", "Backend", "#ea5a5a");
-
-ipcRenderer.on(RepluggedIpcChannels.CONSOLE_LOG, (_event, ...args: unknown[]) =>
-  MainLogger.log(...args),
-);
-ipcRenderer.on(RepluggedIpcChannels.CONSOLE_WARN, (_event, ...args: unknown[]) =>
-  MainLogger.warn(...args),
-);
-ipcRenderer.on(RepluggedIpcChannels.CONSOLE_ERROR, (_event, ...args: unknown[]) =>
-  MainLogger.error(...args),
-);
 
 const version = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_VERSION);
 
@@ -42,21 +29,6 @@ const RepluggedNative = {
     getPlaintextPatches: (pluginName: string): string =>
       ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN_PLAINTEXT_PATCHES, pluginName),
     list: (): RepluggedPlugin[] => ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS),
-    getNative: (pluginPath: string): Record<string, AnyFunction> => {
-      const mapping: Record<string, string> = ipcRenderer.sendSync(
-        RepluggedIpcChannels.REGISTER_PLUGIN_NATIVE,
-        pluginPath,
-      );
-
-      const natives = Object.entries(mapping).reduce<Record<string, AnyFunction>>(
-        (acc, [name, key]) => {
-          acc[name] = (...args: unknown[]) => ipcRenderer.invoke(key, ...args);
-          return acc;
-        },
-        {},
-      );
-      return natives;
-    },
     uninstall: async (pluginPath: string): Promise<RepluggedPlugin> =>
       ipcRenderer.invoke(RepluggedIpcChannels.UNINSTALL_PLUGIN, pluginPath),
     openFolder: () => ipcRenderer.send(RepluggedIpcChannels.OPEN_PLUGINS_FOLDER),
@@ -117,6 +89,8 @@ const RepluggedNative = {
   reactDevTools: {
     downloadExtension: (): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.DOWNLOAD_REACT_DEVTOOLS),
+    removeExtension: (): Promise<void> =>
+      ipcRenderer.invoke(RepluggedIpcChannels.REMOVE_REACT_DEVTOOLS),
   },
 
   getVersion: (): string => version,
@@ -128,16 +102,10 @@ export type RepluggedNativeType = typeof RepluggedNative;
 
 contextBridge.exposeInMainWorld("RepluggedNative", RepluggedNative);
 
-const renderer = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
+const renderer: string = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
 
 // webFrame.executeJavaScript returns a Promise, but we don't have any use for it
-void webFrame.executeJavaScript(`(() => {${renderer}})();//# sourceURL=replugged://renderer.js`);
-
-if (["discord.com", "discordapp.com"].some((host) => window.location.hostname.endsWith(host))) {
-  window.addEventListener("beforeunload", () => {
-    ipcRenderer.send(RepluggedIpcChannels.CLEAR_TEMP);
-  });
-}
+void webFrame.executeJavaScript(renderer);
 
 try {
   // Get and execute Discord preload

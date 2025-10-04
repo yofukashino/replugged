@@ -1,14 +1,6 @@
-.replugged-updater-header {
-  margin-bottom: var(--spacing-12);
-}
-
-.replugged-updater-items {
-  gap: var(--space-xs);
-}
-
 .replugged-updater-item {
-  background-color: var(--bg-base-secondary);
+  background-color: var(--background-base-lower);
   border: 1px solid var(--border-subtle);
-  padding: var(--spacing-16);
+  padding: var(--space-16);
   border-radius: var(--radius-sm);
 }

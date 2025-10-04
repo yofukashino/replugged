@@ -2,7 +2,7 @@
 
 // WARNING: any imported files need to be added to files in package.json
 
-import asar from "@electron/asar";
+import { createPackage } from "@electron/asar";
 import chalk from "chalk";
 import esbuild from "esbuild";
 import { sassPlugin } from "esbuild-sass-plugin";
@@ -260,7 +260,7 @@ async function bundleAddon(
   if (!existsSync("bundle")) {
     mkdirSync("bundle");
   }
-  await asar.createPackage(distPath, `${outputName}.asar`);
+  await createPackage(distPath, `${outputName}.asar`);
   copyFileSync(`${distPath}/manifest.json`, `${outputName}.json`);
 
   console.log(`Bundled ${manifest.name}`);
@@ -301,7 +301,7 @@ const CONFIG_PATH = (() => {
       return path.join(process.env.HOME || "", ".config", REPLUGGED_FOLDER_NAME);
   }
 })();
-const CHROME_VERSION = "130";
+const CHROME_VERSION = "134";
 
 function buildAddons(buildFn: (args: Args) => Promise<void>, args: Args, type: AddonType): void {
   const addons = getAddonFolder(type);
@@ -335,45 +335,14 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
           };
         }
 
-        if (manifest.native && args.importer.startsWith(path.resolve(manifest.native))) {
-          return {
-            errors: [
-              {
-                text: `Unsupported import: ${args.path}\nOnly Native lib imports are supported in native files.`,
-              },
-            ],
-          };
-        }
         return {
           path: args.path,
           namespace: "replugged",
         };
       });
 
-      build.onResolve(
-        { filter: new RegExp(`.*?/${manifest.native?.split("/").pop()?.replace(/\..+/, "")}`) },
-        (args) => {
-          if (args.kind !== "import-statement") return undefined;
-
-          return {
-            path: `replugged.plugins.pluginNatives.get("${manifest.id}")`,
-            namespace: "replugged",
-          };
-        },
-      );
-
       build.onResolve({ filter: /^react$/ }, (args) => {
         if (args.kind !== "import-statement") return undefined;
-
-        if (manifest.native && args.importer.startsWith(path.resolve(manifest.native))) {
-          return {
-            errors: [
-              {
-                text: `Unsupported import: ${args.path}\nOnly Native lib imports are supported in native files.`,
-              },
-            ],
-          };
-        }
 
         return {
           path: "replugged/common/React",
@@ -428,6 +397,7 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
     plugins,
     sourcemap: !production,
     target: `chrome${CHROME_VERSION}`,
+    sourceRoot: `replugged://plugin/${manifest.id}/${isMonoRepo ? "monoRepo/src" : "src"}`,
   };
 
   const targets: Array<Promise<esbuild.BuildContext>> = [];
@@ -461,21 +431,6 @@ async function buildPlugin({ watch, noInstall, production, noReload, addon }: Ar
 
     manifest.plaintextPatches = "plaintextPatches.js";
   }
-  if ("native" in manifest) {
-    targets.push(
-      esbuild.context(
-        overwrites({
-          ...common,
-          platform: "node",
-          format: "cjs",
-          entryPoints: [path.join(folderPath, manifest.native!)],
-          outfile: `${distPath}/native.js`,
-        }),
-      ),
-    );
-
-    manifest.native = "native.js";
-  }
 
   if (!existsSync(distPath)) mkdirSync(distPath, { recursive: true });
 
@@ -495,7 +450,9 @@ async function buildTheme({ watch, noInstall, production, noReload, addon }: Arg
   const distPath = addon ? `dist/${manifest.id}` : "dist";
   const folderPath = addon ? path.join(directory, "themes", addon) : directory;
 
-  const main = path.join(folderPath, manifest.main || "src/main.css");
+  const main = existsSync(path.join(folderPath, manifest.main || "src/main.css"))
+    ? path.join(folderPath, manifest.main || "src/main.css")
+    : undefined;
   const splash = existsSync(path.join(folderPath, manifest.splash || "src/main.css"))
     ? path.join(folderPath, manifest.splash || "src/main.css")
     : undefined;
@@ -533,6 +490,10 @@ async function buildTheme({ watch, noInstall, production, noReload, addon }: Arg
     plugins,
     sourcemap: !production,
     target: `chrome${CHROME_VERSION}`,
+    jsx: "transform",
+    jsxFactory: "window.replugged.common.React.createElement",
+    jsxFragment: "window.replugged.common.React.Fragment",
+    sourceRoot: `replugged://theme/${manifest.id}/${isMonoRepo ? "monoRepo/src" : "src"}`,
   };
 
   const targets: Array<Promise<esbuild.BuildContext>> = [];
@@ -565,6 +526,21 @@ async function buildTheme({ watch, noInstall, production, noReload, addon }: Arg
     );
 
     manifest.splash = "splash.css";
+  }
+
+  if (manifest.presets) {
+    targets.push(
+      esbuild.context({
+        ...common,
+        entryPoints: manifest.presets.map((p) => p.path),
+        outdir: `${distPath}/presets`,
+      }),
+    );
+
+    manifest.presets = manifest.presets.map((p) => ({
+      ...p,
+      path: `presets/${path.basename(p.path).split(".")[0]}.css`,
+    }));
   }
 
   if (!existsSync(distPath)) mkdirSync(distPath, { recursive: true });
