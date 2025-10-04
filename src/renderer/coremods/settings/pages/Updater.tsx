@@ -33,7 +33,7 @@ import "./Updater.css";
 
 const logger = Logger.coremod("Settings:Updater");
 
-export function Updater(): React.ReactElement {
+export function Updater({ crashed }: { crashed?: boolean }): React.ReactElement {
   const [checking, setChecking] = React.useState(false);
   const [updatesAvailable, setUpdatesAvailable] =
     React.useState<Array<UpdateSettings & { id: string }>>(getAvailableUpdates());
@@ -124,6 +124,123 @@ export function Updater(): React.ReactElement {
     window.DiscordNative.app.relaunch();
   };
 
+  const elem = (
+    <>
+      <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
+        <Flex justify={Flex.Justify.CENTER} direction={Flex.Direction.VERTICAL}>
+          <Text variant="heading-md/bold" color="header-primary">
+            {updatesAvailable.length
+              ? intl.format(t.REPLUGGED_UPDATES_AVAILABLE, { count: updatesAvailable.length })
+              : intl.string(t.REPLUGGED_UPDATES_UP_TO_DATE)}
+          </Text>
+          {lastChecked ? (
+            <Text.Normal className={marginStyles.marginTop4}>
+              {intl.format(t.REPLUGGED_UPDATES_LAST_CHECKED, {
+                date: new Date(lastChecked).toLocaleString(intl.currentLocale),
+              })}
+            </Text.Normal>
+          ) : null}
+        </Flex>
+        {!hasAnyUpdates ? (
+          <Button
+            onClick={checkForUpdates}
+            disabled={isAnyUpdating || isAnyComplete}
+            color={checking ? Button.Colors.PRIMARY : Button.Colors.BRAND}
+            submitting={checking}>
+            {intl.string(t.REPLUGGED_UPDATES_CHECK)}
+          </Button>
+        ) : isAllComplete && didInstallAll ? (
+          <Button onClick={reload} color={Button.Colors.RED}>
+            {intl.string(t.REPLUGGED_UPDATES_AWAITING_RELOAD_TITLE)}
+          </Button>
+        ) : (
+          <Button
+            onClick={installAll}
+            disabled={isAllComplete}
+            color={isAllUpdating ? Button.Colors.PRIMARY : Button.Colors.BRAND}
+            submitting={isAnyUpdating}>
+            {intl.string(t.REPLUGGED_UPDATES_UPDATE_ALL)}
+          </Button>
+        )}
+      </Flex>
+      <Stack>
+        {updatesAvailable.map((update) => {
+          const isReplugged = update.id === "dev.replugged.Replugged";
+          const addon =
+            plugins.get(update.id) ||
+            themes.get(update.id) ||
+            (isReplugged
+              ? {
+                  manifest: {
+                    type: "replugged",
+                    name: "Replugged",
+                    version: window.RepluggedNative.getVersion(),
+                  },
+                }
+              : null);
+          const isUpdating = update.id in updatePromises;
+          if (!addon) return null;
+          const { manifest } = addon;
+          const sourceLink = update.webUrl;
+          return (
+            <div className="replugged-updater-item" key={update.id}>
+              <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
+                <div>
+                  <Flex
+                    align={Flex.Align.CENTER}
+                    style={{ gap: "5px" }}
+                    className={marginStyles.marginBottom4}>
+                    <Text variant="heading-sm/normal" tag="h2" color="header-secondary">
+                      <Text variant="heading-md/bold" color="header-primary" tag="span">
+                        {manifest.name}
+                      </Text>{" "}
+                      v{manifest.version}
+                    </Text>
+                    {sourceLink ? (
+                      <Tooltip
+                        text={intl.formatToPlainString(t.REPLUGGED_ADDON_PAGE_OPEN, {
+                          type: intl.string(discordT.UPDATE_BADGE_HEADER),
+                        })}
+                        className="replugged-addon-icon replugged-addon-icon-md">
+                        <Anchor href={sourceLink}>
+                          <Icons.Link />
+                        </Anchor>
+                      </Tooltip>
+                    ) : null}
+                  </Flex>
+                  <Text.Normal>
+                    {intl.format(t.REPLUGGED_UPDATES_UPDATE_TO, {
+                      version: `v${update.version}`,
+                    })}
+                  </Text.Normal>
+                </div>
+                {update.available ? (
+                  <Button
+                    onClick={() => installOne(update.id)}
+                    color={Button.Colors.PRIMARY}
+                    submitting={isUpdating}>
+                    {intl.string(discordT.UPDATE)}
+                  </Button>
+                ) : didInstallAll ? null : (
+                  <Button onClick={reload} color={Button.Colors.RED}>
+                    {intl.string(t.REPLUGGED_UPDATES_AWAITING_RELOAD_TITLE)}
+                  </Button>
+                )}
+              </Flex>
+              {manifest.type !== "replugged" && manifest.updater?.type !== "store" ? (
+                <Notice messageType={Notice.Types.ERROR} className={marginStyles.marginTop8}>
+                  {intl.format(t.REPLUGGED_ADDON_NOT_REVIEWED_DESC, {
+                    type: label(getAddonType(manifest.type)),
+                  })}
+                </Notice>
+              ) : null}
+            </div>
+          );
+        })}
+      </Stack>
+    </>
+  );
+  if (crashed) return elem;
   return (
     <FormSection tag="h1" title={intl.string(t.REPLUGGED_UPDATES_UPDATER)}>
       <Stack gap={16}>
@@ -165,118 +282,7 @@ export function Updater(): React.ReactElement {
             })}
           </Notice>
         )}
-        <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
-          <Flex justify={Flex.Justify.CENTER} direction={Flex.Direction.VERTICAL}>
-            <Text variant="heading-md/bold" color="header-primary">
-              {updatesAvailable.length
-                ? intl.format(t.REPLUGGED_UPDATES_AVAILABLE, { count: updatesAvailable.length })
-                : intl.string(t.REPLUGGED_UPDATES_UP_TO_DATE)}
-            </Text>
-            {lastChecked ? (
-              <Text.Normal className={marginStyles.marginTop4}>
-                {intl.format(t.REPLUGGED_UPDATES_LAST_CHECKED, {
-                  date: new Date(lastChecked).toLocaleString(intl.currentLocale),
-                })}
-              </Text.Normal>
-            ) : null}
-          </Flex>
-          {!hasAnyUpdates ? (
-            <Button
-              onClick={checkForUpdates}
-              disabled={isAnyUpdating || isAnyComplete}
-              color={checking ? Button.Colors.PRIMARY : Button.Colors.BRAND}
-              submitting={checking}>
-              {intl.string(t.REPLUGGED_UPDATES_CHECK)}
-            </Button>
-          ) : isAllComplete && didInstallAll ? (
-            <Button onClick={reload} color={Button.Colors.RED}>
-              {intl.string(t.REPLUGGED_UPDATES_AWAITING_RELOAD_TITLE)}
-            </Button>
-          ) : (
-            <Button
-              onClick={installAll}
-              disabled={isAllComplete}
-              color={isAllUpdating ? Button.Colors.PRIMARY : Button.Colors.BRAND}
-              submitting={isAnyUpdating}>
-              {intl.string(t.REPLUGGED_UPDATES_UPDATE_ALL)}
-            </Button>
-          )}
-        </Flex>
-        <Stack>
-          {updatesAvailable.map((update) => {
-            const isReplugged = update.id === "dev.replugged.Replugged";
-            const addon =
-              plugins.get(update.id) ||
-              themes.get(update.id) ||
-              (isReplugged
-                ? {
-                    manifest: {
-                      type: "replugged",
-                      name: "Replugged",
-                      version: window.RepluggedNative.getVersion(),
-                    },
-                  }
-                : null);
-            const isUpdating = update.id in updatePromises;
-            if (!addon) return null;
-            const { manifest } = addon;
-            const sourceLink = update.webUrl;
-            return (
-              <div className="replugged-updater-item" key={update.id}>
-                <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
-                  <div>
-                    <Flex
-                      align={Flex.Align.CENTER}
-                      style={{ gap: "5px" }}
-                      className={marginStyles.marginBottom4}>
-                      <Text variant="heading-sm/normal" tag="h2" color="header-secondary">
-                        <Text variant="heading-md/bold" color="header-primary" tag="span">
-                          {manifest.name}
-                        </Text>{" "}
-                        v{manifest.version}
-                      </Text>
-                      {sourceLink ? (
-                        <Tooltip
-                          text={intl.formatToPlainString(t.REPLUGGED_ADDON_PAGE_OPEN, {
-                            type: intl.string(discordT.UPDATE_BADGE_HEADER),
-                          })}
-                          className="replugged-addon-icon replugged-addon-icon-md">
-                          <Anchor href={sourceLink}>
-                            <Icons.Link />
-                          </Anchor>
-                        </Tooltip>
-                      ) : null}
-                    </Flex>
-                    <Text.Normal>
-                      {intl.format(t.REPLUGGED_UPDATES_UPDATE_TO, {
-                        version: `v${update.version}`,
-                      })}
-                    </Text.Normal>
-                  </div>
-                  {update.available ? (
-                    <Button
-                      onClick={() => installOne(update.id)}
-                      color={Button.Colors.PRIMARY}
-                      submitting={isUpdating}>
-                      {intl.string(discordT.UPDATE)}
-                    </Button>
-                  ) : didInstallAll ? null : (
-                    <Button onClick={reload} color={Button.Colors.RED}>
-                      {intl.string(t.REPLUGGED_UPDATES_AWAITING_RELOAD_TITLE)}
-                    </Button>
-                  )}
-                </Flex>
-                {manifest.type !== "replugged" && manifest.updater?.type !== "store" ? (
-                  <Notice messageType={Notice.Types.ERROR} className={marginStyles.marginTop8}>
-                    {intl.format(t.REPLUGGED_ADDON_NOT_REVIEWED_DESC, {
-                      type: label(getAddonType(manifest.type)),
-                    })}
-                  </Notice>
-                ) : null}
-              </div>
-            );
-          })}
-        </Stack>
+        {elem}
       </Stack>
     </FormSection>
   );

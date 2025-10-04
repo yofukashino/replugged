@@ -16,6 +16,7 @@ import rpcPlaintext from "../coremods/rpc/plaintextPatches";
 import noTrackPlaintext from "../coremods/noTrack/plaintextPatches";
 import settingsPlaintext from "../coremods/settings/plaintextPatches";
 import themeUtilsPlaintext from "../coremods/themeUtils/plaintextPatches";
+import softCrashPlaintext from "../coremods/softCrash/plaintextPatches";
 import titleBarPlaintext from "../coremods/titleBar/plaintextPatches";
 import utcPlaintext from "../coremods/utc/plaintextPatches";
 
@@ -40,9 +41,11 @@ export namespace coremods {
   export let noXSSDefenses: Coremod;
   export let reactErrorDecoder: Coremod;
   export let rpc: Coremod;
+  export let safeMode: Coremod;
   export let settings: Coremod;
   export let themeUtils: Coremod;
   export let utc: Coremod;
+  export let softCrash: Coremod;
   export let watcher: Coremod;
   export let welcome: Coremod;
 }
@@ -68,9 +71,11 @@ export async function startAll(): Promise<void> {
   coremods.noTrack = await import("../coremods/noTrack");
   coremods.reactErrorDecoder = await import("../coremods/reactErrorDecoder");
   coremods.rpc = await import("../coremods/rpc");
+  coremods.safeMode = await import("../coremods/safeMode");
   coremods.settings = await import("../coremods/settings");
   coremods.themeUtils = await import("../coremods/themeUtils");
   coremods.utc = await import("../coremods/utc");
+  coremods.softCrash = await import("../coremods/softCrash");
   coremods.watcher = await import("../coremods/watcher");
   coremods.welcome = await import("../coremods/welcome");
 
@@ -105,6 +110,7 @@ export function runPlaintextPatches(): void {
     { patch: rpcPlaintext, name: "replugged.coremod.rpc" },
     { patch: settingsPlaintext, name: "replugged.coremod.settings" },
     { patch: themeUtilsPlaintext, name: "replugged.coremod.themeUtils" },
+    { patch: softCrashPlaintext, name: "replugged.coremod.softCrash" },
     { patch: titleBarPlaintext, name: "replugged.coremod.titleBar" },
     { patch: utcPlaintext, name: "replugged.coremod.utc" },
   ].forEach(({ patch, name }) => patchPlaintext(patch, name));

@@ -9,6 +9,11 @@ import * as quickCSS from "./quick-css";
 import { generalSettings } from "./settings";
 import * as themes from "./themes";
 import { startAutoUpdateChecking } from "./updater";
+import { SAFE_MODE_KEY } from "src/constants";
+
+export const safeMode = localStorage.getItem(SAFE_MODE_KEY);
+
+if (safeMode) localStorage.removeItem("replugged-safe-mode");
 
 export async function start(): Promise<void> {
   log("Ignition", "Start", void 0, "Igniting Replugged...");
@@ -21,8 +26,8 @@ export async function start(): Promise<void> {
   await Promise.race([
     Promise.allSettled([
       coremods.startAll(),
-      plugins.startAll(),
-      themes.loadMissing().then(themes.loadAll),
+      !safeMode && plugins.startAll(),
+      safeMode ? themes.loadMissing() : themes.loadMissing().then(themes.loadAll),
     ]),
     // Failsafe to ensure that we always start Replugged
     new Promise((resolve) =>
@@ -74,8 +79,11 @@ export async function restart(): Promise<void> {
 export function ignite(): void {
   // Plaintext patches must run first.
   coremods.runPlaintextPatches();
+
   plugins.loadAll();
-  plugins.runPlaintextPatches();
+  if (!safeMode) {
+    plugins.runPlaintextPatches();
+  }
   // At this point, Discord's code should run.
   // Wait for the designated common modules to load before continuing.
   void Promise.all([commonReady(), componentsReady()]).then(start);

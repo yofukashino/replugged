@@ -241,5 +241,13 @@ export default defineMessages({
   "REPLUGGED_SETTINGS_QUICKCSS_ENABLE_DESC": "Apply custom styles to Discord instantly. Change colors, layout, and appearance in real time without installing themes.",
   "REPLUGGED_ADDON_SETTINGS_THEME_PRESET": "Choose Theme Preset",
   "REPLUGGED_TOAST_THEME_PRESET_CHANGED": "Switched to preset: {name}",
-  "REPLUGGED_TOAST_THEME_PRESET_FAILED": "Failed to change preset for {name}"
+  "REPLUGGED_TOAST_THEME_PRESET_FAILED": "Failed to change preset for {name}",
+  "REPLUGGED_SOFT_CRASH_SAFE_RELOAD": "Safe Mode Reload",
+  "REPLUGGED_SOFT_CRASH_RELOAD_REQUIRED": "Reload might be required to apply changes!",
+  "REPLUGGED_SOFT_CRASH_ERROR_STACK": "Error Stack",
+  "REPLUGGED_SOFT_CRASH_SUSPECTED_PLUGINS": "Suspected Plugins ({count})",
+  "REPLUGGED_SOFT_CRASH_TRY_RECOVERY": "Try Recovery",
+  "REPLUGGED_SOFT_CRASH_DETAILS": "Crash Details",
+  "REPLUGGED_SAFE_MODE_ACTIVE": "Replugged is currently started in safe mode, reload to disable it.",
 });
+
