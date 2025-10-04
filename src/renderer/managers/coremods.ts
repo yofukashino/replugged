@@ -9,14 +9,15 @@ import experimentsPlaintext from "../coremods/experiments/plaintextPatches";
 import languagePlaintext from "../coremods/language/plaintextPatches";
 import messagePopoverPlaintext from "../coremods/messagePopover/plaintextPatches";
 import noticesPlaintext from "../coremods/notices/plaintextPatches";
-import noTrackPlaintext from "../coremods/noTrack/plaintextPatches";
 import noXSSDefensesPlaintext from "../coremods/noXSSDefenses/plaintextPatches";
 import popoutThemingPlaintext from "../coremods/popoutTheming/plaintextPatches";
 import reactErrorDecoderPlaintext from "../coremods/reactErrorDecoder/plaintextPatches";
 import rpcPlaintext from "../coremods/rpc/plaintextPatches";
+import noTrackPlaintext from "../coremods/noTrack/plaintextPatches";
 import settingsPlaintext from "../coremods/settings/plaintextPatches";
 import themeUtilsPlaintext from "../coremods/themeUtils/plaintextPatches";
 import titleBarPlaintext from "../coremods/titleBar/plaintextPatches";
+import utcPlaintext from "../coremods/utc/plaintextPatches";
 
 const logger = Logger.api("Coremods");
 
@@ -41,6 +42,7 @@ export namespace coremods {
   export let rpc: Coremod;
   export let settings: Coremod;
   export let themeUtils: Coremod;
+  export let utc: Coremod;
   export let watcher: Coremod;
   export let welcome: Coremod;
 }
@@ -68,6 +70,7 @@ export async function startAll(): Promise<void> {
   coremods.rpc = await import("../coremods/rpc");
   coremods.settings = await import("../coremods/settings");
   coremods.themeUtils = await import("../coremods/themeUtils");
+  coremods.utc = await import("../coremods/utc");
   coremods.watcher = await import("../coremods/watcher");
   coremods.welcome = await import("../coremods/welcome");
 
@@ -103,5 +106,6 @@ export function runPlaintextPatches(): void {
     { patch: settingsPlaintext, name: "replugged.coremod.settings" },
     { patch: themeUtilsPlaintext, name: "replugged.coremod.themeUtils" },
     { patch: titleBarPlaintext, name: "replugged.coremod.titleBar" },
+    { patch: utcPlaintext, name: "replugged.coremod.utc" },
   ].forEach(({ patch, name }) => patchPlaintext(patch, name));
 }
