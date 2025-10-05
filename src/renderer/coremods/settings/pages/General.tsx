@@ -96,15 +96,7 @@ function EditNativeControlList({
           </Flex>
         </Modal.ModalHeader>
         <Modal.ModalContent style={{ margin: "18px 0" }}>
-          <div
-            style={{
-              justifyItems: "center",
-              gap: "20%",
-              display: "flex",
-              flexFlow: "wrap",
-              height: "100%",
-              justifySelf: "center",
-            }}>
+          <div className="replugged-general-pluginIpc-editList">
             {pluginList.length ? (
               pluginList.map((plugin) => {
                 const [value, setValue] = React.useState(currentList.includes(plugin.manifest.id));
@@ -135,7 +127,7 @@ function EditNativeControlList({
         <Modal.ModalFooter>
           <Flex justify={Flex.Justify.BETWEEN}>
             <Button color={Button.Colors.RED} look={Button.Looks.OUTLINED} onClick={onClose}>
-              Cancel
+              {intl.string(discordT.CANCEL)}
             </Button>
             <Button
               color={Button.Colors.BRAND}
@@ -161,7 +153,7 @@ function EditNativeControlList({
       onClick={() => {
         modal.openModal((props) => <EditModel {...props} />);
       }}>
-      Edit Whitelist
+      {type === "blacklist" ? "Edit Blacklist" : "Edit Whitelist"}
     </Button>
   );
 }

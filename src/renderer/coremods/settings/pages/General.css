@@ -16,3 +16,12 @@
 .replugged-general-pluginIpc-notice svg {
   color: var(--text-feedback-critical) !important;
 }
+
+.replugged-general-pluginIpc-editList {
+  justify-items: center;
+  gap: 20%;
+  display: flex;
+  flex-flow: wrap;
+  height: 100%;
+  justify-self: center;
+}
