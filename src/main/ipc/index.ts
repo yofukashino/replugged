@@ -11,6 +11,7 @@ import "./quick-css";
 import "./react-devtools";
 import "./settings";
 import "./themes";
+import "./transparency";
 
 ipcMain.on(RepluggedIpcChannels.GET_DISCORD_PRELOAD, (event) => {
   event.returnValue = (event.sender as RepluggedWebContents).originalPreload;
