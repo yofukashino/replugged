@@ -1,5 +1,6 @@
 import { WEBSITE_URL } from "src/constants";
 import { init } from "src/renderer/apis/settings";
+import type { BackgroundMaterialType, VibrancyType } from "src/types";
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type GeneralSettings = {
@@ -14,6 +15,11 @@ export type GeneralSettings = {
   titleBar?: boolean;
   quickCSS?: boolean;
   keepToken?: boolean;
+  winUpdater?: boolean;
+  transparency?: boolean;
+  backgroundMaterial?: BackgroundMaterialType;
+  vibrancy?: VibrancyType | null;
+  disableMinimumSize?: boolean;
   pluginIpc?: {
     enabled: boolean;
     mode: "whitelist" | "blacklist" | "allowed";
@@ -34,6 +40,11 @@ const defaultSettings = {
   titleBar: false,
   quickCSS: true,
   keepToken: false,
+  winUpdater: true,
+  transparency: false,
+  backgroundMaterial: "auto",
+  vibrancy: null,
+  disableMinimumSize: false,
   pluginIpc: { enabled: false, mode: "whitelist", blacklist: [], whitelist: [] },
 } satisfies Partial<GeneralSettings>;
 

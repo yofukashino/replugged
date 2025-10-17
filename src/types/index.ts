@@ -31,6 +31,8 @@ export enum RepluggedIpcChannels {
   GET_REPLUGGED_VERSION = "REPLUGGED_GET_REPLUGGED_VERSION",
   DOWNLOAD_REACT_DEVTOOLS = "REPLUGGED_DOWNLOAD_REACT_DEVTOOLS",
   REMOVE_REACT_DEVTOOLS = "REPLUGGED_REMOVE_REACT_DEVTOOLS",
+  SET_BACKGROUND_MATERIAL = "REPLUGGED_SET_BACKGROUND_MATERIAL",
+  SET_VIBRANCY = "REPLUGGED_SET_VIBRANCY",
   SET_PLUGIN_IPC = "REPLUGGED_SET_PLUGIN_IPC",
   SET_PLUGIN_IPC_MODE = "REPLUGGED_SET_PLUGIN_IPC_MODE",
   SET_PLUGIN_IPC_LIST = "REPLUGGED_SET_PLUGIN_IPC_LIST",
@@ -66,6 +68,7 @@ export * from "./coremods/commands";
 export * from "./coremods/contextMenu";
 export * from "./coremods/message";
 export * from "./coremods/settings";
+export * from "./coremods/transparency";
 export * from "./discord";
 export * from "./installer";
 export * from "./settings";
