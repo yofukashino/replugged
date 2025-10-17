@@ -121,7 +121,7 @@ const RepluggedNative = {
     removeExtension: (): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.REMOVE_REACT_DEVTOOLS),
   },
-
+  // Should this be nested in plugins? plugins: {ipc: {...}}
   pluginIpc: {
     setEnabled: (value: boolean): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC, value),
@@ -131,7 +131,7 @@ const RepluggedNative = {
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "blacklist", value),
     setWhitelisted: (value: string[]): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "whitelist", value),
-    getNatives: () => pluginNatives,
+    getNative: (id: string) => pluginNatives[id],
   },
   transparency: {
     setBackgroundMaterial: (effect: BackgroundMaterialType): Promise<void> =>
