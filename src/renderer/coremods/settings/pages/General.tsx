@@ -161,7 +161,9 @@ function EditNativeControlList({
       onClick={() => {
         modal.openModal((props) => <EditModel {...props} />);
       }}>
-      {type === "allowed" ? "..." : type === "blacklist" ? "Edit Blacklist" : "Edit Whitelist"}
+      {type === "allowed" && "All Addons Allowed"}
+      {type === "blacklist" && "Edit Blacklist"}
+      {type === "whitelist" && "Edit Whitelist"}
     </Button>
   );
 }
