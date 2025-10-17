@@ -1,5 +1,5 @@
 import { plugins } from "@replugged";
-import { React, marginStyles, modal, toast } from "@common";
+import { React, classNames, marginStyles, modal, toast } from "@common";
 import { t as discordT, intl } from "@common/i18n";
 import {
   Button,
@@ -70,10 +70,12 @@ function EditNativeControlList({
   type,
   blacklist,
   whitelist,
+  disabled,
 }: {
-  type: "blacklist" | "whitelist";
+  type: "blacklist" | "whitelist" | "allowed";
   blacklist?: string[];
   whitelist?: string[];
+  disabled: boolean;
 }): React.ReactElement {
   const EditModel = ({ transitionState, onClose }: RenderModalProps): React.ReactElement => {
     const [currentList, setCurrentList] = React.useState(
@@ -154,11 +156,12 @@ function EditNativeControlList({
 
   return (
     <Button
+      disabled={disabled || type === "allowed"}
       className={marginStyles.marginBottom20}
       onClick={() => {
         modal.openModal((props) => <EditModel {...props} />);
       }}>
-      {type === "blacklist" ? "Edit Blacklist" : "Edit Whitelist"}
+      {type === "allowed" ? "..." : type === "blacklist" ? "Edit Blacklist" : "Edit Whitelist"}
     </Button>
   );
 }
@@ -299,60 +302,58 @@ function AdvancedTab(): React.ReactElement {
       <Notice messageType={Notice.Types.WARNING}>
         {intl.string(t.REPLUGGED_SETTINGS_ADVANCED_DESC)}
       </Notice>
-      <FieldSet label={intl.string(t.REPLUGGED_SETTINGS_DEVELOPMENT_TOOLS)}>
-        <div>
-          <Switch
-            label={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC)}
-            value={pluginIpc.enabled}
-            onChange={(value) => {
-              void RepluggedNative.pluginIpc.setEnabled(value);
-            }}
-          />
-          {!pluginIpc.enabled && (
+      <FieldSet label={"Plugin Access"}>
+        <Stack gap={16}>
+          <div>
+            <Switch
+              label={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC)}
+              value={pluginIpc.enabled}
+              onChange={(value) => {
+                void RepluggedNative.pluginIpc.setEnabled(value);
+              }}
+            />
             <Notice
-              className={"replugged-general-pluginIpc-notice"}
+              className={classNames("replugged-general-pluginIpc-notice", marginStyles.marginTop8)}
               messageType={Notice.HelpMessageTypes.WARNING}>
               {intl.format(t.REPLUGGED_SETTINGS_PLUGIN_IPC_DESC, {})}
             </Notice>
-          )}
+          </div>
 
-          {pluginIpc.enabled && (
-            <>
-              <RadioGroup
-                className={marginStyles.marginBottom20}
-                label={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE)}
-                description={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_DESC)}
-                options={[
-                  {
-                    value: "whitelist",
-                    name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_WHITELIST),
-                  },
-                  {
-                    value: "blacklist",
-                    name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_BLACKLIST),
-                  },
-                  {
-                    value: "allowed",
-                    name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_ALLOWED),
-                  },
-                ]}
-                value={pluginIpc.mode}
-                onChange={(e: string | null) => {
-                  if (e !== pluginIpc.mode)
-                    void RepluggedNative.pluginIpc.setMode(
-                      e as "whitelist" | "blacklist" | "allowed",
-                    );
-                }}
-              />
-              {pluginIpc.mode !== "allowed" && (
-                <EditNativeControlList
-                  type={pluginIpc.mode}
-                  blacklist={pluginIpc.blacklist}
-                  whitelist={pluginIpc.whitelist}
-                />
-              )}
-            </>
-          )}
+          <RadioGroup
+            disabled={!pluginIpc.enabled}
+            className={marginStyles.marginBottom20}
+            label={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE)}
+            description={intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_DESC)}
+            options={[
+              {
+                value: "whitelist",
+                name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_WHITELIST),
+              },
+              {
+                value: "blacklist",
+                name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_BLACKLIST),
+              },
+              {
+                value: "allowed",
+                name: intl.string(t.REPLUGGED_SETTINGS_PLUGIN_IPC_CONTROL_MODE_ALLOWED),
+              },
+            ]}
+            value={pluginIpc.mode}
+            onChange={(e: string | null) => {
+              if (e !== pluginIpc.mode)
+                void RepluggedNative.pluginIpc.setMode(e as "whitelist" | "blacklist" | "allowed");
+            }}
+          />
+          <EditNativeControlList
+            disabled={!pluginIpc.enabled}
+            type={pluginIpc.mode}
+            blacklist={pluginIpc.blacklist}
+            whitelist={pluginIpc.whitelist}
+          />
+        </Stack>
+      </FieldSet>
+      <FieldSet label={intl.string(t.REPLUGGED_SETTINGS_DEVELOPMENT_TOOLS)}>
+        <div>
           <Switch
             checked={experiments}
             onChange={(value) => {

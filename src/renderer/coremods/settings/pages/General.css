@@ -9,7 +9,7 @@
 
 .replugged-general-pluginIpc-notice {
   background: var(--background-feedback-critical);
-  border: 1px solid var(--info-danger-foreground);
+  border-color: var(--info-danger-foreground);
 }
 
 .replugged-general-pluginIpc-notice,
