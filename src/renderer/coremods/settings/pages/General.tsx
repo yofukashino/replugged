@@ -94,6 +94,7 @@ function EditNativeControlList({
             <Text
               variant="heading-lg/semibold"
               style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+              {/* TODO: i18n*/}
               Edit Whitelist
             </Text>
             <Modal.ModalCloseButton onClick={onClose} />
@@ -126,6 +127,7 @@ function EditNativeControlList({
               align={Flex.Align.CENTER}
               style={{ height: "100%" }}>
               <Text variant="heading-lg/bold" style={{ textAlign: "center" }}>
+                {/* TODO: i18n*/}
                 No Supported Plugin Found!
               </Text>
             </Flex>
@@ -146,6 +148,7 @@ function EditNativeControlList({
                 }
                 void RepluggedNative.pluginIpc.setWhitelisted(currentList);
               }}>
+              {/* TODO: i18n*/}
               Save Changes
             </Button>
           </Flex>
@@ -161,6 +164,7 @@ function EditNativeControlList({
       onClick={() => {
         modal.openModal((props) => <EditModel {...props} />);
       }}>
+      {/* TODO: i18n*/}
       {type === "allowed" && "All Addons Allowed"}
       {type === "blacklist" && "Edit Blacklist"}
       {type === "whitelist" && "Edit Whitelist"}
@@ -304,6 +308,7 @@ function AdvancedTab(): React.ReactElement {
       <Notice messageType={Notice.Types.WARNING}>
         {intl.string(t.REPLUGGED_SETTINGS_ADVANCED_DESC)}
       </Notice>
+      {/* TODO: i18n*/}
       <FieldSet label={"Plugin Access"}>
         <Stack gap={16}>
           <div>
@@ -342,6 +347,7 @@ function AdvancedTab(): React.ReactElement {
             ]}
             value={pluginIpc.mode}
             onChange={(e: string | null) => {
+              /* TODO: pretty types*/
               if (e !== pluginIpc.mode)
                 void RepluggedNative.pluginIpc.setMode(e as "whitelist" | "blacklist" | "allowed");
             }}

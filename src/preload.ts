@@ -16,7 +16,7 @@ import type {
 import { join, sep } from "path";
 import { CONFIG_PATHS } from "./util.mjs";
 
-const pluginIpc: Record<string, unknown> = {};
+const pluginNatives: Record<string, unknown> = {};
 
 const pluginList: RepluggedPlugin[] = ipcRenderer.sendSync(RepluggedIpcChannels.LIST_PLUGINS);
 
@@ -25,7 +25,8 @@ const isFiltered = (id: string): boolean =>
 
 const pluginIpcEnabled = ipcRenderer.sendSync(RepluggedIpcChannels.GET_PLUGIN_IPC_ENABLED);
 
-const loadPluginIpc = (): void => {
+const loadPluginPreloads = (): void => {
+  // TODO: move other than require to ipc so that main/preload wouldnt have different addon due to timing! if so then error & crash
   const PLUGINS_DIR = CONFIG_PATHS.plugins;
   for (const plugin of pluginList) {
     if (!plugin.manifest.preload || isFiltered(plugin.manifest.id)) continue;
@@ -34,11 +35,11 @@ const loadPluginIpc = (): void => {
       // Ensure file changes are restricted to the base path
       throw new Error("Invalid plugin name");
     }
-    pluginIpc[plugin.manifest.id] = require(preloadPath);
+    const native = require(preloadPath);
+    // if nothing exported then nothing added
+    if (native) pluginNatives[plugin.manifest.id] = native;
   }
 };
-
-if (pluginIpcEnabled) loadPluginIpc();
 
 const version = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_VERSION);
 
@@ -130,7 +131,7 @@ const RepluggedNative = {
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "blacklist", value),
     setWhitelisted: (value: string[]): Promise<void> =>
       ipcRenderer.invoke(RepluggedIpcChannels.SET_PLUGIN_IPC_LIST, "whitelist", value),
-    getIPC: () => pluginIpc,
+    getNatives: () => pluginNatives,
   },
   transparency: {
     setBackgroundMaterial: (effect: BackgroundMaterialType): Promise<void> =>
@@ -148,6 +149,9 @@ const RepluggedNative = {
 export type RepluggedNativeType = typeof RepluggedNative;
 
 contextBridge.exposeInMainWorld("RepluggedNative", RepluggedNative);
+
+// load plugin preloads after replugged native is exposed
+if (pluginIpcEnabled) loadPluginPreloads();
 
 const renderer: string = ipcRenderer.sendSync(RepluggedIpcChannels.GET_REPLUGGED_RENDERER);
 

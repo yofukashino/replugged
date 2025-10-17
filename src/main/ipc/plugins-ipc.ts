@@ -5,6 +5,7 @@ import { getPlugin, listPlugin } from "./plugins";
 import { join, sep } from "path";
 import { CONFIG_PATHS } from "src/util.mjs";
 
+// Maybe move the settings to each of its seperate key?
 interface IpcSettings {
   enabled?: boolean;
   mode?: "whitelist" | "blacklist" | "allowed";
@@ -55,6 +56,7 @@ function isFiltered(id: string): boolean {
 }
 
 function loadPluginIpc(): void {
+  // TODO: store data from here for preload, maybe cache listPlugin?
   for (const plugin of listPlugin()) {
     if (!plugin.manifest.main || isFiltered(plugin.manifest.id)) continue;
     const mainPath = join(PLUGINS_DIR, plugin.path, plugin.manifest.main);
@@ -129,6 +131,7 @@ ipcMain.handle(
       type: "blacklist" | "whitelist",
       value: string[],
     ): { removed: string[]; added: string[] } => {
+      // Should we use object instead of array?
       const currentSettings =
         getSetting<Record<"blacklist" | "whitelist", string[]>>(
           "dev.replugged.Settings",
@@ -156,6 +159,8 @@ ipcMain.handle(
         if (added.length || removed.length)
           await queryUser(
             "blacklist",
+            // to remove plugins which are uninstalled
+            // TODO: fix type?
             value.filter((c) => getPlugin(c) as RepluggedPlugin | undefined),
             {
               detail: mapDetails(added, removed),
@@ -187,4 +192,5 @@ ipcMain.on(RepluggedIpcChannels.GET_PLUGIN_IPC_ENABLED, (event) => {
   event.returnValue = currentSettings?.enabled;
 });
 
+// TODO: move this to the end, right before require(discordPath)
 if (currentSettings?.enabled) loadPluginIpc();
