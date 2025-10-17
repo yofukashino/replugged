@@ -3,7 +3,6 @@ import { React, marginStyles, modal, toast } from "@common";
 import { t as discordT, intl } from "@common/i18n";
 import {
   Button,
-  Checkbox,
   Divider,
   FieldSet,
   Flex,
@@ -90,40 +89,45 @@ function EditNativeControlList({
       <Modal.ModalRoot size="medium" transitionState={transitionState}>
         <Modal.ModalHeader>
           <Flex justify={Flex.Justify.BETWEEN} align={Flex.Align.CENTER}>
-            <Text.H1 style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+            <Text
+              variant="heading-lg/semibold"
+              style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
               Edit Whitelist
-            </Text.H1>
+            </Text>
             <Modal.ModalCloseButton onClick={onClose} />
           </Flex>
         </Modal.ModalHeader>
         <Modal.ModalContent style={{ margin: "18px 0" }}>
-          <div className="replugged-general-pluginIpc-editList">
-            {pluginList.length ? (
-              pluginList.map((plugin) => {
-                const [value, setValue] = React.useState(currentList.includes(plugin.manifest.id));
+          {pluginList.length ? (
+            <Stack gap={16}>
+              {pluginList.map((plugin) => {
                 return (
-                  <Checkbox
+                  <Switch
                     key={plugin.path}
                     label={plugin.manifest.name}
-                    type="inverted"
-                    value={value}
+                    description={plugin.manifest.description}
+                    value={currentList.includes(plugin.manifest.id)}
                     onChange={(e: boolean) => {
                       setCurrentList(
                         e
                           ? (list) => [...list, plugin.manifest.id]
                           : (list) => list.filter((id) => id !== plugin.manifest.id),
                       );
-                      setValue(e);
                     }}
                   />
                 );
-              })
-            ) : (
+              })}
+            </Stack>
+          ) : (
+            <Flex
+              justify={Flex.Justify.CENTER}
+              align={Flex.Align.CENTER}
+              style={{ height: "100%" }}>
               <Text variant="heading-lg/bold" style={{ textAlign: "center" }}>
                 No Supported Plugin Found!
               </Text>
-            )}
-          </div>
+            </Flex>
+          )}
         </Modal.ModalContent>
         <Modal.ModalFooter>
           <Flex justify={Flex.Justify.BETWEEN}>
