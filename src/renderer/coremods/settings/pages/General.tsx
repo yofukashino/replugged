@@ -165,7 +165,7 @@ function EditNativeControlList({
         modal.openModal((props) => <EditModel {...props} />);
       }}>
       {/* TODO: i18n*/}
-      {type === "allowed" && "All Addons Allowed"}
+      {type === "allowed" && "All Plugins Allowed"}
       {type === "blacklist" && "Edit Blacklist"}
       {type === "whitelist" && "Edit Whitelist"}
     </Button>
