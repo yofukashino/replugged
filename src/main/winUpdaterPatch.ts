@@ -1,13 +1,10 @@
+import semver from "semver";
 import { cpSync, existsSync, readdirSync, renameSync } from "original-fs";
 import { basename, join } from "path";
 import { getSetting } from "./ipc/settings";
 
-function getVersionFromName(name: string): number[] {
-  return name.replace("app-", "").split(".").map(Number);
-}
-
 function getPathBefore(path: string, before: string): string {
-  return join(path.substring(0, path.indexOf(before)));
+  return join(path.substring(0, path.indexOf(before.replace("/", "\\"))));
 }
 
 export default function patchAutoStartUpdate(): void {
@@ -18,11 +15,11 @@ export default function patchAutoStartUpdate(): void {
     const mainPath = require.main?.filename;
     if (!mainPath) return;
 
-    const origAsarPath = getPathBefore(mainPath, "\\app_bootstrap\\index");
-    const currentAsarDir = join(origAsarPath, "..", "app.asar");
-    const currentVersion = basename(getPathBefore(origAsarPath, "\\resources\\app."));
-    const discordRoot = getPathBefore(origAsarPath, `${currentVersion}\\resources`);
-    const autoStartPath = join(mainPath, "..", "autoStart", "index.js");
+    const origAsarPath = getPathBefore(mainPath, "/app_bootstrap/index");
+    const currentAsarDir = join(origAsarPath, "../app.asar");
+    const currentVersion = basename(getPathBefore(origAsarPath, "/resources/app.asar"));
+    const discordRoot = getPathBefore(origAsarPath, `${currentVersion}/resources`);
+    const autoStartPath = join(mainPath, "../autoStart/index.js");
 
     const autoStart = require(autoStartPath);
     const originalUpdate = autoStart.update;
@@ -33,9 +30,9 @@ export default function patchAutoStartUpdate(): void {
     require.cache[autoStartPath]!.exports.update = async (callback?: () => void) => {
       const newVersion = readdirSync(discordRoot).reduce((oldVersionString, newVersionString) => {
         if (!newVersionString.startsWith("app-")) return oldVersionString;
-        const oldVersion = getVersionFromName(oldVersionString);
-        const newVersion = getVersionFromName(newVersionString);
-        if (newVersion.some((n, i) => n > oldVersion[i])) return newVersionString;
+        const oldVersion = semver.clean(oldVersionString)!;
+        const newVersion = semver.clean(newVersionString)!;
+        if (semver.compare(oldVersion, newVersion) === -1) return newVersionString;
         return oldVersionString;
       }, currentVersion);
 
