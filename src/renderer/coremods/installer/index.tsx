@@ -110,7 +110,7 @@ async function injectLinks(): Promise<void> {
   defaultRules.repluggedInstallLink = {
     order: defaultRules.autolink.order - 0.5,
     match: (source: string) => {
-      if (source.startsWith("replugged://")) source = source.replace("replugged://", "https://replugged.dev/store/")
+      if (source.startsWith("replugged://")) source = source.replace("replugged://", "https://replugged.dev/")
       const match = /^<?(https?:\/\/[^\s<]+[^<>.,:; "'\]\s])>?/.exec(source);
       if (!match) return null;
       const installLink = parseInstallLink(match[1]);
