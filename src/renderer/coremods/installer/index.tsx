@@ -110,6 +110,7 @@ async function injectLinks(): Promise<void> {
   defaultRules.repluggedInstallLink = {
     order: defaultRules.autolink.order - 0.5,
     match: (source: string) => {
+      if (source.startsWith("replugged://")) source = source.replace("replugged://", "https://replugged.dev/store/")
       const match = /^<?(https?:\/\/[^\s<]+[^<>.,:; "'\]\s])>?/.exec(source);
       if (!match) return null;
       const installLink = parseInstallLink(match[1]);
@@ -140,7 +141,7 @@ async function injectLinks(): Promise<void> {
       return <AddonEmbed key={installLink.identifier} addon={installLink} fallback={fallback} />;
     },
     // @ts-expect-error type is wrong
-    requiredFirstCharacters: ["<", "h"],
+    requiredFirstCharacters: ["<", "h", "r"],
   };
 
   parser.parse = parser.reactParserFor(defaultRules);
